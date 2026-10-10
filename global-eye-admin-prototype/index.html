@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>全球眼管理端</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="global-header">
+      <button class="brand" data-route="home">
+        <span class="brand-logo">KN</span>
+        <span class="brand-copy">
+          <strong>康奈网络</strong>
+          <small>knwl.cn</small>
+        </span>
+        <em>MT</em>
+      </button>
+      <div class="product-title">
+        <strong>全球眼管理端</strong>
+      </div>
+      <div class="header-user">
+        <span>
+          <strong>汪艳琼</strong>
+          <small>标准合规部</small>
+        </span>
+        <b>汪</b>
+        <button class="exit-btn">退出</button>
+      </div>
+    </header>
+
+    <div class="app-shell">
+      <aside class="side-nav">
+        <nav aria-label="主导航">
+          <button class="nav-item active" data-route="home"><span>⌂</span>首页</button>
+          <button class="nav-item" data-route="institutions"><span>▦</span>机构管理</button>
+          <button class="nav-item" data-route="schemes"><span>▣</span>方案统计</button>
+          <button class="nav-item" data-route="websites"><span>⌘</span>网址大全</button>
+          <button class="nav-item" data-route="tags"><span>▤</span>标签管理</button>
+          <button class="nav-item" data-route="logs"><span>☷</span>操作日志</button>
+        </nav>
+      </aside>
+
+      <main class="workspace">
+        <header class="page-head">
+          <div class="title-line">
+            <h1 id="pageTitle">机构管理</h1>
+            <span class="help-dot">i</span>
+            <p id="tableSub">机构管理为同步外部机构数据，融媒体管理后台不管理机构（包括：新建机构、编辑机构、删除机构、启用/停用机构等）。</p>
+          </div>
+          <div class="section-actions" id="toolbar"></div>
+        </header>
+
+        <section class="stat-strip hidden" id="stats"></section>
+
+        <section class="page-tabs hidden" id="pageTabs"></section>
+
+        <section class="query-panel">
+          <div class="query-grid" id="filters"></div>
+          <div class="query-actions">
+            <button class="btn primary" id="searchBtn">查询</button>
+            <button class="btn" id="resetBtn">重置</button>
+          </div>
+        </section>
+
+        <section class="content-section">
+          <div class="section-head hidden">
+            <h2 id="tableTitle">机构列表</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead id="tableHead"></thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+          <div class="empty-state hidden" id="emptyState">
+            <strong>暂无数据</strong>
+            <span>当前条件下没有匹配记录</span>
+          </div>
+          <footer class="pagination">
+            <span id="totalText">共 0 条</span>
+            <button class="pager-btn" id="prevPage">‹</button>
+            <span id="pageText">1 / 1</span>
+            <button class="pager-btn" id="nextPage">›</button>
+            <select id="pageSize">
+              <option value="10">10条/页</option>
+              <option value="50">50条/页</option>
+              <option value="100" selected>100条/页</option>
+            </select>
+            <label>前往 <input id="jumpPage" type="number" min="1" value="1" /> 页</label>
+          </footer>
+        </section>
+
+        <section class="form-page hidden" id="formPage"></section>
+      </main>
+    </div>
+
+    <div class="drawer-mask hidden" id="drawerMask">
+      <aside class="drawer" id="drawer"></aside>
+    </div>
+
+    <div class="modal-mask hidden" id="modalMask">
+      <section class="modal" id="modal"></section>
+    </div>
+
+    <div class="toast hidden" id="toast"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>

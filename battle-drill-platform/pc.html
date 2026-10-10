@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>舆情百战演练平台 · PC作战中枢 (PS主机平台模式)</title>
+  <link rel="stylesheet" href="./css/cyber-common.css">
+  <link rel="stylesheet" href="./css/pc.css">
+</head>
+<body>
+  <div class="pc-layout">
+    
+    <!-- ==================== 顶部导航 ==================== -->
+    <header class="pc-topbar">
+      <div class="pc-brand">
+        <span style="font-size:20px;">🛡️</span>
+        <span>舆情百战演练平台 · PC作战中枢</span>
+        <span class="badge-ps badge-cyan" style="font-size:10px; margin-left:6px;">PRO EDITION</span>
+      </div>
+
+      <nav class="pc-topbar-tabs">
+        <button class="pc-tab-btn active" data-target="lobby" id="tab_lobby">🎮 剧本大厅</button>
+        <button class="pc-tab-btn" data-target="roster" id="tab_roster">👥 席位就绪准备室</button>
+        <button class="pc-tab-btn" data-target="warroom" id="tab_warroom">⚔️ 指挥作战室</button>
+      </nav>
+
+      <div style="display:flex; align-items:center; gap:16px; font-size:12px;">
+        <span style="color:var(--pc-text-muted);">所属单位: <b style="color:#fff;">市委网信办</b></span>
+        <span style="color:var(--pc-text-muted);">当前席位: <b style="color:var(--pc-gold);">网信办指挥长·李主任 👑</b></span>
+        <a href="./screen.html" target="_blank" class="btn-cyber" style="padding:3px 10px; font-size:11px;">🖥️ 大屏总控端</a>
+        <a href="./admin.html" target="_blank" class="btn-cyber" style="padding:3px 10px; font-size:11px;">🛠️ 后台编排</a>
+      </div>
+    </header>
+
+    <!-- ==================== 主内容区 ==================== -->
+    <div class="pc-content-body">
+
+      <!-- ==========================================================================
+           1. 视图一：PS主机游戏平台风格剧本大厅 (PS Console Style Lobby)
+           ========================================================================== -->
+      <section class="view-lobby" id="viewLobby" style="display:flex;">
+        <!-- 全屏动态背景切换层与晕影 (双缓冲GPU加速渐变) -->
+        <div class="lobby-backdrop lobby-backdrop-a" id="lobbyBackdropA"></div>
+        <div class="lobby-backdrop lobby-backdrop-b" id="lobbyBackdropB"></div>
+        <div class="lobby-backdrop-vignette"></div>
+
+        <!-- 中上方：当前聚焦剧本详细介绍看板 (与后端完全一致) -->
+        <div class="lobby-info-hero" id="lobbyInfoHero">
+          <div class="lobby-hero-code" id="heroScriptCode">[JB-FIRE-20250408]</div>
+          <h1 class="lobby-hero-title" id="heroScriptTitle">K市P区某居民楼突发火灾爆燃与网络造谣处置演练</h1>
+          
+          <div class="lobby-hero-badges" id="heroScriptBadges">
+            <!-- 动态渲染标签 -->
+          </div>
+
+          <div class="lobby-hero-desc" id="heroScriptDesc">
+            <!-- 动态渲染后端事故背景描述 -->
+          </div>
+
+          <div class="lobby-hero-actions">
+            <button class="btn-ps-enter" id="btnHeroEnterRoster" onclick="enterCurrentSelectedScript()">
+              <span>🎮 点击进入剧本席位准备室</span>
+              <span style="font-size:11px; opacity:0.85;">(开始排兵布阵)</span>
+            </button>
+
+            <!-- 查看与下载上一次演练复盘汇总报告入口 -->
+            <div class="lobby-last-report-dock" id="lobbyLastReportDock" style="display:none; align-items:center; gap:8px;">
+              <button class="btn-cyber btn-report-glow" onclick="previewLastDrillReport()" style="border-color:var(--pc-gold); color:var(--pc-gold); font-weight:700; padding:9px 16px; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+                <span>📑</span>
+                <span>查看上次演练复盘汇总报告</span>
+                <span class="badge-ps badge-gold" id="lobbyLastScoreBadge" style="font-size:10.5px; padding:1px 6px; margin-left:4px;">98分</span>
+              </button>
+              <button class="btn-cyber" onclick="downloadLastDrillReport()" style="padding:9px 14px; font-size:12.5px;" title="下载上次演练复盘战报">
+                📥 下载报告
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 中下部：剧本方块卡带横排 (方块不要太大，紧凑精致主机风) -->
+        <div class="lobby-tiles-section">
+          <div class="lobby-tiles-track" id="lobbyTilesTrack">
+            <!-- JS 动态渲染剧本方块卡片 -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           2. 视图二：角色就位与双二维码扫码集结室 (Roster Room)
+           ========================================================================== -->
+      <section class="view-roster" id="viewRoster" style="display:none;">
+        <div class="roster-header-bar">
+          <div class="roster-title-wrap">
+            <button class="btn-cyber" onclick="switchView('lobby')" style="padding:4px 10px; font-size:11px;">◀ 返回剧本大厅</button>
+            <div>
+              <strong style="font-size:16px; color:#fff;" id="rosterTargetScriptName">K市P区某居民楼突发火灾爆燃与网络造谣处置演练</strong>
+              <div style="font-size:11px; color:var(--pc-text-muted);">红蓝双方各阶段参演席位认领大厅</div>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span class="badge-ps badge-gold" id="rosterSeatedCountBadge">👥 就绪席位: 0 / 16</span>
+            <button class="btn-cyber" onclick="simulateClaimAllRoles()" style="font-size:11.5px;">⚡ 一键全员模拟就位 (演示助手)</button>
+            <button class="btn-cyber btn-cyber-red" id="btnEnterWarRoom" onclick="attemptEnterWarRoom()" style="font-size:12.5px; font-weight:700; padding:6px 18px;">
+              ⚔️ 指挥长进入作战室
+            </button>
+          </div>
+        </div>
+
+        <div class="roster-notice-box">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:16px;">⚠️</span>
+            <span><strong>参演规则提示：</strong>各部门及学员通过手机 H5 扫码选择角色席位。<strong>只有【网信办指挥长】角色方可在 PC 端进入作战室指挥</strong>，其他人员均在手机端进行作战！</span>
+          </div>
+          <span style="font-size:11px; opacity:0.85;">PC端点击卡片亦可快捷认领测试</span>
+        </div>
+
+        <!-- 左右红蓝两翼席位展示 -->
+        <div class="roster-camps-grid">
+          
+          <!-- 2.1 左翼：红方舆情施压战队 -->
+          <div class="roster-camp-column roster-camp-red">
+            <div class="roster-camp-head">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="tag-cyber tag-red">RED TEAM</span>
+                <strong style="color:#ff6b8b; font-size:14px;">红方 · 舆情施压与发酵阵营</strong>
+              </div>
+              <span style="font-size:11px; color:#ff99ab;" id="redSeatedRatioText">0 / 8 已就绪</span>
+            </div>
+
+            <!-- 红方专属扫码区 -->
+            <div class="roster-qr-box">
+              <div class="qr-img-wrapper">
+                <img src="/api/qrcode?data=http://localhost:5173/mobile.html?camp=red" alt="红方扫码加入" id="qrImgRed">
+              </div>
+              <div class="qr-info-wrap">
+                <div style="font-weight:700; color:#ff6b8b; font-size:12px; margin-bottom:2px;">📱 红方学员手机扫码入口</div>
+                <div style="color:var(--pc-text-muted);">微信/手机浏览器扫码，认领造谣网民、博主大V、媒体记者等红方进攻角色。</div>
+                <div style="margin-top:4px;">
+                  <a href="./mobile.html?camp=red" target="_blank" class="btn-cyber btn-cyber-red" style="font-size:10px; padding:2px 6px;">打开红方手机端 📱</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- 红方角色席位卡片网格 -->
+            <div class="roster-roles-grid" id="rosterRedRolesGrid">
+              <!-- JS 动态渲染红方角色席位卡片 (亮起展示用户头像，底下是角色名称) -->
+            </div>
+          </div>
+
+          <!-- 2.2 右翼：蓝方官方协同处置战队 -->
+          <div class="roster-camp-column roster-camp-blue">
+            <div class="roster-camp-head">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="tag-cyber">BLUE TEAM</span>
+                <strong style="color:var(--pc-cyan); font-size:14px;">蓝方 · 官方处置与公信力应对阵营</strong>
+              </div>
+              <span style="font-size:11px; color:var(--pc-cyan);" id="blueSeatedRatioText">0 / 8 已就绪</span>
+            </div>
+
+            <!-- 蓝方专属扫码区 -->
+            <div class="roster-qr-box">
+              <div class="qr-img-wrapper">
+                <img src="/api/qrcode?data=http://localhost:5173/mobile.html?camp=blue" alt="蓝方扫码加入" id="qrImgBlue">
+              </div>
+              <div class="qr-info-wrap">
+                <div style="font-weight:700; color:var(--pc-cyan); font-size:12px; margin-bottom:2px;">📱 蓝方部门手机扫码入口</div>
+                <div style="color:var(--pc-text-muted);">应急、消防、公安、卫健等各席位扫码就位；指挥长席位点亮后激活作战室大门！</div>
+                <div style="margin-top:4px;">
+                  <a href="./mobile.html?camp=blue" target="_blank" class="btn-cyber" style="font-size:10px; padding:2px 6px;">打开蓝方手机端 📱</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- 蓝方角色席位卡片网格 -->
+            <div class="roster-roles-grid" id="rosterBlueRolesGrid">
+              <!-- JS 动态渲染蓝方角色席位卡片 (指挥长带金冠高亮) -->
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           3. 视图三：指挥作战室 (Combat War Room)
+           ========================================================================== -->
+      <section class="view-war-room" id="viewWarRoom" style="display:none;">
+        
+        <!-- 3.1 作战室顶部控制栏 (开始/暂停/倒计时/虚拟时间换算) -->
+        <header class="war-topbar">
+          <div class="war-title-cluster">
+            <button class="btn-cyber" onclick="switchView('roster')" style="padding:2px 8px; font-size:11px;">◀ 返回准备室</button>
+            <strong style="font-size:14px; color:#fff;" id="warCurrentScriptName">P区某居民楼突发火灾爆燃与网络造谣处置演练</strong>
+            <span class="war-stage-tag" id="warCurrentStageTag">阶段一：初发舆情发现与核实</span>
+          </div>
+
+          <!-- 真实时间倒计时与虚拟时间倍速换算 -->
+          <div style="display:flex; align-items:center; gap:16px;">
+            <div class="war-countdown-box">
+              <span style="font-size:11px; color:var(--pc-text-muted);">⏱️ 真实倒计时:</span>
+              <span class="war-countdown-val" id="warRealCountdown">01:30:00</span>
+            </div>
+
+            <div class="war-virtual-time-pill">
+              <span>📅 虚拟推进时间:</span>
+              <b style="color:var(--pc-cyan);" id="warVirtualClock">2026-04-08 18:57</b>
+              <span class="badge-ps badge-gold" id="warSpeedPill" style="font-size:10.5px; padding:1px 6px;">24.0x 倍速</span>
+            </div>
+          </div>
+
+          <!-- 开始/暂停/结束操作按钮 -->
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button class="btn-cyber" id="btnStartDrill" onclick="handleStartDrill()" style="background:linear-gradient(135deg, rgba(0,230,118,0.2), rgba(0,230,118,0.5)); border-color:#00e676;">
+              ▶️ 开始演练
+            </button>
+            <button class="btn-cyber" id="btnPauseDrill" onclick="handlePauseDrill()" style="display:none; background:linear-gradient(135deg, rgba(255,184,0,0.2), rgba(255,184,0,0.5)); border-color:#ffb800;">
+              ⏸️ 暂停演练
+            </button>
+            <button class="btn-cyber btn-cyber-red" id="btnEndDrill" onclick="handleEndDrillManually()" style="display:none;">
+              ⏹️ 结束演练
+            </button>
+            <button class="btn-cyber" onclick="forceAdvanceStage()" style="padding:4px 8px; font-size:10.5px;" title="教官快速推进至下一阶段">
+              ⏩ 推进阶段
+            </button>
+          </div>
+        </header>
+
+        <!-- 3.2 作战室主体：左红方席位 - 中拳击核心与时间轴 - 右蓝方席位 -->
+        <div class="war-arena-grid">
+          
+          <!-- 左翼：红方席位态势立柱 -->
+          <aside class="war-camp-panel camp-red-border">
+            <div class="war-camp-header head-red">
+              <span>🔴 红方施压战队席位</span>
+              <span style="font-size:10px; font-weight:normal;" id="warRedActiveCount">8人在线</span>
+            </div>
+            <div class="war-seats-scroll" id="warRedSeatsScroll">
+              <!-- JS 动态渲染红方席位实时攻击活跃度 -->
+            </div>
+          </aside>
+
+          <!-- 中部核心：榜单 + 相对双拳与公信力分数 + 横向可拖动时间轴 -->
+          <main class="war-center-arena">
+            
+            <!-- 3.2.1 拳头上方：实时热搜榜单 (公信力>80一直上榜高亮闪动，随公信力增减) -->
+            <div class="trending-banner-panel" id="warTrendingBanner">
+              <div class="trending-header-pill">
+                <span>🔥</span> 实时网络榜单
+              </div>
+              <div class="trending-items-row" id="warTrendingItemsRow">
+                <!-- JS 动态渲染热搜条目 (事件相关词条高亮并闪动) -->
+              </div>
+            </div>
+
+            <!-- 3.2.2 中间：红蓝两个相对的拳头 + 中间公信力分数 (左红右蓝，红拳朝右，蓝拳朝左) -->
+            <div class="fists-collision-arena">
+              <!-- 左侧红拳 (烈焰赤红拳套，向右冲锋) -->
+              <div class="combat-fist-red">
+                <div style="text-align:right;">
+                  <div style="font-size:12px; font-weight:800; color:#ff2a5f;">RED ATTACK</div>
+                  <div style="font-size:10px; color:#ff99ab;" id="warRedPressureVal">负向施压 -45 分</div>
+                </div>
+                <div class="fist-icon-red">
+                  <svg viewBox="0 0 64 64" width="56" height="56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <linearGradient id="redGloveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#ff0055"/>
+                        <stop offset="60%" stop-color="#ff2a5f"/>
+                        <stop offset="100%" stop-color="#ff6b8b"/>
+                      </linearGradient>
+                      <filter id="redGloveGlow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#ff0055" flood-opacity="0.85"/>
+                      </filter>
+                    </defs>
+                    <g filter="url(#redGloveGlow)">
+                      <path d="M14 26 C14 16, 24 12, 38 12 C48 12, 56 18, 56 30 C56 42, 48 48, 36 48 L22 48 C15 48, 14 38, 14 26 Z" fill="url(#redGloveGrad)"/>
+                      <path d="M22 26 C22 20, 28 18, 36 22 C42 25, 42 32, 38 36 C34 40, 26 40, 22 36 Z" fill="#ff4d79"/>
+                      <rect x="6" y="24" width="10" height="24" rx="3" fill="#ffffff" opacity="0.95"/>
+                      <line x1="11" y1="24" x2="11" y2="48" stroke="#ff0055" stroke-width="2"/>
+                      <path d="M46 18 C52 23, 52 35, 46 42" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+                    </g>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- 中间碰撞中心与公信力分数大号徽标 -->
+              <div class="collision-spark-center">
+                <div class="credibility-score-badge" id="warCredibilityBadge">
+                  <div class="score-num-text" id="warCredScoreVal">100</div>
+                  <div class="score-label-text" id="warCredRatingLabel">公信力基准</div>
+                </div>
+                <div style="font-size:10px; color:var(--pc-text-muted); margin-top:4px;" id="warAlertNoticeText">
+                  公信力天平动态博弈中
+                </div>
+              </div>
+
+              <!-- 右侧蓝拳 (闪电碧蓝拳套，向左抗衡) -->
+              <div class="combat-fist-blue">
+                <div class="fist-icon-blue">
+                  <svg viewBox="0 0 64 64" width="56" height="56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <linearGradient id="blueGloveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#00f0ff"/>
+                        <stop offset="60%" stop-color="#0088ff"/>
+                        <stop offset="100%" stop-color="#0055ff"/>
+                      </linearGradient>
+                      <filter id="blueGloveGlow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#00f0ff" flood-opacity="0.9"/>
+                      </filter>
+                    </defs>
+                    <g filter="url(#blueGloveGlow)" transform="translate(64, 0) scale(-1, 1)">
+                      <path d="M14 26 C14 16, 24 12, 38 12 C48 12, 56 18, 56 30 C56 42, 48 48, 36 48 L22 48 C15 48, 14 38, 14 26 Z" fill="url(#blueGloveGrad)"/>
+                      <path d="M22 26 C22 20, 28 18, 36 22 C42 25, 42 32, 38 36 C34 40, 26 40, 22 36 Z" fill="#38bdf8"/>
+                      <rect x="6" y="24" width="10" height="24" rx="3" fill="#ffffff" opacity="0.95"/>
+                      <line x1="11" y1="24" x2="11" y2="48" stroke="#0088ff" stroke-width="2"/>
+                      <path d="M46 18 C52 23, 52 35, 46 42" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
+                    </g>
+                  </svg>
+                </div>
+                <div style="text-align:left;">
+                  <div style="font-size:12px; font-weight:800; color:var(--pc-cyan);">BLUE DEFENSE</div>
+                  <div style="font-size:10px; color:var(--pc-cyan);" id="warBlueRestoreVal">处置挽回 +40 分</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3.2.3 拳头下方：横向可左右拖动时间轴 (从左往右展示H5红蓝作战内容，可左右拖动) -->
+            <div class="timeline-horizontal-container">
+              <div class="timeline-nav-bar">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <strong style="color:#fff; font-size:12px;">⏳ 攻防态势推进时间轴 (从左往右实时推演 · 支持左右拖动)</strong>
+                  <span class="badge-ps badge-cyan" style="font-size:9.5px; padding:1px 5px;">H5端双向同步</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <button class="btn-cyber" style="padding:1px 6px; font-size:10px;" onclick="scrollTimeline('left')">◀ 向左回溯</button>
+                  <button class="btn-cyber" style="padding:1px 6px; font-size:10px;" onclick="scrollTimeline('right')">向右前沿 ▶</button>
+                </div>
+              </div>
+
+              <!-- 横向滚动可视区 (支持鼠标拖拽与滚动) -->
+              <div class="timeline-scroll-viewport" id="timelineScrollViewport">
+                <!-- JS 动态渲染攻防节点卡片 (左红攻，右蓝防，由左至右横向展开) -->
+              </div>
+            </div>
+
+            <!-- 3.2.4 底部虚拟推进时间轴 -->
+            <div class="virtual-timeline-tracker">
+              <span style="font-size:10.5px; color:var(--pc-text-muted);">推演推进阶段:</span>
+              <div class="tracker-bar-bg">
+                <div class="tracker-bar-fill" id="virtualTrackerFill"></div>
+              </div>
+              <span style="font-size:10.5px; color:var(--pc-cyan); font-weight:700;" id="virtualStageProgressText">阶段 1 / 5</span>
+            </div>
+
+          </main>
+
+          <!-- 右翼：蓝方席位态势立柱 -->
+          <aside class="war-camp-panel camp-blue-border">
+            <div class="war-camp-header head-blue">
+              <span>🔵 蓝方协同处置席位</span>
+              <span style="font-size:10px; font-weight:normal;" id="warBlueActiveCount">8人在线</span>
+            </div>
+            <div class="war-seats-scroll" id="warBlueSeatsScroll">
+              <!-- JS 动态渲染蓝方席位实时处置响应状态 -->
+            </div>
+          </aside>
+
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ==========================================================================
+         4. 右下角圆圈“点”字图标与点点密信群聊悬浮窗 (Floating Dot IM)
+         默认隐藏，仅在席位全员就位并正式开启演练后显示
+         ========================================================================== -->
+    <div class="floating-dot-launcher" id="floatingDotLauncher" onclick="toggleFloatingIM()" title="点开点点密信应急指挥群" style="display:none;">
+      <span>点</span>
+      <div class="floating-dot-unread" id="imUnreadDot" style="display:none;"></div>
+    </div>
+
+    <!-- 点点密信聊天抽屉窗 -->
+    <div class="floating-im-window" id="floatingIMWindow">
+      <div class="im-top-bar">
+        <div class="im-title">
+          <span>💬</span>
+          <strong id="imGroupNameDisplay">[密] 应急指挥协同专班群</strong>
+        </div>
+        <button class="im-close-btn" onclick="toggleFloatingIM()">×</button>
+      </div>
+
+      <div class="im-msg-area" id="imMsgArea">
+        <!-- 动态消息流：含默认哨兵机器人实时转发红方攻击内容 -->
+      </div>
+
+      <div class="im-input-dock">
+        <!-- 指挥长快捷催办指令气泡 -->
+        <div class="im-quick-chips-row">
+          <button class="im-quick-chip" onclick="quickSendCommand('@消防 @应急 30分钟内核实现场伤亡与火势！')">📢 催报死伤</button>
+          <button class="im-quick-chip" onclick="quickSendCommand('@公安网安 立即固定造谣证据并落地查人！')">🚨 指令网安</button>
+          <button class="im-quick-chip" onclick="quickSendCommand('@卫健委 报送定点医院收治轻重伤员底数！')">🏥 调阅卫健</button>
+          <button class="im-quick-chip" onclick="quickSendCommand('@宣传组 组织首期搜救官方情况通报！')">📄 指令通报</button>
+        </div>
+
+        <div class="im-input-row">
+          <input type="text" class="im-text-input" id="imTextInput" placeholder="指挥长下发督导指令或通报口径...">
+          <button class="btn-cyber" onclick="sendCommanderIMMessage()" style="padding:4px 12px; font-size:11.5px;">发送</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+         5. 全屏状态文字弹出遮罩 (演练暂停、演练成功、演练结束都在页面中间弹出来文字，且不可做任何操作)
+         ========================================================================== -->
+
+    <!-- 5.1 演练暂停遮罩 (不可做任何操作) -->
+    <div class="fullscreen-state-overlay" id="overlayPause">
+      <div class="state-dialog-card state-paused">
+        <div class="state-icon-large">⏸️</div>
+        <div class="state-title-text">演 练 已 暂 停</div>
+        <div class="state-desc-text">
+          作战倒计时与推演攻防态势已全部冻结。<br>页面推演操作已锁定，等待指挥长恢复推演。
+        </div>
+        <div class="state-actions-row">
+          <button class="btn-cyber" onclick="handleResumeDrill()" style="padding:8px 24px; font-size:13px; font-weight:700;">
+            ▶️ 继续演练
+          </button>
+          <button class="btn-cyber btn-cyber-red" onclick="handleEndDrillFromModal()" style="padding:8px 18px; font-size:13px;">
+            ⏹️ 终止推演
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5.2 演练推演圆满成功遮罩 (公信力>95且全阶段完成，不可操作) -->
+    <div class="fullscreen-state-overlay" id="overlaySuccess">
+      <div class="state-dialog-card state-success">
+        <div class="state-icon-large">🏆</div>
+        <div class="state-title-text">演 练 推 演 圆 满 成 功</div>
+        <div class="state-desc-text" id="successDescText">
+          最终政府公信力得分达到 <strong style="color:var(--pc-gold); font-size:18px;" id="successFinalScore">98 分</strong> (≥95分)！<br>
+          五大阶段协同应对闭环，虚假网络谣言被依法遏制澄清，官方权威发声稳固人心，取得卓越推演成效！
+        </div>
+        <div class="state-actions-row" style="flex-wrap:wrap; justify-content:center;">
+          <button class="btn-cyber" onclick="openDebriefReportModal()" style="border-color:var(--pc-gold); color:var(--pc-gold); font-weight:700; padding:8px 18px; font-size:13px;">
+            📑 预览复盘汇总报告
+          </button>
+          <button class="btn-cyber" onclick="downloadCurrentDebriefReport()" style="padding:8px 14px; font-size:13px;">
+            📥 下载复盘报告
+          </button>
+          <button class="btn-ps-enter" onclick="returnToLobbyFromModal()" style="padding:8px 18px;">
+            🎮 返回剧本大厅
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5.3 演练推演失败遮罩 (公信力<60，不可操作) -->
+    <div class="fullscreen-state-overlay" id="overlayFailure">
+      <div class="state-dialog-card state-failed">
+        <div class="state-icon-large">⚠️</div>
+        <div class="state-title-text">演 练 失 败 · 公 信 力 崩 塌</div>
+        <div class="state-desc-text" id="failureDescText">
+          政府公信力得分跌至 <strong style="color:#ff2a5f; font-size:18px;" id="failureFinalScore">56 分</strong> (&lt;60分红线)！<br>
+          恶性造谣广泛蔓延引发群体性恐慌，官方处置迟滞或失言失策，舆情彻底失控失手！
+        </div>
+        <div class="state-actions-row" style="flex-wrap:wrap; justify-content:center;">
+          <button class="btn-cyber" onclick="openDebriefReportModal()" style="border-color:var(--pc-gold); color:var(--pc-gold); font-weight:700; padding:8px 18px; font-size:13px;">
+            📑 预览复盘汇总报告
+          </button>
+          <button class="btn-cyber" onclick="downloadCurrentDebriefReport()" style="padding:8px 14px; font-size:13px;">
+            📥 下载复盘报告
+          </button>
+          <button class="btn-cyber btn-cyber-red" onclick="restartCurrentScriptDrill()" style="padding:8px 18px;">
+            🔄 重新推演此剧本
+          </button>
+          <button class="btn-cyber" onclick="returnToLobbyFromModal()" style="padding:8px 18px;">
+            🎮 返回剧本大厅
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5.4 演练结束遮罩 (不可做任何操作) -->
+    <div class="fullscreen-state-overlay" id="overlayEnded">
+      <div class="state-dialog-card state-ended">
+        <div class="state-icon-large">⏹️</div>
+        <div class="state-title-text">演 练 推 演 已 结 束</div>
+        <div class="state-desc-text">
+          当前推演对局已被指挥长手动终止归档。<br>本次推演数据已留存至演练档案库。
+        </div>
+        <div class="state-actions-row" style="flex-wrap:wrap; justify-content:center;">
+          <button class="btn-cyber" onclick="openDebriefReportModal()" style="border-color:var(--pc-gold); color:var(--pc-gold); font-weight:700; padding:8px 18px; font-size:13px;">
+            📑 预览复盘汇总报告
+          </button>
+          <button class="btn-cyber" onclick="downloadCurrentDebriefReport()" style="padding:8px 14px; font-size:13px;">
+            📥 下载复盘报告
+          </button>
+          <button class="btn-cyber" onclick="returnToLobbyFromModal()" style="padding:8px 24px; font-size:13px;">
+            🎮 返回剧本大厅
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5.5 全屏复盘战报汇总预览遮罩 (支持在线预览与一键下载) -->
+    <div class="fullscreen-state-overlay" id="overlayDebriefReport">
+      <div class="debrief-report-modal-card">
+        <div class="debrief-report-header">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:24px;">📑</span>
+            <div>
+              <h2 style="font-size:18px; margin:0; color:#fff;" id="reportModalTitle">舆情百战演练平台 · 实战推演复盘汇总报告</h2>
+              <div style="font-size:11px; color:var(--pc-text-muted);" id="reportModalSub">权威推演全景记录 · 态势闭环复盘评估</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button class="btn-cyber" onclick="downloadCurrentDebriefReport()" style="border-color:var(--pc-gold); color:var(--pc-gold); padding:5px 14px; font-size:12px; font-weight:700;">
+              📥 一键下载报告 (HTML)
+            </button>
+            <button class="btn-cyber" onclick="window.print()" style="padding:5px 10px; font-size:12px;">
+              🖨️ 打印战报
+            </button>
+            <button class="im-close-btn" onclick="closeDebriefReportModal()" style="font-size:24px; line-height:1; padding:0 8px;">×</button>
+          </div>
+        </div>
+
+        <!-- 报告内容滚动区 -->
+        <div class="debrief-report-body" id="debriefReportContentArea">
+          <!-- JS 动态渲染格式化战报内容 -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="./js/cartridges-data.js"></script>
+  <script src="./js/sync-engine.js"></script>
+  <script src="./js/pc.js"></script>
+</body>
+</html>

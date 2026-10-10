@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>舆情百战演练平台 · 方案A 赛博红蓝对抗原型总控</title>
+  <link rel="stylesheet" href="./css/cyber-common.css">
+  <style>
+    .portal-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(circle at 50% 20%, #0d172e 0%, #060912 100%);
+    }
+
+    .portal-nav {
+      height: 64px;
+      background: rgba(12, 19, 36, 0.95);
+      border-bottom: 1px solid rgba(0, 240, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 30px;
+    }
+
+    .portal-hero {
+      text-align: center;
+      padding: 60px 20px 30px;
+    }
+
+    .cards-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      padding: 20px 40px 80px;
+      max-width: 1440px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .entry-card {
+      background: #0d1526;
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      border-radius: 8px;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+
+    .entry-card:hover {
+      transform: translateY(-6px);
+      border-color: var(--neon-cyan);
+      box-shadow: 0 10px 30px rgba(0, 240, 255, 0.25);
+    }
+
+    .entry-card-red:hover {
+      border-color: var(--neon-red);
+      box-shadow: 0 10px 30px rgba(255, 42, 95, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="portal-shell">
+    <header class="portal-nav">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:20px;">🛡️</span>
+        <strong style="font-size:18px; color:#fff; letter-spacing:1px;">
+          舆情百战演练平台
+        </strong>
+        <span class="tag-cyber">多端可交互原型系统</span>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:16px;">
+        <span style="color:#788aa6; font-size:13px;">实时状态引擎: <b style="color:#00e676;">● 在线毫秒级同步</b></span>
+        <button class="btn-cyber btn-cyber-red" onclick="window.drillEngine && window.drillEngine.resetScenario(); alert('所有终端演练数据已恢复初始状态！'); location.reload();">🔄 重置初始演练数据</button>
+      </div>
+    </header>
+
+    <div class="portal-hero">
+      <h1 style="font-size:32px; font-weight:800; background:linear-gradient(180deg, #fff 40%, #00f0ff 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px;">
+        数字战境 · 突发舆情红蓝实战博弈平台
+    </div>
+
+    <!-- 四大终端独立入口卡片 -->
+    <div class="cards-row">
+      <!-- 卡片 1: 大屏端 -->
+      <div class="entry-card">
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+            <span style="font-size:24px;">🖥️</span>
+            <span class="tag-cyber">16:9 态势指挥</span>
+          </div>
+          <h3 style="color:#fff; font-size:16px; margin-bottom:8px;">1. 态势感知与对抗指挥大屏</h3>
+          <p style="font-size:12px; color:#788aa6; line-height:1.6;">
+            方案A核心看板，集成 3D 扫描雷达、红蓝博弈声量天平、公信力仪表盘、微博实时热搜榜 TOP 5 与点点密信直报跑马灯。
+          </p>
+        </div>
+        <div style="margin-top:16px;">
+          <a href="./screen.html" target="_blank" class="btn-cyber" style="width:100%; justify-content:center; text-decoration:none;">🚀 独立打开大屏端</a>
+        </div>
+      </div>
+
+      <!-- 卡片 2: PC实战端 -->
+      <div class="entry-card">
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+            <span style="font-size:24px;">💻</span>
+            <span class="tag-cyber">Switch主机模式</span>
+          </div>
+          <h3 style="color:#fff; font-size:16px; margin-bottom:8px;">2. PC端 · Switch大厅与作战台</h3>
+          <p style="font-size:12px; color:#788aa6; line-height:1.6;">
+            包含卡带式突发剧本选单、红蓝席位集结大厅（支持扫码加入）、内嵌点点密信桌面版协同群、通报起草陷阱决策与处置链路。
+          </p>
+        </div>
+        <div style="margin-top:16px;">
+          <a href="./pc.html" target="_blank" class="btn-cyber" style="width:100%; justify-content:center; text-decoration:none;">🚀 独立打开PC作战台</a>
+        </div>
+      </div>
+
+      <!-- 卡片 3: H5移动端 -->
+      <div class="entry-card">
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+            <span style="font-size:24px;">📱</span>
+            <span class="tag-cyber">学员参演双模</span>
+          </div>
+          <h3 style="color:#fff; font-size:16px; margin-bottom:8px;">3. H5移动端 · 学员参演终端</h3>
+          <p style="font-size:12px; color:#788aa6; line-height:1.6;">
+            支持手机微信扫码入局，外网仿微博/抖音发帖带节奏、内网点点密信群聊快捷报送“搜救完毕死5伤12”事实，机密情报卡查看。
+          </p>
+        </div>
+        <div style="margin-top:16px;">
+          <a href="./mobile.html" target="_blank" class="btn-cyber" style="width:100%; justify-content:center; text-decoration:none;">📱 打开手机仿真端</a>
+        </div>
+      </div>
+
+      <!-- 卡片 4: 后台管理端 -->
+      <div class="entry-card">
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+            <span style="font-size:24px;">⚙️</span>
+            <span class="tag-cyber" style="border-color:#145bff; color:#145bff;">global-eye规范</span>
+          </div>
+          <h3 style="color:#fff; font-size:16px; margin-bottom:8px;">4. 后台管理 · 剧本编辑器</h3>
+          <p style="font-size:12px; color:#788aa6; line-height:1.6;">
+            严格继承 global-eye-admin-prototype 样式规范与设计令牌，包含四阶段可视化 DAG 工作流画布、抽屉式属性与通报陷阱配置。
+          </p>
+        </div>
+        <div style="margin-top:16px;">
+          <a href="./admin.html" target="_blank" class="btn-cyber" style="width:100%; justify-content:center; text-decoration:none; background:#145bff; border-color:#145bff;">⚙️ 打开剧本编辑器</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="./js/sync-engine.js"></script>
+</body>
+</html>

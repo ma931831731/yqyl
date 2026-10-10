@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>舆情百战演练态势指挥大屏 · 赛博红蓝对抗总控</title>
+  <link rel="stylesheet" href="./css/cyber-common.css">
+  <link rel="stylesheet" href="./css/screen.css">
+</head>
+<body>
+  <div class="screen-container" id="screenContainer">
+    <!-- 动态背景遮罩层 -->
+    <div class="screen-bg-overlay"></div>
+    <div class="screen-grid-glow"></div>
+
+    <!-- 顶部大屏状态标牌 -->
+    <header class="screen-header">
+      <div class="header-left-col">
+        <div class="brand-tag-group">
+          <span class="tag-cyber tag-highlight">CYBER DRILL</span>
+          <span class="room-tag">房间号: <b id="roomCode">#ROOM-8821</b></span>
+        </div>
+        
+        <!-- 全局演练状态指示器 (进行中 / 已暂停 / 已结束 显要展示) -->
+        <div class="drill-status-indicator" id="drillStatusIndicator" title="点击可快速切换演练暂停/继续">
+          <span class="status-pulse-dot" id="statusPulseDot"></span>
+          <div class="status-text-wrap">
+            <span class="status-main" id="statusMainText">演练进行中</span>
+            <span class="status-en" id="statusEnText">IN PROGRESS</span>
+          </div>
+          <button class="status-quick-btn" id="statusQuickBtn" onclick="toggleDrillPause(event)" title="暂停/恢复演练">⏸️</button>
+        </div>
+      </div>
+
+      <div class="header-title-box">
+        <h1 class="header-title">舆情百战演练态势指挥总控大屏</h1>
+        <div class="header-subtitle">
+          <span class="script-title-text" id="roomName">K市P区某居民楼突发火灾爆燃与网络造谣处置演练</span>
+          <span class="alert-badge alert-ORANGE" id="alertBadge">二级橙色预警</span>
+          <span class="stage-badge-box">推演阶段: <b id="stageName">阶段二：现场受阻与初次通报</b></span>
+        </div>
+      </div>
+
+      <div class="header-right-col">
+        <div class="clock-display">
+          <div class="virtual-time-row">
+            <span class="clock-label">推演时钟:</span>
+            <b class="clock-time" id="virtualClock">19:22 (24x)</b>
+          </div>
+          <div class="countdown-row">
+            <span class="clock-label">阶段倒计时:</span>
+            <b class="countdown-time" id="countdownTimer">23:40</b>
+            <span class="countdown-status" id="countdownStatusBadge">正常推进</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button class="btn-cyber-ghost" id="btnToggleFullscreen" onclick="toggleScreenFullscreen()" title="切换全屏">⛶ 全屏</button>
+          <a href="./pc.html" target="_blank" class="btn-cyber-ghost" title="打开PC作战台">💻 作战席</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- 演练状态全局横幅通告条 (演练暂停 / 演练结束 顶部醒目警示) -->
+    <div class="drill-global-banner banner-paused" id="drillPauseBanner" style="display:none;">
+      <div class="banner-inner">
+        <div class="banner-badge">⏸️ 演练暂停</div>
+        <div class="banner-message">
+          <strong>推演战场已进入【暂停】状态：</strong> 全网舆情演化已静默，战场虚拟时钟已冻结。导调长可组织集中研判，各参演席位随时待命。
+        </div>
+        <div class="banner-actions">
+          <button class="btn-cyber btn-banner-resume" onclick="resumeDrillFromScreen()">▶ 立即恢复演练</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="drill-global-banner banner-ended" id="drillEndedBanner" style="display:none;">
+      <div class="banner-inner">
+        <div class="banner-badge badge-ended">⏹️ 演练结束</div>
+        <div class="banner-message" id="drillEndedBannerMsg">
+          <strong>本次舆情百战推演已【圆满结束】：</strong> 最终政府公信力得分 <b id="bannerFinalScore" style="color:#00f0ff;">72分</b>，红蓝攻防对抗全景战报与各专班处置履历已归档保存。
+        </div>
+        <div class="banner-actions">
+          <button class="btn-cyber" onclick="window.open('./pc.html')">📑 进入作战台查看复盘报告</button>
+          <button class="btn-cyber-ghost" onclick="restartDrillFromScreen()">🔄 重新推演</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 三栏核心作战态势区域 -->
+    <main class="screen-main-grid">
+      <!-- ==================== 1. 左侧：红方攻击方实时舆情态势 + 实时榜单 ==================== -->
+      <section class="col-left">
+        <!-- 模块 1-1：红方攻击态势全景看板 -->
+        <div class="cyber-card red-camp-panel">
+          <div class="module-header module-header-red">
+            <div class="module-title-wrap">
+              <span class="icon-pulse red-dot"></span>
+              <span class="title-text">🔥 红方攻击态势 · 实时舆情施压</span>
+            </div>
+            <span class="tag-cyber tag-red" id="redAlertStatus">高危爆发中</span>
+          </div>
+
+          <!-- 红方战力核心指标 -->
+          <div class="red-stat-grid">
+            <div class="red-stat-card">
+              <div class="stat-label">全网负面声量</div>
+              <div class="stat-value red-glow" id="redVolumeVal">20,450</div>
+              <div class="stat-trend" id="redTrendVal">▲ +34% 环比激增</div>
+            </div>
+            <div class="red-stat-card">
+              <div class="stat-label">扣除公信力累计</div>
+              <div class="stat-value red-glow" id="redPenaltySum">-75 分</div>
+              <div class="stat-trend">已发起 6 轮次攻击</div>
+            </div>
+          </div>
+
+          <!-- 红方平台渗透分布条 -->
+          <div class="platform-penetration-wrap">
+            <div class="sub-label-row">
+              <span>舆论渗透主阵地分布:</span>
+              <span style="color:#ff809b;">短视频+微博高频共振</span>
+            </div>
+            <div class="penetration-bar">
+              <div class="seg-douyin" style="width:48%;" title="抖音短视频 48%">抖音 48%</div>
+              <div class="seg-weibo" style="width:34%;" title="新浪微博 34%">微博 34%</div>
+              <div class="seg-kuaishou" style="width:18%;" title="快手及其他 18%">快手 18%</div>
+            </div>
+          </div>
+
+          <!-- 红方主力攻击席位活跃状态 -->
+          <div class="red-actors-row">
+            <div class="actor-chip active"><span class="avatar">📱</span> 云朵儿 (爆料)</div>
+            <div class="actor-chip active"><span class="avatar">🚨</span> 小飞飞 (造谣)</div>
+            <div class="actor-chip active"><span class="avatar">⚡</span> 花花的世界</div>
+            <div class="actor-chip"><span class="avatar">📹</span> 直击现场</div>
+            <div class="actor-chip"><span class="avatar">🎙️</span> 深度记者</div>
+          </div>
+
+          <!-- 红方最新攻势动态流水 -->
+          <div class="red-stream-wrap">
+            <div class="sub-label-row">
+              <span>最新攻势打击贴文流水:</span>
+              <span class="live-dot-tag">实时同步</span>
+            </div>
+            <div class="red-stream-list" id="redAttackStream">
+              <!-- 动态渲染红方最新进攻贴文 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 模块 1-2：实时舆论热搜榜 TOP 5 (全网/同城热搜) -->
+        <div class="cyber-card trending-panel">
+          <div class="module-header module-header-red">
+            <div class="module-title-wrap">
+              <span class="title-text">🔥 全网舆论同城实时热搜榜 TOP 5</span>
+            </div>
+            <span class="tag-cyber tag-amber" id="trendingUpdateTag">动态刷新</span>
+          </div>
+
+          <div class="trending-list-box" id="trendingList">
+            <!-- 动态渲染热搜榜 TOP 5 -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 2. 中间：舆情传播扩展图谱 (根据实时发展动态演化) ==================== -->
+      <section class="col-center">
+        <div class="cyber-card graph-viewport-card">
+          <div class="module-header graph-header">
+            <div class="module-title-wrap">
+              <span class="icon-pulse cyan-dot"></span>
+              <span class="title-text">🌐 舆情传播扩散与攻防对抗扩展图谱</span>
+              <span class="tag-cyber tag-highlight" style="margin-left:8px;">动态演化拓扑</span>
+            </div>
+            
+            <div class="graph-metrics-pills">
+              <div class="metric-pill">已演化节点: <b id="graphNodeCount">12</b></div>
+              <div class="metric-pill">红方攻击链路: <b style="color:#ff2a5f;" id="graphRedLinksCount">6</b></div>
+              <div class="metric-pill">蓝方防御阻断: <b style="color:#00f0ff;" id="graphBlueLinksCount">6</b></div>
+              <button class="btn-graph-action" onclick="resetGraphView()" title="重置图谱中心视角">⟲ 居中</button>
+            </div>
+          </div>
+
+          <!-- 交互式 Canvas 动态图谱画布 -->
+          <div class="graph-canvas-container" id="graphContainer">
+            <canvas id="propagationCanvas"></canvas>
+
+            <!-- 图谱悬浮提示框 (Tooltip) -->
+            <div class="graph-tooltip" id="graphTooltip" style="display:none;"></div>
+
+            <!-- 图谱图例与图层指引 -->
+            <div class="graph-legend">
+              <div class="legend-item"><span class="legend-circle core"></span> 事发源头核心</div>
+              <div class="legend-item"><span class="legend-circle red"></span> 红方负面扩散</div>
+              <div class="legend-item"><span class="legend-circle blue"></span> 蓝方研判阻断</div>
+              <div class="legend-item"><span class="legend-circle truth"></span> 官方事实通报</div>
+            </div>
+
+            <!-- 图谱最新事件演化滚动指示条 -->
+            <div class="graph-event-footer" id="graphEventFeed">
+              <span class="feed-tag">⚡ 拓扑演化进展:</span>
+              <span class="feed-text" id="graphEventText">图谱随演练推进动态生长中：阶段二【消防通道堵塞】与【官方首报】链路已建立...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 3. 右侧：蓝方防守端内容 ==================== -->
+      <section class="col-right">
+        <!-- 模块 3-1：蓝方防守态势与效能看板 -->
+        <div class="cyber-card blue-camp-panel">
+          <div class="module-header">
+            <div class="module-title-wrap">
+              <span class="icon-pulse blue-dot"></span>
+              <span class="title-text">🛡️ 蓝方防守态势 · 研判消峰阻断</span>
+            </div>
+            <span class="tag-cyber" id="blueDefenseStatus">全员就位抗峰</span>
+          </div>
+
+          <!-- 蓝方战力核心指标 -->
+          <div class="blue-stat-grid">
+            <div class="blue-stat-card">
+              <div class="stat-label">官方正面引导声量</div>
+              <div class="stat-value blue-glow" id="blueVolumeVal">16,820</div>
+              <div class="stat-trend" id="blueCoverageVal">对冲覆盖率 45%</div>
+            </div>
+            <div class="blue-stat-card">
+              <div class="stat-label">挽回公信力分值</div>
+              <div class="stat-value green-glow" id="blueRecoveryVal">+60 分</div>
+              <div class="stat-trend">已执行 5 项处置措施</div>
+            </div>
+          </div>
+
+          <!-- 蓝方协同作战席位矩阵 -->
+          <div class="blue-seats-section">
+            <div class="sub-label-row">
+              <span>应急指挥部席位协同矩阵:</span>
+              <span style="color:#00f0ff;">6个专班实时在线</span>
+            </div>
+            <div class="blue-seats-grid">
+              <div class="seat-badge online" id="seat_blue_commander">
+                <span class="seat-icon">👑</span>
+                <span class="seat-name">网信办李主任</span>
+                <span class="seat-dot"></span>
+              </div>
+              <div class="seat-badge online" id="seat_blue_emergency">
+                <span class="seat-icon">🛡️</span>
+                <span class="seat-name">应急局王科长</span>
+                <span class="seat-dot"></span>
+              </div>
+              <div class="seat-badge online" id="seat_blue_fire">
+                <span class="seat-icon">🚒</span>
+                <span class="seat-name">消防陈大队</span>
+                <span class="seat-dot"></span>
+              </div>
+              <div class="seat-badge online" id="seat_blue_police">
+                <span class="seat-icon">👮</span>
+                <span class="seat-name">公安张警官</span>
+                <span class="seat-dot"></span>
+              </div>
+              <div class="seat-badge online" id="seat_blue_health">
+                <span class="seat-icon">🏥</span>
+                <span class="seat-name">卫健委刘主任</span>
+                <span class="seat-dot"></span>
+              </div>
+              <div class="seat-badge online" id="seat_blue_spokesman">
+                <span class="seat-icon">📢</span>
+                <span class="seat-name">新闻发言人</span>
+                <span class="seat-dot"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 蓝方处置效能与时效指标 -->
+          <div class="blue-efficiency-box">
+            <div class="eff-item">
+              <span class="eff-name">黄金首报窗口:</span>
+              <span class="eff-val warn" id="goldenWindowVal">08:20 剩余</span>
+            </div>
+            <div class="eff-item">
+              <span class="eff-name">谣言阻断拦截:</span>
+              <span class="eff-val good" id="rumorBlockRate">85% 拦截率</span>
+            </div>
+            <div class="eff-item">
+              <span class="eff-name">现场清障保通:</span>
+              <span class="eff-val good">已拖移违停车辆3台</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 模块 3-2：蓝方应急处置流水与官方通报 -->
+        <div class="cyber-card blue-actions-panel">
+          <div class="module-header">
+            <div class="module-title-wrap">
+              <span class="title-text">🏛️ 蓝方应急处置流水与权威通报</span>
+            </div>
+            <span class="tag-cyber">处置履历</span>
+          </div>
+
+          <div class="blue-stream-list" id="blueMeasuresStream">
+            <!-- 动态渲染蓝方执行的处置措施与通报 -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ==================== 4. 下方：红蓝博弈总控底栏 (现有内容重构升级) ==================== -->
+    <footer class="screen-bottom-dock cyber-card">
+      <!-- 4-1 左侧：红蓝即时战力对抗天平 -->
+      <div class="dock-balance-section">
+        <div class="balance-title-row">
+          <span style="color:#ff6b8b; font-weight:700;">🔴 红方进攻声量 <b id="barRedVal">42%</b></span>
+          <span class="balance-status-tag" id="balanceVerdictTag">🛡️ 蓝方正向对冲略占优势</span>
+          <span style="color:#00f0ff; font-weight:700;"><b id="barBlueVal">58%</b> 🔵 蓝方防御声量</span>
+        </div>
+
+        <div class="confront-dynamic-bar">
+          <div class="bar-fill-red" id="redBarFill" style="width: 42%;">
+            <span class="bar-text">红方 42%</span>
+          </div>
+          <div class="bar-divider"></div>
+          <div class="bar-fill-blue" id="blueBarFill" style="width: 58%;">
+            <span class="bar-text">蓝方 58%</span>
+          </div>
+        </div>
+
+        <div class="balance-meta-row">
+          <span id="redTacticsDesc">红方主攻：现场视频曝光 + 消防通道堵塞声讨</span>
+          <span id="blueTacticsDesc">蓝方应对：内攻灭火搜救 + 官方首期情况通报</span>
+        </div>
+      </div>
+
+      <!-- 4-2 中间：政府公信力核心仪表盘 -->
+      <div class="dock-gauge-section">
+        <div class="gauge-canvas-box">
+          <canvas id="gaugeCanvas" width="180" height="110"></canvas>
+          <div class="gauge-center-content">
+            <div class="gauge-score-num" id="credibilityScoreText">72</div>
+            <div class="gauge-score-unit">分</div>
+          </div>
+        </div>
+        <div class="gauge-info-box">
+          <div class="gauge-level-badge level-good" id="credibilityLevelBadge">良好可控</div>
+          <div class="gauge-name">政府公信力安全指数</div>
+          <div class="gauge-trend-indicator" id="credibilityTrendText">▲ 较初发回升 +12分</div>
+        </div>
+      </div>
+
+      <!-- 4-3 右侧：推演全阶段进度轴与跨部门调度跑马灯 -->
+      <div class="dock-stages-section">
+        <div class="stages-timeline-row">
+          <div class="stage-step-pill done" id="stageStep1">
+            <span class="step-num">1</span>
+            <span class="step-text">初发核实</span>
+          </div>
+          <div class="step-arrow">→</div>
+          <div class="stage-step-pill active" id="stageStep2">
+            <span class="step-num">2</span>
+            <span class="step-text">现场通报</span>
+          </div>
+          <div class="step-arrow">→</div>
+          <div class="stage-step-pill" id="stageStep3">
+            <span class="step-num">3</span>
+            <span class="step-text">次生拆解</span>
+          </div>
+          <div class="step-arrow">→</div>
+          <div class="stage-step-pill" id="stageStep4">
+            <span class="step-num">4</span>
+            <span class="step-text">铁证辟谣</span>
+          </div>
+          <div class="step-arrow">→</div>
+          <div class="stage-step-pill" id="stageStep5">
+            <span class="step-num">5</span>
+            <span class="step-text">发布会定调</span>
+          </div>
+        </div>
+
+        <!-- 点点密信跨部门直报跑马灯 -->
+        <div class="dock-dispatch-ticker">
+          <span class="dispatch-tag">点点密信 · 跨部门直报</span>
+          <div class="dispatch-marquee" id="latestDispatch">
+            正在同步市委网信办、应急管理局、区消防大队协同调度流...
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- 引入基础剧本卡带数据、跨端同步引擎与大屏逻辑脚本 -->
+  <script src="./js/cartridges-data.js"></script>
+  <script src="./js/sync-engine.js"></script>
+  <script src="./js/screen.js"></script>
+</body>
+</html>

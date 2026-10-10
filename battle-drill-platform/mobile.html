@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>百战演练移动终端 · 学员参演H5 (红蓝对决)</title>
+  <link rel="stylesheet" href="./css/cyber-common.css">
+  <link rel="stylesheet" href="./css/mobile.css">
+</head>
+<body style="background:#03060d;">
+  <div class="mobile-wrapper">
+    <!-- 顶部状态栏 -->
+    <div class="mobile-status-bar">
+      <span>19:22 📶 5G</span>
+      <span style="color:#00f0ff;">百战演练终端 · 移动协同</span>
+      <span>100% 🔋</span>
+    </div>
+
+    <!-- 演练推演态势总控条 (阶段与公信力天平) -->
+    <div class="m-stage-banner">
+      <div class="m-stage-header-row">
+        <span class="m-stage-title-text" id="mStageHeaderTitle">阶段一：初发舆情发现与核实</span>
+        <div class="m-stage-score-badge" id="mStageScoreBadge">公信力 100分</div>
+      </div>
+      <div class="m-stage-desc-text" id="mStageDescText">
+        火灾爆燃视频初现抖音，全网负面舆情发酵，红方组织进攻，蓝方开展前线核实。
+      </div>
+    </div>
+
+    <!-- 角色席位认领状态栏 -->
+    <div style="background:#0c1426; padding:8px 12px; border-bottom:1px solid rgba(0,240,255,0.25); display:flex; justify-content:space-between; align-items:center;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span id="mCurrentRoleAvatar" style="font-size:20px;">📱</span>
+        <div>
+          <div style="font-size:12.5px; font-weight:700; color:#fff;" id="mCurrentRoleTitle">抖音网民“云朵儿”</div>
+          <div style="font-size:10px; color:#ff6b8b;" id="mCurrentRoleCampText">【红方阵营】外网舆情造谣施压</div>
+        </div>
+      </div>
+      <button class="btn-cyber" style="padding:3px 8px; font-size:11px;" onclick="openRoleSelectSheet()">🔄 换选席位</button>
+    </div>
+
+    <!-- 顶层功能选项卡 (蓝方与红方动态差异化，红方绝对没有点点密信) -->
+    <nav class="mobile-nav-tabs" id="mNavTabsContainer">
+      <button class="m-tab-btn active" data-target="stage_actions" id="mtab_stage_actions">⚔️ 阶段攻防行动</button>
+      <button class="m-tab-btn" data-target="im" id="mtab_im" style="display:none;">💬 点点密信指挥群 <span class="m-badge-dot" id="mImBadgeDot"></span></button>
+      <button class="m-tab-btn" data-target="social_free" id="mtab_social_free">📢 自由爆料发帖</button>
+      <button class="m-tab-btn" data-target="clues" id="mtab_clues">📜 身份与态势</button>
+    </nav>
+
+    <!-- 视图 1：红方阶段进攻行动舱 (红方专属，后台配置的进攻卡片，含视频/多模态) -->
+    <div class="mobile-body" id="viewRedActions" style="display:block;">
+      <div style="padding:10px 12px 6px; background:#131c33; border-bottom:1px solid rgba(255,42,95,0.2); font-size:11.5px; color:#ff809b;">
+        🔥 <strong>红方进攻任务</strong>：根据当前处置阶段，使用后台预设的攻防素材发起冲击，迅速削弱政府公信力！
+      </div>
+      
+      <div class="m-action-list-container">
+        <!-- 属于当前席位的专属进攻 -->
+        <div class="m-section-header">
+          <span style="color:#ff6b8b;">⭐ 我的专属进攻卡片</span>
+          <span style="font-size:10.5px; color:#788aa6;">后台剧本自动配发</span>
+        </div>
+        <div id="redRoleExclusiveList" style="display:flex; flex-direction:column; gap:10px;"></div>
+
+        <!-- 协同友军进攻池 -->
+        <div class="m-section-header" style="margin-top:10px;">
+          <span style="color:#94a3b8;">👥 本阶段红方协同攻势池</span>
+          <span style="font-size:10.5px; color:#64748b;">支持协同发起</span>
+        </div>
+        <div id="redRoleCollabList" style="display:flex; flex-direction:column; gap:10px;"></div>
+
+        <!-- 本剧本红方全员席位概览与快速切换 -->
+        <div class="m-section-header" style="margin-top:16px;">
+          <span style="color:#ffaa00;">📋 红方全员席位与阶段进攻内容 (点击可切换身份)</span>
+          <span style="font-size:10.5px; color:#ffb800; cursor:pointer;" onclick="openRoleSelectSheet()">选单 ❯</span>
+        </div>
+        <div id="redAllRolesOverview" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+    </div>
+
+    <!-- 视图 2：蓝方阶段处置防守舱 (蓝方专属，包含正向走向与推诿扯皮失当走向) -->
+    <div class="mobile-body" id="viewBlueActions" style="display:none;">
+      <div style="padding:10px 12px 6px; background:#0b1930; border-bottom:1px solid rgba(0,240,255,0.2); font-size:11.5px; color:#00f0ff;">
+        🛡️ <strong>蓝方应急处置任务</strong>：依据现场核实进展，选择有效处置或推诿失当措施，影响事态不同走向与公信力！
+      </div>
+
+      <div class="m-action-list-container">
+        <!-- 属于当前蓝方席位的专属防守措施 -->
+        <div class="m-section-header">
+          <span style="color:#00f0ff;">⭐ 我的专属处置防守措施</span>
+          <span style="font-size:10.5px; color:#788aa6;">正向应对 / 推诿失当走向</span>
+        </div>
+        <div id="blueRoleExclusiveList" style="display:flex; flex-direction:column; gap:10px;"></div>
+
+        <!-- 协同部门防守措施池 -->
+        <div class="m-section-header" style="margin-top:10px;">
+          <span style="color:#94a3b8;">🏛️ 本阶段协同部门措施池</span>
+          <span style="font-size:10.5px; color:#64748b;">网信/消防/公安/卫健</span>
+        </div>
+        <div id="blueRoleCollabList" style="display:flex; flex-direction:column; gap:10px;"></div>
+
+        <!-- 本剧本蓝方全员席位概览与快速切换 -->
+        <div class="m-section-header" style="margin-top:16px;">
+          <span style="color:#00e676;">📋 蓝方全员席位与阶段防守措施 (点击可切换身份)</span>
+          <span style="font-size:10.5px; color:#00e676; cursor:pointer;" onclick="openRoleSelectSheet()">选单 ❯</span>
+        </div>
+        <div id="blueAllRolesOverview" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+    </div>
+
+    <!-- 视图 3：内部应急指挥群 (点点密信移动版) - 【仅蓝方可见】 -->
+    <div class="mobile-body m-im-view" id="viewIM" style="display:none;">
+      <div style="padding:8px 12px; background:#121a30; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; font-weight:bold; color:#00f0ff;">[密] P区4.8火灾舆情应急处置专班群</span>
+        <span style="font-size:11px; color:#00e676;">● 8人在线 (加密直报)</span>
+      </div>
+
+      <div class="m-im-msg-list" id="mIMMsgList"></div>
+
+      <!-- 快捷汇报气泡栏 -->
+      <div class="m-quick-chips">
+        <button class="m-chip-btn action-executable-btn" onclick="quickSendChip('casualty')">📢 搜救核实死5伤12</button>
+        <button class="m-chip-btn action-executable-btn" onclick="quickSendChip('cause')">⚡ 违规飞线充电证据</button>
+        <button class="m-chip-btn action-executable-btn" onclick="quickSendChip('passage')">🚗 私家车违停已拖离</button>
+        <button class="m-chip-btn action-executable-btn" onclick="quickSendChip('doc')">📄 选用情况通报发布</button>
+      </div>
+
+      <!-- 输入栏 -->
+      <div class="m-input-bar">
+        <input type="text" class="m-input" id="mChatInput" placeholder="向指挥长报送前线处置进展与数据...">
+        <button class="btn-cyber action-executable-btn" id="mSendChatBtn" style="padding:6px 12px; font-size:12px;">发送</button>
+      </div>
+    </div>
+
+    <!-- 视图 4：外网自由爆料发帖舱 (红方自由发帖) -->
+    <div class="mobile-body" id="viewSocialFree" style="display:none;">
+      <div style="background:#0f1628; padding:12px; border-bottom:1px solid rgba(0,240,255,0.2);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-size:11.5px; font-weight:700; color:#ff6b8b;">📢 自由爆料 / 网络造谣带节奏</span>
+          <span style="font-size:10px; color:#788aa6;">将实时同步至PC作战室时间轴</span>
+        </div>
+
+        <textarea id="mSocialInput" rows="2" style="width:100%; background:#070b14; border:1px solid rgba(0,240,255,0.3); color:#fff; padding:8px; font-size:12px; border-radius:4px; margin-bottom:8px;" placeholder="以当前红方角色身份发布自主编写的网络爆料、质疑或带节奏文案..."></textarea>
+        
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <label style="font-size:11px; color:#ff6b8b; display:flex; align-items:center; gap:4px; cursor:pointer;">
+            <input type="checkbox" id="mIsRumorCheck" checked> 造成公信力显著下降 (-15分)
+          </label>
+          <button class="btn-cyber btn-cyber-red action-executable-btn" id="mPublishSocialBtn" style="padding:4px 14px; font-size:12px;">🔥 发帖施压</button>
+        </div>
+      </div>
+
+      <div id="mSocialPostList"></div>
+    </div>
+
+    <!-- 视图 5：我的身份与态势线索卡 -->
+    <div class="mobile-body" id="viewClues" style="display:none; padding:14px;">
+      <!-- 作战状态指示卡片 -->
+      <div class="cyber-card" id="mDrillStatusPromptCard" style="padding:12px; margin-bottom:12px; background:rgba(255,184,0,0.1); border:1px solid rgba(255,184,0,0.4);">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:20px;" id="mDrillStatusPromptIcon">⏳</span>
+          <div style="flex:1;">
+            <div style="font-size:13px; font-weight:bold; color:#ffb800;" id="mDrillStatusPromptTitle">作战室待命就绪 · 暂未开启作战</div>
+            <div style="font-size:11px; color:#c6d6eb; margin-top:2px; line-height:1.4;" id="mDrillStatusPromptDesc">
+              您已成功认领当前席位！目前PC作战室尚未开启作战，您还不能进行攻防操作，请先熟悉下方身份与准则。待PC作战室点击【开始演练】后，将自动接入实战攻防！
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cyber-card" style="padding:14px; margin-bottom:12px;">
+        <div style="font-size:14px; font-weight:bold; color:#00f0ff; margin-bottom:6px;">当前认领身份</div>
+        <div style="font-size:13px; color:#fff;" id="mClueRoleName">【红方】抖音网民“云朵儿”</div>
+        <div style="font-size:11px; color:#788aa6; margin-top:4px; line-height:1.5;" id="mClueRoleDesc">
+          职责：负责在抖音发布爆燃浓烟与学生逃生现场视频，引发社会对火灾伤亡的初步热议。
+        </div>
+      </div>
+
+      <div class="cyber-card" id="mClueCardGuide" style="padding:14px;">
+        <div style="font-size:14px; font-weight:bold; color:#ffaa00; margin-bottom:8px;">🔒 参演行动准则</div>
+        <div style="font-size:11.5px; color:#c6d6eb; line-height:1.7;" id="mClueGuideContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 角色席位选单底部抽屉 (Sheet) -->
+  <div class="global-modal-mask" id="roleSheetModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:flex-end;">
+    <div style="background:#0c152c; width:100%; max-height:80vh; border-radius:14px 14px 0 0; padding:16px; overflow-y:auto; border-top:1px solid #00f0ff;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <strong style="color:#fff; font-size:15px;">📱 认领参演角色席位</strong>
+        <button onclick="closeRoleSelectSheet()" style="background:transparent; border:none; color:#788aa6; font-size:18px;">✕</button>
+      </div>
+      <div style="font-size:11.5px; color:#788aa6; margin-bottom:10px;">根据所扫二维码或演练分配，选择您的红方或蓝方参演角色：</div>
+
+      <div style="font-size:12px; font-weight:700; color:#ff6b8b; margin-bottom:6px;">🔴 红方角色阵营 (现场爆料/舆论造谣)</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;" id="sheetRedList"></div>
+
+      <div style="font-size:12px; font-weight:700; color:#00f0ff; margin-bottom:6px;">🔵 蓝方处置席位 (跨部门协同处置/点点密信)</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;" id="sheetBlueList"></div>
+    </div>
+  </div>
+
+  <!-- 演练结束全屏锁定与结果弹窗 -->
+  <div class="m-result-modal-mask" id="modalDrillEndedResult" style="display:none;">
+    <div class="m-result-dialog" id="mResultDialogBox">
+      <div class="m-result-badge-icon" id="mResultBadgeIcon">🏆</div>
+      <div class="m-result-title" id="mResultTitle">实战推演圆满结束 · 演练成功</div>
+      
+      <div class="m-result-score-box">
+        <div style="font-size:11px; color:#788aa6; margin-bottom:2px;">最终政府公信力得分</div>
+        <div class="m-result-score-val" id="mResultScoreVal">85 分</div>
+      </div>
+
+      <div class="m-result-desc" id="mResultDesc">
+        官方处置迅速有力，及时查清死伤真实人数并向社会通报，成功粉碎恶意造谣，舆情态势平稳降温！
+      </div>
+
+      <div class="m-result-lock-tag">
+        <span>🔒</span>
+        <span>演练已全盘锁定，手机端操作权限已关闭不可再操作</span>
+      </div>
+
+      <button class="btn-cyber" style="width:100%; padding:9px; font-size:12.5px;" onclick="closeDrillResultModal()">查看战况回顾 (只读锁定)</button>
+    </div>
+  </div>
+
+  <script src="./js/cartridges-data.js"></script>
+  <script src="./js/sync-engine.js"></script>
+  <script src="./js/mobile.js"></script>
+</body>
+</html>

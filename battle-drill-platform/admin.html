@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>舆情百战演练平台 · 剧本演练编排总控中心</title>
+  <link rel="stylesheet" href="./css/admin.css">
+</head>
+<body>
+  <!-- 顶栏 (遵循 global-eye 规范：浅蓝顶栏、卡带指示、终端快速入口) -->
+  <header class="global-header">
+    <div class="brand">
+      <div class="brand-logo">🛡️</div>
+      <div>
+        <strong style="color:#082047; font-size:15px; letter-spacing:0.5px;">百战演练平台</strong>
+        <div style="font-size:11px; color:#8192b3;">Combat Orchestrator · Admin</div>
+      </div>
+    </div>
+    
+    <!-- 顶栏中部：全局活动卡带状态指示 -->
+    <div class="header-center-cartridge">
+      <div class="cartridge-indicator" id="topActiveCartridgeBar">
+        <span class="cartridge-label">当前运行卡带：</span>
+        <span class="cartridge-title" id="topCartridgeTitle">[JB-FIRE-20250408] K市P区某居民楼突发火灾爆燃与网络造谣处置演练</span>
+        <span class="cartridge-status-badge badge-active" id="topCartridgeBadge">
+          <span class="pulse-dot"></span> 演练中
+        </span>
+      </div>
+    </div>
+
+    <!-- 顶栏右侧：终端跳转与用户信息 -->
+    <div class="header-user">
+      <div class="terminals-nav">
+        <a href="./screen.html" target="_blank" class="terminal-link btn-terminal-screen">🖥️ 大屏总控端</a>
+        <a href="./pc.html" target="_blank" class="terminal-link btn-terminal-pc">💻 PC红蓝对战端</a>
+        <a href="./mobile.html" target="_blank" class="terminal-link btn-terminal-mobile">📱 H5移动群端</a>
+        <a href="./index.html" class="btn-default" style="font-size:12px; text-decoration:none;">演示中心</a>
+      </div>
+      <div class="user-profile">
+        <div class="user-avatar">教</div>
+        <div class="user-info">
+          <strong class="user-name">汪艳琼</strong>
+          <span class="user-role">总导演 / 特聘教官</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <!-- 左侧极简聚焦导航 -->
+    <aside class="side-nav">
+      <div>
+        <div class="nav-section-title">核心业务</div>
+        <nav aria-label="主导航">
+          <button class="nav-item active" data-route="script_list" id="nav_script_list">
+            <span class="nav-icon">📼</span> 剧本演练列表
+          </button>
+          <button class="nav-item sub-item" data-route="script_workbench" id="nav_script_workbench">
+            <span class="nav-icon">🛠️</span> 剧本编排工作台
+          </button>
+          <button class="nav-item" data-route="asset_vault" id="nav_asset_vault">
+            <span class="nav-icon">🎬</span> 多模态素材中心
+          </button>
+        </nav>
+      </div>
+
+      <!-- 侧边栏底部：多端状态监控 -->
+      <div class="sidebar-system-monitor">
+        <div class="monitor-title">多端协同通信监控</div>
+        <div class="monitor-item">
+          <span class="monitor-dot dot-online"></span>
+          <span class="monitor-name">大屏战况指挥大厅</span>
+          <span class="monitor-status">实时同频</span>
+        </div>
+        <div class="monitor-item">
+          <span class="monitor-dot dot-online"></span>
+          <span class="monitor-name">PC 红蓝推演工作台</span>
+          <span class="monitor-status">双工就绪</span>
+        </div>
+        <div class="monitor-item">
+          <span class="monitor-dot dot-online"></span>
+          <span class="monitor-name">H5 移动应急协同端</span>
+          <span class="monitor-status">通道正常</span>
+        </div>
+        <div class="monitor-footer-bus">
+          广播频道: <code>BATTLE_DRILL_BUS</code>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 主工作区 -->
+    <main class="workspace" id="mainWorkspace">
+
+      <!-- ==================== 视图 1：剧本演练列表 (增加封面图与背景图设置) ==================== -->
+      <section class="admin-view-panel" id="panel_script_list" style="display:flex;">
+        
+        <!-- 顶部指标概览看板 -->
+        <div class="kpi-metrics-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon-box" style="background:#eff6ff; color:#2563eb;">📼</div>
+            <div class="kpi-content">
+              <div class="kpi-label">演练剧本总数</div>
+              <div class="kpi-value"><strong id="kpiTotalScripts">3</strong> <span class="kpi-unit">套</span></div>
+              <div class="kpi-sub">已编排火灾/霸凌/中毒事件</div>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-box" style="background:#ecfdf5; color:#059669;">🚀</div>
+            <div class="kpi-content">
+              <div class="kpi-label">当前运行卡带</div>
+              <div class="kpi-value"><strong style="color:#059669;">1</strong> <span class="kpi-unit">套实战中</span></div>
+              <div class="kpi-sub">[JB-FIRE-20250408] 高层火灾</div>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-box" style="background:#fff7ed; color:#ea580c;">⚖️</div>
+            <div class="kpi-content">
+              <div class="kpi-label">当前推演公信力预测</div>
+              <div class="kpi-value"><strong style="color:#2563eb;">95</strong> <span class="kpi-unit">分 (优秀)</span></div>
+              <div class="kpi-sub">基准 100 分 · 5 阶段分支联动</div>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-box" style="background:#f5f3ff; color:#7c3aed;">🎬</div>
+            <div class="kpi-content">
+              <div class="kpi-label">多模态情境素材池</div>
+              <div class="kpi-value"><strong>7</strong> <span class="kpi-unit">项</span></div>
+              <div class="kpi-sub">含火灾V6两期官方通报红头公文</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 组合查询工具栏 -->
+        <div class="query-card">
+          <div class="query-grid">
+            <div class="query-item">
+              <label>剧本名称/编号</label>
+              <input type="text" class="form-input" id="searchScriptKeyword" placeholder="输入火灾、编号搜索...">
+            </div>
+            <div class="query-item">
+              <label>演练难度</label>
+              <select class="form-input" id="searchScriptDifficulty">
+                <option value="">全部难度</option>
+                <option value="easy">简单 (指导式)</option>
+                <option value="medium">中等 (实战推演)</option>
+                <option value="hard">困难 (高压施压)</option>
+                <option value="hell">地狱 (极限博弈)</option>
+              </select>
+            </div>
+            <div class="query-item">
+              <label>卡带状态</label>
+              <select class="form-input" id="searchScriptStatus">
+                <option value="">全部状态</option>
+                <option value="active">● 演练中</option>
+                <option value="draft">● 草稿</option>
+                <option value="disabled">● 未启用</option>
+              </select>
+            </div>
+            <div class="query-actions">
+              <button class="btn-primary" onclick="renderScriptTable()">查询</button>
+              <button class="btn-default" onclick="resetScriptSearch()">重置</button>
+            </div>
+            <div style="margin-left:auto; display:flex; gap:8px;">
+              <button class="btn-primary" onclick="openNewScriptModal()">+ 新建剧本</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 剧本卡带数据表格 (平铺舒展无折行) -->
+        <div class="data-table-card">
+          <div class="table-toolbar">
+            <div class="table-title">剧本卡带总览 (<span id="scriptListCount">3</span>)</div>
+            <div style="font-size:12px; color:var(--text-muted);">
+              💡 提示：点击【封面/背景】可自定义剧本封面图与大屏推演背景底图；点击【进入编排】体验全展开红蓝对抗。
+            </div>
+          </div>
+          <table class="global-table">
+            <thead>
+              <tr>
+                <th style="width:60px;">封面</th>
+                <th style="width:130px;">卡带编号</th>
+                <th>剧本名称与背景</th>
+                <th style="width:90px;">演练难度</th>
+                <th style="width:115px;">演练周期/时长</th>
+                <th style="width:90px;">公信力基准</th>
+                <th style="width:85px;">推进环节</th>
+                <th style="width:90px;">卡带状态</th>
+                <th style="width:125px;">更新时间</th>
+                <th style="width:250px; text-align:center;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="scriptTableBody">
+              <!-- JS动态渲染 -->
+            </tbody>
+          </table>
+          <div class="table-footer-pagination">
+            <span>共 3 条记录，当前显示第 1 至 3 条</span>
+            <div style="display:flex; gap:4px;">
+              <button class="btn-default" style="padding:2px 8px; font-size:11px;" disabled>上一页</button>
+              <button class="btn-primary" style="padding:2px 8px; font-size:11px;">1</button>
+              <button class="btn-default" style="padding:2px 8px; font-size:11px;" disabled>下一页</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 视图 2：剧本编排工作台 (上中左右 + 演练周期/虚拟时长 + 红蓝配对全展开) ==================== -->
+      <section class="admin-view-panel" id="panel_script_workbench" style="display:none; flex-direction:column; gap:10px;">
+        
+        <!-- 【上方区域】：剧本全局基本信息 + 演练周期 + 虚拟时长 + 公信力天平总控栏 + 置顶榜单模块 -->
+        <div class="workbench-top-bar">
+          <div class="wt-info-row">
+            <div class="wt-title-block">
+              <div class="breadcrumb" style="margin-bottom:2px;">
+                <a href="javascript:void(0)" onclick="returnToScriptList()" style="color:var(--primary); text-decoration:none;">◀ 返回剧本列表</a> / 剧本编排
+              </div>
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:nowrap;">
+                <input type="text" class="wt-script-name-input" id="wbTopScriptName" value="K市P区某居民楼突发火灾爆燃与网络造谣处置演练" style="flex:1; min-width:260px;">
+                <span class="cartridge-status-badge badge-active" id="wbTopStatusBadge" style="white-space:nowrap; flex-shrink:0;">演练中</span>
+              </div>
+            </div>
+
+            <!-- 参数快速配置：开始结束周期、虚拟时长、演练难度 -->
+            <div class="wt-params-group">
+              <div class="wt-param-item">
+                <span class="wt-label">📅 演练周期:</span>
+                <input type="date" class="form-input wt-date-input" id="wbTopStartDate" value="2026-04-08">
+                <span style="font-size:11px; color:var(--text-muted);">至</span>
+                <input type="date" class="form-input wt-date-input" id="wbTopEndDate" value="2026-04-09">
+              </div>
+
+              <div class="wt-param-item">
+                <span class="wt-label">⏱️ 演练时长:</span>
+                <select class="form-input wt-select" id="wbTopVirtualDuration" style="width:105px;" onchange="onVirtualDurationChange(this.value)">
+                  <option value="30">30 分钟</option>
+                  <option value="45">45 分钟</option>
+                  <option value="60">60 分钟</option>
+                  <option value="90" selected>90 分钟</option>
+                  <option value="120">120 分钟</option>
+                  <option value="180">180 分钟</option>
+                </select>
+              </div>
+
+              <div class="wt-param-item">
+                <span class="wt-label">⚡ 时间倍速:</span>
+                <select class="form-input wt-select" id="wbTopTimeSpeed" style="width:145px;" onchange="onTimeSpeedChange(this.value)">
+                  <option value="6">6.0x (1小时=6小时)</option>
+                  <option value="12">12.0x (1小时=半天)</option>
+                  <option value="24" selected>24.0x (1小时=1天)</option>
+                  <option value="48">48.0x (1小时=2天)</option>
+                  <option value="72">72.0x (1小时=3天)</option>
+                </select>
+              </div>
+
+              <div class="wt-param-item">
+                <span class="wt-label">难度:</span>
+                <select class="form-input wt-select" id="wbTopDifficulty" style="width:95px;" onchange="onDifficultyChange(this.value)">
+                  <option value="easy">简单</option>
+                  <option value="medium" selected>中等</option>
+                  <option value="hard">困难</option>
+                  <option value="hell">地狱</option>
+                </select>
+              </div>
+
+              <div class="action-btn-group" style="margin-left:6px;">
+                <button class="btn-default" onclick="saveWorkbenchScriptDraft()">💾 保存草稿</button>
+                <button class="btn-default" onclick="openSimulatePreviewModal()">👁️ 模拟预览</button>
+                <button class="btn-primary" onclick="publishWorkbenchScript()">🚀 发布演练</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 公信力天平与当前分支得分综合显示区 -->
+          <div class="credibility-scale-panel">
+            <div class="scale-header">
+              <div class="scale-title">
+                ⚖️ <strong>政府公信力天平</strong>：红方进攻使公信力下降（负分），蓝方应对处置挽回公信力（正分），左右抵消动态倾斜
+              </div>
+              <div class="scale-stat">
+                基准分: <b>100</b> | 当前整套推演预估得分: <b id="wbProjectedScore" style="color:var(--success); font-size:14px;">95 分 (评级: 优秀)</b>
+              </div>
+            </div>
+            
+            <!-- 公信力刻度进度条 -->
+            <div class="credibility-bar-track">
+              <div class="credibility-zone zone-crisis" title="危机区 (<60分)">危机区 (&lt;60)</div>
+              <div class="credibility-zone zone-alert" title="警戒区 (60~79分)">警戒区 (60~79)</div>
+              <div class="credibility-zone zone-safe" title="安全区 (80~100分)">安全区 (80~100)</div>
+              <div class="credibility-zone zone-excellent" title="卓越区 (>100分)">卓越区 (&gt;100)</div>
+              
+              <!-- 动态指示指针 -->
+              <div class="scale-pointer" id="scalePointer" style="left:75%;">
+                <div class="pointer-pin"></div>
+                <div class="pointer-label" id="pointerScoreVal">95分</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 【下半部分：左(红方施压) - 中(红蓝对战矩阵完全展开不折叠) - 右(蓝方应对) 三栏协同】 -->
+        <div class="workbench-tri-grid">
+          
+          <!-- ================= 2.1 左翼：红方进攻阵营 (支持拖拽/推入中间) ================= -->
+          <div class="camp-column camp-red">
+            <div class="camp-header header-red">
+              <div class="camp-title">
+                <span class="camp-badge badge-red">RED TEAM</span>
+                <strong>红方 · 舆情施压与发酵</strong>
+              </div>
+              <span class="camp-subtitle">当前编辑: <span id="redCurrentStageName">阶段一</span></span>
+            </div>
+
+            <div class="camp-body">
+              <!-- 模块 1：本阶段红方激活角色 -->
+              <div class="config-block">
+                <div class="block-label-row">
+                  <span class="block-title">👥 环节参与角色库</span>
+                  <button class="btn-link" onclick="openAddRoleModal('red')">+ 定义角色</button>
+                </div>
+                <div class="roles-tag-group" id="redActiveRolesContainer">
+                  <!-- JS动态渲染角色复选标签 -->
+                </div>
+              </div>
+
+              <!-- 模块 2：红方发帖与造谣话术设定 (绑定角色与公信力下降分，支持拖拽) -->
+              <div class="config-block">
+                <div class="block-label-row">
+                  <span class="block-title">📢 进攻贴文库 (绑定角色与负分)</span>
+                  <button class="btn-link" onclick="openAddRedPostModal()">+ 录入贴文</button>
+                </div>
+                <div class="drag-hint-tip">💡 提示：按住贴文卡片拖动到中间区域，或点击【推入】加入对抗</div>
+                <div class="post-cards-list" id="redPostsListContainer">
+                  <!-- JS动态渲染红方发帖话术卡片 (带 draggable) -->
+                </div>
+              </div>
+
+              <!-- 模块 3：红方多模态施压素材筛选与挂接 -->
+              <div class="config-block">
+                <div class="block-label-row">
+                  <span class="block-title">🎬 施压多模态素材 (视频/照片)</span>
+                  <button class="btn-link" onclick="openAttachAssetModal('red')">+ 库中筛选</button>
+                </div>
+                <div class="attached-media-list" id="redAssetsListContainer">
+                  <!-- JS动态渲染挂接素材 -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ================= 2.2 中间：全展开红蓝对应对抗矩阵 (完全不折叠！先红后蓝，拖拉即放) ================= -->
+          <div class="camp-column center-timeline-column">
+            <div class="center-header">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <strong style="font-size:13.5px; color:var(--text-title);">⚔️ 阶段红蓝对抗响应矩阵 (完全展开 · 支持自由组合与移除)</strong>
+                  <span style="font-size:11px; background:#eff6ff; color:#1d4ed8; padding:1px 6px; border-radius:3px; font-weight:600;">全要素平铺</span>
+                </div>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <button class="btn-primary" style="padding:2px 9px; font-size:11px;" onclick="openAddStageModal()">+ 新增推进阶段</button>
+                  <div id="stageQuickNavPills" style="display:flex; gap:4px;">
+                    <!-- JS动态渲染阶段快速直达卡片 -->
+                  </div>
+                </div>
+              </div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+                💡 点击阶段卡片直接切换编辑；支持自定义起止与跨天设置；可从左右拖入攻防，可单进攻无防守或一进攻多防守！已拖入内容可随时移除。
+              </div>
+            </div>
+
+            <!-- 中间主滚动区：完全不折叠的阶段对战列表 -->
+            <div class="timeline-tree-scroll" id="centerTimelineTreeContainer">
+              <!-- JS动态渲染所有环节，完全平铺展开！ -->
+            </div>
+          </div>
+
+          <!-- ================= 2.3 右翼：蓝方处置阵营 (支持拖拽/推入中间对应回复) ================= -->
+          <div class="camp-column camp-blue">
+            <div class="camp-header header-blue">
+              <div class="camp-title">
+                <span class="camp-badge badge-blue">BLUE TEAM</span>
+                <strong>蓝方 · 官方处置与公信力应对</strong>
+              </div>
+              <span class="camp-subtitle">当前编辑: <span id="blueCurrentStageName">阶段一</span></span>
+            </div>
+
+            <div class="camp-body">
+              <!-- 模块 1：本阶段蓝方协同部门席位 -->
+              <div class="config-block">
+                <div class="block-label-row">
+                  <span class="block-title">🏛️ 协同处置机构席位</span>
+                  <button class="btn-link" onclick="openAddRoleModal('blue')">+ 指派部门</button>
+                </div>
+                <div class="roles-tag-group" id="blueActiveRolesContainer">
+                  <!-- JS动态渲染蓝方部门席位标签 -->
+                </div>
+              </div>
+
+              <!-- 模块 2：处置措施选项池 (绑定正向加分与对应回复，支持拖拽) -->
+              <div class="config-block">
+                <div class="block-label-row">
+                  <span class="block-title">🎯 处置措施库 (对应回复与正向加分)</span>
+                  <button class="btn-link" onclick="openAddBlueMeasureModal()">+ 新增措施</button>
+                </div>
+                <div class="drag-hint-tip">💡 提示：按住措施卡片拖动到中间阶段，可配对对应红方发帖</div>
+                <div class="measures-cards-list" id="blueMeasuresListContainer">
+                  <!-- JS动态渲染措施选项卡片 (带 draggable) -->
+                </div>
+              </div>
+
+              <!-- 模块 3：官方权威通报口径与佐证材料 -->
+              <div class="config-block">
+                <div class="block-label-row">
+                  <span class="block-title">📄 官方发布通报模板 (两期红头文)</span>
+                  <button class="btn-link" onclick="openAttachAssetModal('blue')">+ 绑定公文</button>
+                </div>
+                <div class="attached-media-list" id="blueStatementsListContainer">
+                  <!-- JS动态渲染官方通报公文 -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ==================== 视图 3：多模态素材中心 (已加入火灾V6两期官方通报模板) ==================== -->
+      <section class="admin-view-panel" id="panel_asset_vault" style="display:none;">
+        <div class="view-header">
+          <div>
+            <div class="breadcrumb">首页 / 多模态素材中心</div>
+            <h1 class="page-title">🎬 多模态情境素材中心</h1>
+            <p class="page-desc">涵盖《火灾素材视频.mp4》、现场照片，以及《火灾事故V6》第一期搜救通报与第二期警情通报官方模板。</p>
+          </div>
+          <button class="btn-primary" onclick="openUploadVideoModal()">+ 上传多模态素材</button>
+        </div>
+        <div class="admin-card">
+          <div class="filter-tabs-row">
+            <div class="tab-btn-group">
+              <button class="filter-tab active" data-type="all" onclick="filterAssetCategory('all')">全部素材 (<span id="cntAll">7</span>)</button>
+              <button class="filter-tab" data-type="doc" onclick="filterAssetCategory('doc')">📄 官方通报模板 (<span id="cntDoc">3</span>)</button>
+              <button class="filter-tab" data-type="video" onclick="filterAssetCategory('video')">🎬 视频素材 (<span id="cntVideo">2</span>)</button>
+              <button class="filter-tab" data-type="image" onclick="filterAssetCategory('image')">🖼️ 现场照片 (<span id="cntImage">2</span>)</button>
+            </div>
+          </div>
+          <div class="assets-display-grid" id="assetVaultDisplayGrid">
+            <!-- JS动态渲染素材卡片 (含两份真实通报红头模版) -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ======================= 各种功能模态框 ======================= -->
+
+  <!-- 模态框 1：【新建剧本卡带】(含封面与背景图预选) -->
+  <div class="global-modal-mask" id="modal_new_script" style="display:none;">
+    <div class="global-modal" style="width:720px;">
+      <div class="modal-header">
+        <h3 class="modal-title">新建演练剧本卡带</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal_new_script')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>剧本卡带编码 <span class="required">*</span></label>
+            <input type="text" class="form-input" id="newScriptCode" readonly value="JB-AUTO-20261010" style="background:#f1f5f9;">
+          </div>
+          <div class="form-group">
+            <label>剧本名称 <span class="required">*</span></label>
+            <input type="text" class="form-input" id="newScriptName" placeholder="例如：某市高层住宅燃爆舆情实战演练">
+          </div>
+        </div>
+        <div class="form-row-3">
+          <div class="form-group">
+            <label>演练难度 <span class="required">*</span></label>
+            <select class="form-input" id="newScriptDifficulty">
+              <option value="easy">简单 (指导式)</option>
+              <option value="medium" selected>中等 (实战推演)</option>
+              <option value="hard">困难 (高压施压)</option>
+              <option value="hell">地狱 (极限博弈)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>虚拟推演跨度</label>
+            <select class="form-input" id="newScriptVirtualDuration">
+              <option value="12">12 小时</option>
+              <option value="24" selected>24 小时</option>
+              <option value="48">48 小时</option>
+              <option value="72">72 小时</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>初始公信力基准</label>
+            <input type="number" class="form-input" id="newScriptCredibility" value="100" readonly style="background:#f1f5f9;">
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>演练开始日期</label>
+            <input type="date" class="form-input" id="newScriptStartDate" value="2026-04-08">
+          </div>
+          <div class="form-group">
+            <label>演练结束日期</label>
+            <input type="date" class="form-input" id="newScriptEndDate" value="2026-04-09">
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>剧本封面图 (支持本地上传 / URL)</label>
+            <div style="display:flex; gap:6px;">
+              <input type="text" class="form-input" id="newScriptCover" value="https://images.unsplash.com/photo-1542385151-efd9000785a0?w=400" style="flex:1;">
+              <input type="file" id="newScriptCoverFile" accept="image/*" style="display:none;" onchange="handleNewScriptLocalCover(this)">
+              <button type="button" class="btn-default" style="white-space:nowrap; font-size:11.5px; padding:0 10px;" onclick="document.getElementById('newScriptCoverFile').click()">📁 本地上传</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>大屏推演背景图 (支持本地上传 / URL)</label>
+            <div style="display:flex; gap:6px;">
+              <input type="text" class="form-input" id="newScriptBgImg" value="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200" style="flex:1;">
+              <input type="file" id="newScriptBgFile" accept="image/*" style="display:none;" onchange="handleNewScriptLocalBg(this)">
+              <button type="button" class="btn-default" style="white-space:nowrap; font-size:11.5px; padding:0 10px;" onclick="document.getElementById('newScriptBgFile').click()">📁 本地上传</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>事故发生地与背景描述</label>
+          <textarea class="form-textarea" id="newScriptDesc" rows="3" placeholder="描述事件起因、建筑环境、涉及重点人群..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>初始卡带状态</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="newScriptInitialStatus" value="draft" checked> 保存为草稿卡带 (进入编排工作台完善分支)
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="newScriptInitialStatus" value="active"> 直接发布并设为当前演练状态
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-default" onclick="closeModal('modal_new_script')">取消</button>
+        <button class="btn-primary" onclick="submitCreateScript()">确定新建并进入工作台</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框 2：【上传/更换剧本封面与推演背景图】 (支持本地文件选择与拖拽上传) -->
+  <div class="global-modal-mask" id="modal_script_visuals" style="display:none;">
+    <div class="global-modal" style="width:720px;">
+      <div class="modal-header">
+        <h3 class="modal-title">🖼️ 设置剧本封面图与大屏推演背景图 (支持本地上传)</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal_script_visuals')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:12px;">
+          <label style="font-size:13px;">当前配置剧本：<strong id="visualTargetScriptName" style="color:var(--primary); font-size:13.5px;"></strong></label>
+        </div>
+        <div class="form-row-2" style="margin-top:6px; gap:16px;">
+          <!-- 封面图配置 -->
+          <div class="visual-upload-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="font-weight:700; font-size:12.5px; color:var(--text-strong);">1. 剧本卡带封面图</span>
+              <span style="font-size:11px; color:var(--text-muted);">推荐 4:3 或方形</span>
+            </div>
+            
+            <div class="visual-preview-img-wrap" id="coverDropZone" onclick="document.getElementById('coverFileInput').click()" title="点击或拖拽本地图片上传">
+              <img src="" id="visualCoverPreviewImg" alt="封面预览">
+              <div class="visual-preview-overlay-hint">
+                <span style="font-size:18px;">📷</span>
+                <span>点击或拖拽本地图片上传</span>
+              </div>
+            </div>
+
+            <!-- 本地文件选择器 -->
+            <input type="file" id="coverFileInput" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" style="display:none;" onchange="handleLocalCoverSelected(this)">
+            
+            <button type="button" class="btn-primary" style="width:100%; margin-top:8px; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px; padding:7px 10px;" onclick="document.getElementById('coverFileInput').click()">
+              📁 本地选择上传封面
+            </button>
+            <div id="coverUploadStatus" style="font-size:11.5px; color:#64748b; margin-top:4px; min-height:16px;"></div>
+
+            <!-- 备用输入与预设 -->
+            <div style="margin-top:6px; border-top:1px dashed #e2e8f0; padding-top:8px;">
+              <label style="font-size:11px; color:#64748b; display:block; margin-bottom:4px;">或输入图片 URL / 经典预设：</label>
+              <div style="display:flex; gap:6px;">
+                <input type="text" class="form-input" id="visualCoverInput" placeholder="输入封面图片地址" style="font-size:11.5px; flex:1;" oninput="onCoverUrlInput(this.value)">
+                <button type="button" class="btn-default" style="font-size:11px; padding:0 8px; white-space:nowrap;" onclick="choosePresetCover()">使用预设</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 背景图配置 -->
+          <div class="visual-upload-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="font-weight:700; font-size:12.5px; color:var(--text-strong);">2. 大屏/推演战境背景图</span>
+              <span style="font-size:11px; color:var(--text-muted);">推荐 16:9 高清</span>
+            </div>
+
+            <div class="visual-preview-img-wrap" id="bgDropZone" onclick="document.getElementById('bgFileInput').click()" title="点击或拖拽本地图片上传">
+              <img src="" id="visualBgPreviewImg" alt="背景预览">
+              <div class="visual-preview-overlay-hint">
+                <span style="font-size:18px;">📷</span>
+                <span>点击或拖拽本地图片上传</span>
+              </div>
+            </div>
+
+            <!-- 本地文件选择器 -->
+            <input type="file" id="bgFileInput" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" style="display:none;" onchange="handleLocalBgSelected(this)">
+
+            <button type="button" class="btn-primary" style="width:100%; margin-top:8px; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px; padding:7px 10px;" onclick="document.getElementById('bgFileInput').click()">
+              📁 本地选择上传背景图
+            </button>
+            <div id="bgUploadStatus" style="font-size:11.5px; color:#64748b; margin-top:4px; min-height:16px;"></div>
+
+            <!-- 备用输入与预设 -->
+            <div style="margin-top:6px; border-top:1px dashed #e2e8f0; padding-top:8px;">
+              <label style="font-size:11px; color:#64748b; display:block; margin-bottom:4px;">或输入背景 URL / 战境预设：</label>
+              <div style="display:flex; gap:6px;">
+                <input type="text" class="form-input" id="visualBgInput" placeholder="输入大屏背景图片地址" style="font-size:11.5px; flex:1;" oninput="onBgUrlInput(this.value)">
+                <button type="button" class="btn-default" style="font-size:11px; padding:0 8px; white-space:nowrap;" onclick="choosePresetBg()">使用预设</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 提示栏 -->
+        <div style="margin-top:14px; padding:8px 12px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; font-size:11.5px; color:#1e40af; display:flex; align-items:center; gap:8px;">
+          <span>💡</span>
+          <span>支持本地直接上传 PNG、JPG、JPEG、WEBP、SVG 文件（可拖拽至预览框）。保存后全局生效，PC剧本大厅与指挥舱大屏立即同步显示。</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-default" onclick="closeModal('modal_script_visuals')">取消</button>
+        <button class="btn-primary" onclick="saveScriptVisuals()" style="padding:6px 18px; font-weight:600;">💾 保存视觉配置并同步</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框 3：【录入红方发帖话术】 (多模态素材库选择+自定义上传，文案非必填) -->
+  <div class="global-modal-mask" id="modal_add_red_post" style="display:none;">
+    <div class="global-modal" style="width:660px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="redPostModalTitle">录入红方发帖 / 网络造谣话术 (绑定角色与负分)</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal_add_red_post')">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="redPostEditId" value="">
+        <input type="hidden" id="redPostEditStageId" value="">
+        <input type="hidden" id="redPostEditCfId" value="">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>环节参与角色 <span class="required">* (必须绑定)</span></label>
+            <select class="form-input" id="redPostRoleSelect">
+              <option value="抖音网民“云朵儿”">抖音网民“云朵儿” (首发曝光)</option>
+              <option value="抖音造谣网民“小飞飞”">抖音造谣网民“小飞飞” (造谣抬了20多担架)</option>
+              <option value="微博造谣大V“花花的世界”">微博造谣大V“花花的世界” (造谣死50人)</option>
+              <option value="快手账号“@直击K市现场”">快手“@直击K市现场” (移花接木便衣抓家属)</option>
+              <option value="《红星新闻》记者团队">《红星新闻》记者团队 (采访遇阻冲突)</option>
+              <option value="微博组织“@正义家长联盟”">“@正义家长联盟” (居民楼补课黑产)</option>
+              <option value="遇难伤者家属代表">遇难伤者家属代表 (堵路要说法)</option>
+              <option value="自媒体网络大V">自媒体网络大V (跟风炒作)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>发布网络平台 <span class="required">*</span></label>
+            <select class="form-input" id="redPostPlatform">
+              <option value="抖音短视频">抖音短视频</option>
+              <option value="新浪微博">新浪微博</option>
+              <option value="快手平台">快手平台</option>
+              <option value="小红书">小红书</option>
+              <option value="微信业主群">微信业主群</option>
+              <option value="今日头条">今日头条</option>
+              <option value="知乎论坛">知乎论坛</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>造成政府公信力下降分值 <span class="required">*</span></label>
+            <select class="form-input" id="redPostPenaltySelect">
+              <option value="-5">下降 5 分 (轻微发酵)</option>
+              <option value="-10">下降 10 分 (局部热议)</option>
+              <option value="-15" selected>下降 15 分 (恶性造谣/中度失控)</option>
+              <option value="-20">下降 20 分 (引发跨平台恐慌暴击)</option>
+              <option value="-25">下降 25 分 (造成警民冲突/失控)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>多模态素材来源方式</label>
+            <div style="display:flex; gap:12px; margin-top:6px;">
+              <label style="font-size:12px; cursor:pointer; display:flex; align-items:center; gap:4px;">
+                <input type="radio" name="redAssetSourceMode" value="library" checked onchange="toggleRedAssetSourceMode('library')"> 从多模态素材库选择
+              </label>
+              <label style="font-size:12px; cursor:pointer; display:flex; align-items:center; gap:4px;">
+                <input type="radio" name="redAssetSourceMode" value="custom" onchange="toggleRedAssetSourceMode('custom')"> 自定义上传新素材
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 来源 A: 从多模态素材库选择 -->
+        <div class="form-group" id="redAssetLibrarySelectBox">
+          <label>选择素材库挂接素材</label>
+          <select class="form-input" id="redPostAssetSelect">
+            <option value="">(无素材挂接 · 纯文本或口头声讨)</option>
+            <option value="AST-001" selected>🎬 火灾现场实况视频 (MP4 · 居民楼爆燃实拍)</option>
+            <option value="AST-002">🖼️ 小区消防通道堵死监控照片 (JPG · 私家车占道)</option>
+            <option value="AST-003">🖼️ 23层空消火栓箱隐患实拍图 (PNG · 无水枪水带)</option>
+            <option value="AST-004">📄 《采访遇阻》红星新闻网传文章扫描件 (PDF)</option>
+            <option value="AST-005">🎬 “小飞飞”造谣担架抬20多具短视频截图 (JPG)</option>
+          </select>
+        </div>
+
+        <!-- 来源 B: 自定义上传素材 (支持本地文件或URL) -->
+        <div id="redCustomAssetUploadBox" style="display:none; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:6px; padding:10px; margin-bottom:12px;">
+          <div style="font-size:12px; font-weight:700; color:#1e293b; margin-bottom:6px;">📤 自定义上传多模态素材</div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label style="font-size:11.5px;">素材名称 <span class="required">*</span></label>
+              <input type="text" class="form-input" id="redCustomAssetName" placeholder="如：居民楼现场浓烟目击短视频">
+            </div>
+            <div class="form-group">
+              <label style="font-size:11.5px;">素材类别</label>
+              <select class="form-input" id="redCustomAssetCategory">
+                <option value="video">🎬 视频素材 (MP4)</option>
+                <option value="photo" selected>🖼️ 现场照片 (JPG/PNG)</option>
+                <option value="audio">🎙️ 录音/口供 (MP3)</option>
+                <option value="doc">📄 物证/公文扫描件 (PDF)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label style="font-size:11.5px;">本地文件选择</label>
+              <input type="file" class="form-input" id="redCustomFileInput" style="padding:4px;" onchange="onCustomFileSelected(this)">
+            </div>
+            <div class="form-group">
+              <label style="font-size:11.5px;">或输入素材URL地址</label>
+              <input type="text" class="form-input" id="redCustomAssetUrl" placeholder="./media/fire_material_video.mp4 或网络链接">
+            </div>
+          </div>
+        </div>
+
+        <!-- 上榜单设置字段 (在红方增加上榜单选项) -->
+        <div class="form-row-2" style="background:#fff7ed; border:1px solid #fed7aa; border-radius:6px; padding:10px; margin-bottom:12px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label style="color:#c2410c; font-weight:700;">🔥 是否上榜单 / 关联榜单平台</label>
+            <select class="form-input" id="redPostTrendingPlatform">
+              <option value="">(不上榜 · 普通网络发酵)</option>
+              <option value="weibo">新浪微博 · 实时热搜榜</option>
+              <option value="douyin">抖音短视频 · 热点榜</option>
+              <option value="toutiao">今日头条 · 综合热榜</option>
+              <option value="kuaishou">快手平台 · 热搜榜</option>
+              <option value="baidu">百度指数 · 实时热搜</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label style="color:#c2410c; font-weight:700;">🏆 榜单排名 / 热度标签</label>
+            <select class="form-input" id="redPostTrendingRank">
+              <option value="Top 1 (爆)">Top 1 (全网第一 · 爆)</option>
+              <option value="Top 2 (热)">Top 2 (前二排位 · 热)</option>
+              <option value="Top 3 (沸)">Top 3 (热搜前三 · 沸)</option>
+              <option value="Top 5">Top 5 (高位热搜)</option>
+              <option value="Top 10">Top 10 (榜单前十)</option>
+              <option value="同城榜首">同城榜首 (属地第一)</option>
+              <option value="上升热榜">上升热榜 (快速蹿升)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 帖文文案：修改为非必填！ -->
+        <div class="form-group">
+          <label>贴文或爆料具体文案 <span style="font-weight:normal; color:var(--text-muted); font-size:11.5px;">(选填 · 若仅发布现场突发视频/照片物证可留空)</span></label>
+          <textarea class="form-textarea" id="redPostContent" rows="3" placeholder="（选填）输入发帖爆料具体文案；若仅发布短视频或图片现场可留空直接生成..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-default" onclick="closeModal('modal_add_red_post')">取消</button>
+        <button class="btn-primary" id="redPostSubmitBtn" onclick="submitAddRedPost()">保存并加入红方阵营</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框 4：【新增/编辑蓝方处置措施】 (包含点点迷信要求上报、点点迷信回复、通报模板发布、采访应对、发布会等) -->
+  <div class="global-modal-mask" id="modal_add_blue_measure" style="display:none;">
+    <div class="global-modal" style="width:720px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="blueMeasureModalTitle">新增蓝方处置响应措施 (对应红方施压)</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal_add_blue_measure')">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="blueMeasureEditId" value="">
+        <input type="hidden" id="blueMeasureEditStageId" value="">
+        <input type="hidden" id="blueMeasureEditCfId" value="">
+        <div class="form-group">
+          <label>处置措施标题 <span class="required">*</span></label>
+          <input type="text" class="form-input" id="blueMeasureTitle" placeholder="如：通过点点迷信指令卫健上报伤亡 + 选用附件一情况通报发布">
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>处置措施类型 <span class="required">*</span></label>
+            <select class="form-input" id="blueMeasureCategory" onchange="onBlueMeasureCategoryChange(this.value)">
+              <option value="diandian_dispatch" selected>📨 点点迷信指令下发 (发要求上报情况/进展/伤亡)</option>
+              <option value="diandian_reply">💬 点点迷信情况回复 (协同单位现场情况反馈)</option>
+              <option value="official_notice">📄 官方通报发布 (选用情况通报/警情通报模版对外发布)</option>
+              <option value="media_interview">🎤 突发采访应对 (应对记者突发采访与舆论引导)</option>
+              <option value="press_conf">📢 新闻发布会 (事态终局新闻发布会与通报答记者问)</option>
+              <option value="field_operation">🛡️ 线下应急处置 (破拆排障/医院救治/善后专班)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>牵头处置机构席位 <span class="required">*</span></label>
+            <select class="form-input" id="blueMeasureRoleSelect">
+              <option value="市委网信办监测专班">市委网信办监测专班</option>
+              <option value="K市公安局P区分局">K市公安局P区分局 (网安/治安)</option>
+              <option value="P区消防救援大队">P区消防救援大队</option>
+              <option value="区应急管理局指挥调度席">区应急管理局指挥调度席</option>
+              <option value="市卫健委医疗救治组">市卫健委医疗救治组</option>
+              <option value="区住建局安监站">区住建局安监站</option>
+              <option value="X街道善后维稳专班">X街道善后维稳专班</option>
+              <option value="区联合调查组新闻发言人">区联合调查组新闻发言人</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group" id="blueTargetUnitBox">
+            <label>目标协同单位 (点点迷信对象/通报单位)</label>
+            <input type="text" class="form-input" id="blueMeasureTargetUnit" placeholder="如：区应急管理局、市卫健委、区消防救援大队">
+          </div>
+          <div class="form-group" id="blueTemplateSelectBox">
+            <label>关联通报模板 (对外发布调用)</label>
+            <select class="form-input" id="blueMeasureTemplateSelect">
+              <option value="">(无模板关联 · 口头通气或内部调度)</option>
+              <option value="AST-DOC-01">📄 选用《火灾搜救与基本情况通报》 (附件一·首发通报)</option>
+              <option value="AST-DOC-02">📄 选用《K市公安局P区分局警情通报》 (附件二·辟谣拘留)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>事态走向分支导向 <span class="required">*</span></label>
+            <select class="form-input" id="blueMeasureBranchSelect">
+              <option value="positive_a" selected>走向 A (正向应对 · 事实透明/平息舆情)</option>
+              <option value="negative_b">走向 B (处置失当 · 迟滞推诿/次生次级危机)</option>
+              <option value="negative_c">走向 C (对立激化 · 暴力争夺摄像机/家属堵路)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>公信力影响分值 <span class="required">*</span></label>
+            <select class="form-input" id="blueMeasureDeltaSelect">
+              <option value="5">挽回 +5 分 (常规核实回应/点点迷信内部上报)</option>
+              <option value="10" selected>挽回 +10 分 (首发权威通报/破拆排障/迅速定调)</option>
+              <option value="15">挽回 +15 分 (专班核查/拆解次生风险/一户一专班)</option>
+              <option value="20">挽回 +20 分 (雷霆辟谣/拘留造谣者震慑网络)</option>
+              <option value="25">挽回 +25 分 (新闻发布会诚恳担当/公布调查死伤)</option>
+              <option value="-15">损失 -15 分 (推诿扯皮/拒绝采访冲突)</option>
+              <option value="-25">损失 -25 分 (粗暴压制/激化线下对立)</option>
+            </select>
+          </div>
+        </div>
+
+
+
+        <div class="form-group">
+          <label>官方口径正文 / 点点迷信指令与回复详情</label>
+          <textarea class="form-textarea" id="blueMeasureStatement" rows="3" placeholder="例如：【点点迷信指令】请卫健委与消防救援大队于30分钟内精准报送现场人员搜救及医院收治伤亡底数，供领导小组发布权威通报..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-default" onclick="closeModal('modal_add_blue_measure')">取消</button>
+        <button class="btn-primary" id="blueMeasureSubmitBtn" onclick="submitAddBlueMeasure()">保存应对措施并加入库</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框 4.1：【添加/编辑推进阶段】 (支持自定义开始和结束时间，支持跨天设置) -->
+  <div class="global-modal-mask" id="modal_edit_stage" style="display:none;">
+    <div class="global-modal" style="width:620px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="stageModalTitle">添加推进阶段 (支持跨天起止时间)</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal_edit_stage')">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="stageEditId" value="">
+        <div class="form-group">
+          <label>阶段名称 <span class="required">*</span></label>
+          <input type="text" class="form-input" id="stageEditName" placeholder="例如：阶段一：初发舆情发现与核实">
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>开始时间 <span class="required">*</span></label>
+            <input type="datetime-local" class="form-input" id="stageEditStartTime" onchange="calculateStageCrossDay()">
+          </div>
+          <div class="form-group">
+            <label>结束时间 <span class="required">*</span></label>
+            <input type="datetime-local" class="form-input" id="stageEditEndTime" onchange="calculateStageCrossDay()">
+          </div>
+        </div>
+
+        <!-- 跨天时间计算指示卡 -->
+        <div id="stageCrossDayBadgeWrap" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:4px; padding:6px 10px; font-size:12px; color:#1d4ed8; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+          <span>🕒</span>
+          <span id="stageCrossDayText">当前设定：同天推演 (历时 0 小时)</span>
+        </div>
+
+        <div class="form-group">
+          <label>阶段情境目标与事件背景</label>
+          <textarea class="form-textarea" id="stageEditSummary" rows="3" placeholder="概述此阶段的核心发酵风险、红方主攻方向与蓝方处置使命..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-default" onclick="closeModal('modal_edit_stage')">取消</button>
+        <button class="btn-primary" onclick="submitSaveStage()">保存推进阶段</button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- 模态框 4.3：【为指定进攻项追加防守措施走向】 -->
+  <div class="global-modal-mask" id="modal_add_defense_to_cf" style="display:none;">
+    <div class="global-modal" style="width:640px;">
+      <div class="modal-header">
+        <h3 class="modal-title">为当前红方进攻追加蓝方防守措施 / 走向分支</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal_add_defense_to_cf')">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="targetCfStageId" value="">
+        <input type="hidden" id="targetCfId" value="">
+        
+        <div style="background:#fffafa; border:1px solid #fecaca; border-radius:4px; padding:8px 10px; margin-bottom:12px;">
+          <div style="font-size:11px; color:#991b1b; font-weight:700;">🎯 当前红方进攻项：</div>
+          <div id="targetCfRedPreview" style="font-size:12px; color:#1e293b; margin-top:2px;">-</div>
+        </div>
+
+        <div class="form-group">
+          <label>选择现有措施库中的防守措施</label>
+          <select class="form-input" id="cfQuickMeasureSelect" onchange="onCfQuickMeasureSelected(this.value)">
+            <!-- JS动态加载 -->
+          </select>
+        </div>
+
+        <div style="text-align:center; color:var(--text-muted); font-size:11px; margin:6px 0;">— 或者直接自定义快速录入新防守 —</div>
+
+        <div class="form-group">
+          <label>防守措施标题</label>
+          <input type="text" class="form-input" id="cfNewDefenseTitle" placeholder="如：【点点迷信回复】市卫健委上报已收治全部伤员无危重">
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>牵头席位</label>
+            <input type="text" class="form-input" id="cfNewDefenseRole" value="市卫健委医疗救治组">
+          </div>
+          <div class="form-group">
+            <label>公信力影响 (+/-分)</label>
+            <select class="form-input" id="cfNewDefenseDelta">
+              <option value="5">+5 分 (常规回复)</option>
+              <option value="10" selected>+10 分 (有力处置)</option>
+              <option value="15">+15 分 (权威通报)</option>
+              <option value="20">+20 分 (雷霆辟谣)</option>
+              <option value="-15">-15 分 (反面迟滞走向)</option>
+            </select>
+          </div>
+        </div>
+
+
+
+        <div class="form-group">
+          <label>走向名称</label>
+          <input type="text" class="form-input" id="cfNewDefenseBranch" value="走向 (有效应对)">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-default" onclick="closeModal('modal_add_defense_to_cf')">取消</button>
+        <button class="btn-primary" onclick="submitAddDefenseToCf()">确认追加防守</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框 5：【查看火灾V6官方通报红头公函全文】 (功能 1) -->
+  <div class="global-modal-mask" id="modal_view_official_doc" style="display:none;">
+    <div class="global-modal" style="width:780px; max-height:85vh;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="docModalTitle">官方通报红头公函预览</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal_view_official_doc')">×</button>
+      </div>
+      <div class="modal-body" style="background:#fdfcf9; border:1px solid #ebd5b3; margin:10px 18px; border-radius:4px; padding:20px; font-family:'Songti SC', SimSun, serif; line-height:1.8;">
+        <div id="docModalBodyContent">
+          <!-- 动态渲染真实红头公函文本 -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-default" onclick="closeModal('modal_view_official_doc')">关闭</button>
+        <button class="btn-primary" onclick="showToast('已复制通报全文，可直接引用至发布口径！', 'success')">复制通报全文</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框 6：【视频播放器模态框】 -->
+  <div class="global-modal-mask" id="modal_play_video" style="display:none;">
+    <div class="global-modal" style="width:840px; background:#0d1117; color:#fff;">
+      <div class="modal-header" style="border-bottom:1px solid #30363d;">
+        <h3 class="modal-title" id="videoModalTitle" style="color:#fff;">在线视频素材预览</h3>
+        <button class="modal-close-btn" style="color:#8b949e;" onclick="closeVideoModal()">×</button>
+      </div>
+      <div class="modal-body" style="padding:16px; text-align:center;">
+        <video id="html5VideoPlayer" controls style="width:100%; max-height:480px; border-radius:6px; background:#000;">
+          <source src="./media/fire_material_video.mp4" type="video/mp4">
+          您的浏览器不支持视频播放。
+        </video>
+        <div style="text-align:left; margin-top:12px; font-size:12px; color:#8b949e;">
+          📌 <strong>视频要素</strong>：P区花园居小区高层浓烟爆燃、居民惊慌逃离实况视频，已作为红方阶段一首发素材挂接。
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid #30363d;">
+        <button class="btn-default" style="background:#21262d; color:#c9d1d9; border-color:#30363d;" onclick="closeVideoModal()">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框 7：【设为演练 / 停用确认】 -->
+  <div class="global-modal-mask" id="modal_toggle_drill" style="display:none;">
+    <div class="global-modal" style="width:480px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="toggleModalTitle">确认将此剧本设为演练状态？</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal_toggle_drill')">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="toggleModalContent" style="font-size:13px; line-height:1.6; color:var(--text-body);">
+          切换后，大屏端与学员端将载入此剧本红蓝走向与公信力规则。
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-default" onclick="closeModal('modal_toggle_drill')">取消</button>
+        <button class="btn-primary" id="btnConfirmToggle" onclick="confirmToggleScriptStatus()">确认切换</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框 8：【从案例文档派生向导】 -->
+  <div class="global-modal-mask" id="modal_derive_wizard" style="display:none;">
+    <div class="global-modal" style="width:880px;">
+      <div class="modal-header">
+        <h3 class="modal-title">✨ 从案例文档智能派生剧本向导</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal_derive_wizard')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="derive-wizard-steps">
+          <div class="dw-step active" id="dwStep1">1. 基础信息与难度</div>
+          <div class="dw-step" id="dwStep2">2. 环节映射与分支生成</div>
+          <div class="dw-step" id="dwStep3">3. 绑定素材并生成剧本</div>
+        </div>
+        <div id="deriveWizardContent" style="margin-top:16px;">
+          <!-- 动态渲染步骤内容 -->
+        </div>
+      </div>
+      <div class="modal-footer" id="deriveWizardFooter">
+        <!-- 动态按钮 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框 9：【从素材库筛选挂载素材】 -->
+  <div class="global-modal-mask" id="modal_attach_asset" style="display:none;">
+    <div class="global-modal" style="width:780px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="attachAssetModalTitle">从素材库筛选挂接素材</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal_attach_asset')">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="attachAssetPickerList">
+          <!-- 动态渲染多选列表 -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-default" onclick="closeModal('modal_attach_asset')">取消</button>
+        <button class="btn-primary" onclick="confirmAttachSelectedAssets()">确认挂接至当前环节</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 全局轻提示 Toast -->
+  <div class="global-toast" id="globalToast" style="display:none;"></div>
+
+  <script src="./js/cartridges-data.js"></script>
+  <script src="./js/sync-engine.js"></script>
+  <script src="./js/admin.js"></script>
+</body>
+</html>

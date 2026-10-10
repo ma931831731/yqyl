@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Large presentation files (> 100MB, exceeds GitHub limit)
+*.pptx
+
+# Logs
+*.log
+*/server.err.log
+*/server.out.log
+
+# OS & IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
