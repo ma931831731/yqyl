@@ -492,9 +492,8 @@ function renderRedStageCards(stage, state) {
 
         ${mediaHtml}
 
-        <div class="m-card-impact-row">
-          <span class="m-impact-red">⚡ 攻击负面效果：公信力扣减 ${penalty} 分</span>
-          <span style="color:#788aa6; font-size:10px;">${isExecuted ? '● 已推入中枢' : (!isCombatActive ? '⏳ 待命就绪' : '● 待发起')}</span>
+        <div class="m-card-impact-row" style="justify-content: flex-end;">
+          <span style="color:#788aa6; font-size:11px;">${isExecuted ? '● 进攻已发动生效' : (!isCombatActive ? '⏳ 待命中' : '● 待发起攻势')}</span>
         </div>
 
         <button class="m-action-btn btn-cyber-red action-executable-btn ${btnClass}" 
@@ -515,7 +514,7 @@ function renderRedStageCards(stage, state) {
     : `<div style="padding:10px; text-align:center; color:#64748b; font-size:11px;">暂无其他协同红方攻势</div>`;
 }
 
-// 渲染蓝方当前阶段防守措施 (包含正向走向与推诿失当走向)
+// 渲染蓝方当前阶段防守措施 (学员移动端不展示走向与分值增减)
 function renderBlueStageCards(stage, state) {
   const exclusiveContainer = document.getElementById('blueRoleExclusiveList');
   const collabContainer = document.getElementById('blueRoleCollabList');
@@ -574,18 +573,16 @@ function renderBlueStageCards(stage, state) {
     } else {
       btnClass = isNegative ? 'btn-cyber-red' : 'btn-cyber';
       btnDisabled = false;
-      btnText = isNegative ? '⚠️ 执行此项失当处置 (推演失控分支)' : '🛡️ 报送并执行处置措施';
+      btnText = '🛡️ 报送并执行处置措施';
     }
 
     return `
       <div class="m-action-card m-action-card-blue ${isNegative ? 'negative-branch' : ''} ${isExclusive ? 'exclusive-card' : ''}">
         <div class="m-card-head">
-          <span class="m-card-badge ${isNegative ? 'm-card-badge-branch-neg' : 'm-card-badge-branch'}">
-            ${m.branchName || (isNegative ? '走向 1-B (失当迟滞走向)' : '走向 1-A (首战协同闭环)')}
-          </span>
           <span class="m-card-badge m-card-badge-platform">
-            ${m.role || myCurrentSeat?.department || '应急协同'}
+            ${m.role || myCurrentSeat?.department || '协同部门'}
           </span>
+          ${isExclusive ? '<span class="m-card-badge m-card-badge-exclusive">⭐ 本席位专属行动</span>' : ''}
         </div>
 
         <div class="m-card-title">${m.title || '前线应急处置响应与核实'}</div>
@@ -593,11 +590,8 @@ function renderBlueStageCards(stage, state) {
           ${m.statement || m.desc || '迅速落实处置职责，反馈伤亡核查材料，强化信息研判权威发布。'}
         </div>
 
-        <div class="m-card-impact-row">
-          <span class="${isNegative ? 'm-impact-blue-neg' : 'm-impact-blue'}">
-            ${isNegative ? `⚠️ 失当处置风险：公信力扣减 ${delta} 分` : `🌟 挽回政府公信力：+${delta} 分`}
-          </span>
-          <span style="color:#788aa6; font-size:10px;">${isExecuted ? '● 措施已执行' : (!isCombatActive ? '⏳ 待命就绪' : '● 待执行上报')}</span>
+        <div class="m-card-impact-row" style="justify-content: flex-end;">
+          <span style="color:#788aa6; font-size:11px;">${isExecuted ? '● 措施已执行上报' : (!isCombatActive ? '⏳ 待命中' : '● 待执行上报')}</span>
         </div>
 
         <button class="m-action-btn action-executable-btn ${btnClass}"

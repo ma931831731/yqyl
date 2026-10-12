@@ -164,14 +164,15 @@
         </div>
       </section>
 
-      <!-- ==================== 2. 中间：舆情传播扩展图谱 (根据实时发展动态演化) ==================== -->
+      <!-- ==================== 2. 中间：图谱 + 左右红蓝正面对抗时序流 ==================== -->
       <section class="col-center">
+        <!-- 2.1 上半区：舆情传播扩展图谱 (力导向防重叠 · 支持单节点自由拖拽与平移) -->
         <div class="cyber-card graph-viewport-card">
           <div class="module-header graph-header">
             <div class="module-title-wrap">
               <span class="icon-pulse cyan-dot"></span>
-              <span class="title-text">🌐 舆情传播扩散与攻防对抗扩展图谱</span>
-              <span class="tag-cyber tag-highlight" style="margin-left:8px;">动态演化拓扑</span>
+              <span class="title-text">🌐 舆情传播扩散与攻防拓扑图谱</span>
+              <span class="tag-cyber tag-highlight" style="margin-left:8px;">可拖拽拓扑 · 物理防重叠</span>
             </div>
             
             <div class="graph-metrics-pills">
@@ -197,11 +198,37 @@
               <div class="legend-item"><span class="legend-circle truth"></span> 官方事实通报</div>
             </div>
 
+            <!-- 拖拽操作提示气泡 -->
+            <div class="graph-drag-hint">
+              <span>🖱️ 按住任一节点自由拖拽移动 | 拖动空白平移视角</span>
+            </div>
+
             <!-- 图谱最新事件演化滚动指示条 -->
             <div class="graph-event-footer" id="graphEventFeed">
               <span class="feed-tag">⚡ 拓扑演化进展:</span>
               <span class="feed-text" id="graphEventText">图谱随演练推进动态生长中：阶段二【消防通道堵塞】与【官方首报】链路已建立...</span>
             </div>
+          </div>
+        </div>
+
+        <!-- 2.2 下半区：左右红蓝对抗时序流 (时序推演 · 全息高大上动效) -->
+        <div class="cyber-card center-confrontation-card">
+          <div class="module-header module-header-vs">
+            <div class="module-title-wrap">
+              <span class="icon-pulse amber-dot"></span>
+              <span class="title-text">⚔️ 攻防推演时序流 · 左右红蓝正面对抗</span>
+              <span class="tag-cyber tag-amber">时序对抗演进</span>
+            </div>
+            <div class="confrontation-sub-hint">
+              <span style="color:#ff6b8b; font-weight:700;">🔴 左翼：红方施压</span>
+              <span style="color:#788aa6; margin:0 8px; font-weight:900;">⚡ VS 🛡️</span>
+              <span style="color:#00f0ff; font-weight:700;">🔵 右翼：蓝方处置</span>
+            </div>
+          </div>
+
+          <!-- 战术全息对抗时序流视口 (带激光粒子流动背景) -->
+          <div class="confrontation-stream-viewport" id="centerConfrontationStream">
+            <!-- 动态渲染左右红蓝对抗条目 (时间顺序排列) -->
           </div>
         </div>
       </section>

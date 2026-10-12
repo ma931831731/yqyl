@@ -72,10 +72,11 @@ function renderAll(state, action) {
   // 5. 右侧：蓝方防守态势与应急处置流水
   renderBlueCampAndMeasures(state);
 
-  // 6. 中间：扩展图谱动态演化
+  // 6. 中间：扩展图谱动态演化与左右红蓝正面对抗时序流
   if (propagationGraphInstance) {
     propagationGraphInstance.updateData(state);
   }
+  renderCenterConfrontationStream(state);
 
   // 7. 下方：红蓝即时战力天平、公信力仪表盘、阶段推进与密信跑马灯
   renderBottomDock(state);
@@ -294,7 +295,7 @@ function renderRedCampAndTrending(state) {
   });
   const penaltyEl = document.getElementById('redPenaltySum');
   if (penaltyEl) {
-    penaltyEl.textContent = `${penaltySum || -75} 分`;
+    penaltyEl.textContent = `${penaltySum} 分`;
   }
 
   // 攻击轮次
@@ -381,7 +382,7 @@ function renderBlueCampAndMeasures(state) {
 
   const recoveryEl = document.getElementById('blueRecoveryVal');
   if (recoveryEl) {
-    recoveryEl.textContent = `+${gainSum || 60} 分`;
+    recoveryEl.textContent = `+${gainSum} 分`;
   }
 
   // 蓝方协同席位认领状态
@@ -601,8 +602,8 @@ class DynamicPropagationGraph {
     this.tooltip = tooltip;
     this.ctx = canvas.getContext('2d');
 
-    this.width = container.clientWidth;
-    this.height = container.clientHeight;
+    this.width = container.clientWidth || 800;
+    this.height = container.clientHeight || 400;
     this.canvas.width = this.width;
     this.canvas.height = this.height;
 
@@ -613,9 +614,11 @@ class DynamicPropagationGraph {
     this.offsetX = 0;
     this.offsetY = 0;
     this.isDragging = false;
+    this.draggedNode = null;
     this.startX = 0;
     this.startY = 0;
     this.hoveredNode = null;
+    this.radarRadius = 20;
 
     this.bindEvents();
     this.animate = this.animate.bind(this);
@@ -632,47 +635,83 @@ class DynamicPropagationGraph {
   resetCenter() {
     this.offsetX = 0;
     this.offsetY = 0;
-    // 重新让根节点居中
     if (this.nodes.length > 0 && this.nodes[0].isRoot) {
+      this.nodes[0].x = this.width / 2;
+      this.nodes[0].y = this.height / 2;
       this.nodes[0].targetX = this.width / 2;
       this.nodes[0].targetY = this.height / 2;
     }
   }
 
   bindEvents() {
+    // 鼠标按下：优先检测是否点中具体节点进行拖拽，若空白处则平移画板
     this.canvas.addEventListener('mousedown', (e) => {
-      this.isDragging = true;
-      this.startX = e.clientX - this.offsetX;
-      this.startY = e.clientY - this.offsetY;
+      const rect = this.canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left - this.offsetX;
+      const mouseY = e.clientY - rect.top - this.offsetY;
+
+      let hitNode = null;
+      for (let i = this.nodes.length - 1; i >= 0; i--) {
+        const n = this.nodes[i];
+        if (Math.hypot(n.x - mouseX, n.y - mouseY) <= n.radius + 10) {
+          hitNode = n;
+          break;
+        }
+      }
+
+      if (hitNode) {
+        this.draggedNode = hitNode;
+        hitNode.isPinned = true;
+        this.canvas.style.cursor = 'grabbing';
+      } else {
+        this.isDragging = true;
+        this.startX = e.clientX - this.offsetX;
+        this.startY = e.clientY - this.offsetY;
+        this.canvas.style.cursor = 'grabbing';
+      }
     });
 
     window.addEventListener('mousemove', (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left - this.offsetX;
+      const mouseY = e.clientY - rect.top - this.offsetY;
+
+      // 1. 拖拽具体节点移动 (满足需求4：节点自由拖动移动)
+      if (this.draggedNode) {
+        this.draggedNode.x = mouseX;
+        this.draggedNode.y = mouseY;
+        this.draggedNode.targetX = mouseX;
+        this.draggedNode.targetY = mouseY;
+        this.updateTooltip(this.draggedNode, e.clientX - rect.left, e.clientY - rect.top);
+        return;
+      }
+
+      // 2. 平移整个画布
       if (this.isDragging) {
         this.offsetX = e.clientX - this.startX;
         this.offsetY = e.clientY - this.startY;
       }
 
-      // 计算鼠标悬浮节点
-      const rect = this.canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left - this.offsetX;
-      const mouseY = e.clientY - rect.top - this.offsetY;
-
+      // 3. 悬浮检测
       let found = null;
       for (const node of this.nodes) {
-        const dx = node.x - mouseX;
-        const dy = node.y - mouseY;
-        if (Math.sqrt(dx * dx + dy * dy) <= node.radius + 6) {
+        if (Math.hypot(node.x - mouseX, node.y - mouseY) <= node.radius + 8) {
           found = node;
           break;
         }
       }
 
       this.hoveredNode = found;
+      if (!this.isDragging) {
+        this.canvas.style.cursor = found ? 'grab' : 'default';
+      }
       this.updateTooltip(found, e.clientX - rect.left, e.clientY - rect.top);
     });
 
     window.addEventListener('mouseup', () => {
+      this.draggedNode = null;
       this.isDragging = false;
+      this.canvas.style.cursor = this.hoveredNode ? 'grab' : 'default';
     });
   }
 
@@ -694,11 +733,49 @@ class DynamicPropagationGraph {
       <div style="color:#a8c4ea; margin-bottom:4px;">${node.role || ''} · ${node.time || ''}</div>
       <div style="font-size:10.5px; color:#d8e5ff;">${node.desc || ''}</div>
       ${node.impact ? `<div style="margin-top:4px; font-weight:bold; color:${node.type==='red'?'#ff4d6d':'#00e676'};">公信力影响: ${node.impact}</div>` : ''}
+      <div style="margin-top:4px; font-size:9.5px; color:#788aa6;">💡 提示: 按住鼠标左键可拖拽移动此节点</div>
     `;
 
     this.tooltip.style.left = `${Math.min(this.width - 240, x + 12)}px`;
     this.tooltip.style.top = `${Math.max(10, y - 40)}px`;
     this.tooltip.style.display = 'block';
+  }
+
+  // 节点物理排斥算法，消除节点重叠挤压 (满足需求4：不要重叠在一起)
+  relaxNodePositions(nodes, iterations = 60) {
+    for (let iter = 0; iter < iterations; iter++) {
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const n1 = nodes[i];
+          const n2 = nodes[j];
+          let dx = n2.targetX - n1.targetX;
+          let dy = n2.targetY - n1.targetY;
+          let dist = Math.hypot(dx, dy);
+          if (dist === 0) {
+            dx = 0.5;
+            dy = 0.5;
+            dist = 0.7;
+          }
+
+          // 最小安全距离 85px，彻底保证节点文字和图形不互相重叠
+          const minSafeDist = (n1.radius || 15) + (n2.radius || 15) + 52;
+          if (dist < minSafeDist) {
+            const overlap = (minSafeDist - dist) * 0.5;
+            const nx = dx / dist;
+            const ny = dy / dist;
+
+            if (!n1.isRoot && !n1.isPinned) {
+              n1.targetX -= nx * overlap;
+              n1.targetY -= ny * overlap;
+            }
+            if (!n2.isRoot && !n2.isPinned) {
+              n2.targetX += nx * overlap;
+              n2.targetY += ny * overlap;
+            }
+          }
+        }
+      }
+    }
   }
 
   updateData(state) {
@@ -720,7 +797,7 @@ class DynamicPropagationGraph {
       time: '04-08 18:57',
       desc: '23层高层住宅突发爆燃事故，浓烟滚滚居民逃生',
       type: 'root',
-      radius: 18,
+      radius: 19,
       isRoot: true,
       x: cx,
       y: cy,
@@ -729,17 +806,18 @@ class DynamicPropagationGraph {
     };
     newNodes.push(rootNode);
 
-    // 2. 遍历对抗事件，动态生成红方攻击节点与蓝方防守节点
+    // 2. 遍历对抗事件，左右分区规划初始坐标
     let redCount = 0;
     let blueCount = 0;
+    const totalConfrontations = Math.max(1, confrontations.length);
 
     confrontations.forEach((c, cIndex) => {
       const red = c.red || {};
       const redNodeId = `RED-${c.id || cIndex}`;
 
-      // 分布在左上到左下扇区
-      const angleRed = Math.PI * 0.75 + (cIndex / Math.max(1, confrontations.length)) * Math.PI * 0.7;
-      const distRed = 110 + (cIndex % 3) * 35;
+      // 红方节点分布在左侧扇区 (90° ~ 270°)
+      const angleRed = Math.PI * 0.7 + (cIndex / totalConfrontations) * (Math.PI * 0.65);
+      const distRed = 130 + (cIndex % 3) * 45;
 
       const rNode = {
         id: redNodeId,
@@ -750,9 +828,9 @@ class DynamicPropagationGraph {
         desc: (red.content || '').slice(0, 48),
         impact: `${red.penalty || -15} 分`,
         type: 'red',
-        radius: 12,
-        x: cx + Math.cos(angleRed) * (distRed * 0.6),
-        y: cy + Math.sin(angleRed) * (distRed * 0.6),
+        radius: 13,
+        x: cx + Math.cos(angleRed) * distRed,
+        y: cy + Math.sin(angleRed) * distRed,
         targetX: cx + Math.cos(angleRed) * distRed,
         targetY: cy + Math.sin(angleRed) * distRed
       };
@@ -766,13 +844,12 @@ class DynamicPropagationGraph {
         type: 'red'
       });
 
-      // 蓝方防守措施节点
+      // 蓝方防守措施节点分布在右侧扇区 (-90° ~ 90°)
       if (c.blues && Array.isArray(c.blues)) {
         c.blues.forEach((b, bIndex) => {
           const blueNodeId = `BLUE-${c.id}-${bIndex}`;
-          // 分布在右上到右下扇区
-          const angleBlue = -Math.PI * 0.35 + (blueCount / 6) * Math.PI * 0.75;
-          const distBlue = 120 + (blueCount % 3) * 30;
+          const angleBlue = -Math.PI * 0.38 + (blueCount / 7) * (Math.PI * 0.75);
+          const distBlue = 135 + (blueCount % 3) * 42;
 
           const bNode = {
             id: blueNodeId,
@@ -783,9 +860,9 @@ class DynamicPropagationGraph {
             desc: (b.statement || '').slice(0, 48),
             impact: `+${b.delta || 10} 分`,
             type: 'blue',
-            radius: 13,
-            x: cx + Math.cos(angleBlue) * (distBlue * 0.6),
-            y: cy + Math.sin(angleBlue) * (distBlue * 0.6),
+            radius: 14,
+            x: cx + Math.cos(angleBlue) * distBlue,
+            y: cy + Math.sin(angleBlue) * distBlue,
             targetX: cx + Math.cos(angleBlue) * distBlue,
             targetY: cy + Math.sin(angleBlue) * distBlue
           };
@@ -809,14 +886,20 @@ class DynamicPropagationGraph {
       }
     });
 
-    // 保留现有节点位置以平滑过渡
+    // 保留用户已经拖拽过（或已存在）的节点坐标和钉住状态
     newNodes.forEach(nn => {
       const existing = this.nodes.find(n => n.id === nn.id);
       if (existing) {
         nn.x = existing.x;
         nn.y = existing.y;
+        nn.targetX = existing.targetX;
+        nn.targetY = existing.targetY;
+        nn.isPinned = existing.isPinned;
       }
     });
+
+    // 运行物理排斥迭代，防止初始或新增节点重叠
+    this.relaxNodePositions(newNodes, 70);
 
     this.nodes = newNodes;
     this.links = newLinks;
@@ -837,7 +920,7 @@ class DynamicPropagationGraph {
       feedTextEl.textContent = `实时拓扑演化：[${latest.time || '最新'}] ${red.role || '造谣攻击'} 节点接入网络，蓝方专班已布设对冲阻断！`;
     }
 
-    // 重新生成运动粒子
+    // 重新生成运动光子粒子
     this.reinitParticles();
   }
 
@@ -848,7 +931,7 @@ class DynamicPropagationGraph {
         this.particles.push({
           linkIdx: idx,
           t: Math.random(),
-          speed: 0.006 + Math.random() * 0.005,
+          speed: 0.005 + Math.random() * 0.005,
           color: link.type === 'red' ? '#ff2a5f' : link.type === 'blue' ? '#00f0ff' : '#00e676'
         });
       }
@@ -862,13 +945,67 @@ class DynamicPropagationGraph {
     ctx.save();
     ctx.translate(this.offsetX, this.offsetY);
 
-    // 缓动节点到 targetX, targetY
+    // 1. 每帧轻微物理防重叠斥力模拟 (确保任何拖拽或动态变化下绝不重叠)
+    for (let i = 0; i < this.nodes.length; i++) {
+      for (let j = i + 1; j < this.nodes.length; j++) {
+        const n1 = this.nodes[i];
+        const n2 = this.nodes[j];
+        const dx = n2.x - n1.x;
+        const dy = n2.y - n1.y;
+        const dist = Math.hypot(dx, dy) || 0.1;
+        const minSafe = n1.radius + n2.radius + 38;
+        if (dist < minSafe) {
+          const push = (minSafe - dist) * 0.08;
+          const nx = dx / dist;
+          const ny = dy / dist;
+          if (n1 !== this.draggedNode && !n1.isRoot) {
+            n1.x -= nx * push;
+            n1.y -= ny * push;
+            n1.targetX = n1.x;
+            n1.targetY = n1.y;
+          }
+          if (n2 !== this.draggedNode && !n2.isRoot) {
+            n2.x += nx * push;
+            n2.y += ny * push;
+            n2.targetX = n2.x;
+            n2.targetY = n2.y;
+          }
+        }
+      }
+    }
+
+    // 2. 节点缓动到 targetX, targetY (被手动拖拽的节点除外)
     this.nodes.forEach(n => {
-      n.x += (n.targetX - n.x) * 0.08;
-      n.y += (n.targetY - n.y) * 0.08;
+      if (n !== this.draggedNode) {
+        n.x += (n.targetX - n.x) * 0.09;
+        n.y += (n.targetY - n.y) * 0.09;
+      }
     });
 
-    // 1. 绘制连线
+    // 3. 根节点雷达波纹扩散动效 (提升大屏高大上科技感)
+    const rootNode = this.nodes.find(n => n.isRoot);
+    if (rootNode) {
+      this.radarRadius += 0.8;
+      if (this.radarRadius > 130) this.radarRadius = 20;
+
+      const alpha = Math.max(0, 1 - (this.radarRadius / 130));
+      ctx.beginPath();
+      ctx.arc(rootNode.x, rootNode.y, this.radarRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(255, 170, 0, ${alpha * 0.4})`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // 内层次级波
+      const r2 = (this.radarRadius + 50) % 130;
+      const alpha2 = Math.max(0, 1 - (r2 / 130));
+      ctx.beginPath();
+      ctx.arc(rootNode.x, rootNode.y, r2, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(0, 240, 255, ${alpha2 * 0.25})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // 4. 绘制拓扑连线
     this.links.forEach(link => {
       const sNode = this.nodes.find(n => n.id === link.source);
       const tNode = this.nodes.find(n => n.id === link.target);
@@ -879,15 +1016,15 @@ class DynamicPropagationGraph {
       ctx.lineTo(tNode.x, tNode.y);
 
       if (link.type === 'red') {
-        ctx.strokeStyle = 'rgba(255, 42, 95, 0.35)';
+        ctx.strokeStyle = 'rgba(255, 42, 95, 0.4)';
         ctx.lineWidth = 1.8;
         ctx.setLineDash([4, 4]);
       } else if (link.type === 'blue') {
-        ctx.strokeStyle = 'rgba(0, 240, 255, 0.45)';
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.5)';
         ctx.lineWidth = 2.2;
         ctx.setLineDash([]);
       } else {
-        ctx.strokeStyle = 'rgba(0, 230, 118, 0.25)';
+        ctx.strokeStyle = 'rgba(0, 230, 118, 0.3)';
         ctx.lineWidth = 1.2;
         ctx.setLineDash([2, 4]);
       }
@@ -895,7 +1032,7 @@ class DynamicPropagationGraph {
       ctx.setLineDash([]);
     });
 
-    // 2. 绘制流动光子粒子
+    // 5. 绘制流动光子粒子
     this.particles.forEach(p => {
       const link = this.links[p.linkIdx];
       if (!link) return;
@@ -918,22 +1055,22 @@ class DynamicPropagationGraph {
       ctx.shadowBlur = 0;
     });
 
-    // 3. 绘制节点
+    // 6. 绘制节点本体与文字
     this.nodes.forEach(node => {
       const isHovered = this.hoveredNode && this.hoveredNode.id === node.id;
+      const isDragged = this.draggedNode && this.draggedNode.id === node.id;
 
-      // 外发光环
+      // 根节点光环脉冲
       if (node.isRoot) {
-        // 根节点脉冲
         const pulse = 18 + Math.sin(Date.now() * 0.004) * 4;
         ctx.beginPath();
         ctx.arc(node.x, node.y, pulse + 6, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 170, 0, 0.15)';
+        ctx.fillStyle = 'rgba(255, 170, 0, 0.16)';
         ctx.fill();
       }
 
       ctx.beginPath();
-      ctx.arc(node.x, node.y, node.radius + (isHovered ? 4 : 0), 0, Math.PI * 2);
+      ctx.arc(node.x, node.y, node.radius + (isHovered || isDragged ? 4 : 0), 0, Math.PI * 2);
 
       let grad = ctx.createRadialGradient(node.x, node.y, 1, node.x, node.y, node.radius);
       if (node.type === 'red') {
@@ -949,28 +1086,27 @@ class DynamicPropagationGraph {
 
       ctx.fillStyle = grad;
       ctx.shadowColor = node.type === 'red' ? '#ff2a5f' : node.type === 'blue' ? '#00f0ff' : '#ffaa00';
-      ctx.shadowBlur = isHovered ? 16 : 8;
+      ctx.shadowBlur = isHovered || isDragged ? 18 : 8;
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // 边框
-      ctx.lineWidth = isHovered ? 2.5 : 1.5;
-      ctx.strokeStyle = '#ffffff';
+      // 边框 (拖拽中黄色高亮)
+      ctx.lineWidth = isDragged ? 3 : isHovered ? 2.5 : 1.5;
+      ctx.strokeStyle = isDragged ? '#ffeb3b' : '#ffffff';
       ctx.stroke();
 
-      // 节点文本
+      // 节点内文字或图标
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 10.5px sans-serif';
+      ctx.font = 'bold 11px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      // 节点内文字或图标
       const icon = node.type === 'red' ? '🔥' : node.type === 'blue' ? '🛡️' : '⚠️';
       ctx.fillText(icon, node.x, node.y - 1);
 
-      // 节点下方标题
+      // 节点下方文字标签
       ctx.font = '10px sans-serif';
-      ctx.fillStyle = isHovered ? '#ffffff' : '#c8dbf7';
+      ctx.fillStyle = isHovered || isDragged ? '#ffffff' : '#c8dbf7';
       const label = node.name.length > 7 ? node.name.slice(0, 6) + '..' : node.name;
       ctx.fillText(label, node.x, node.y + node.radius + 11);
     });
@@ -979,6 +1115,75 @@ class DynamicPropagationGraph {
 
     requestAnimationFrame(this.animate);
   }
+}
+
+/**
+ * 渲染大屏中央下半区：左右红蓝正面对抗时序流 (时序演进链路)
+ */
+function renderCenterConfrontationStream(state) {
+  const container = document.getElementById('centerConfrontationStream');
+  if (!container) return;
+
+  const confrontations = state.timelineConfrontations || [];
+  if (confrontations.length === 0) {
+    container.innerHTML = `
+      <div style="color:#788aa6; font-size:12px; margin:auto; text-align:center; padding:35px 0;">
+        <span style="font-size:24px; display:block; margin-bottom:8px;">⚔️</span>
+        演练已进入推演态势，等待红蓝双方发起推演攻防内容...
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = confrontations.map((c, idx) => {
+    const red = c.red || {};
+    const blues = c.blues || [];
+
+    const blueCardHtml = blues.length > 0 ? blues.map(b => `
+      <div style="margin-bottom:4px;">
+        <div class="stream-card-head stream-head-blue">
+          <span>🏛️ ${b.role || '处置专班'}</span>
+          <span style="color:#00f0ff; font-weight:800;">+${b.delta || 10}分</span>
+        </div>
+        <div style="color:#fff; font-weight:600; font-size:11px; margin-bottom:2px;">${b.title || ''}</div>
+        <div class="stream-card-text">${b.statement || ''}</div>
+      </div>
+    `).join('') : `
+      <div class="stream-card-pending">
+        <span>⚠️</span>
+        <span>应急专班研判响应中 (公信力承压)</span>
+      </div>
+    `;
+
+    return `
+      <div class="stream-confront-row" id="screen_cf_${c.id || idx}">
+        <!-- 左翼：红方施压卡片 -->
+        <div class="stream-card-red">
+          <div class="stream-card-head stream-head-red">
+            <span>👤 ${red.role || red.author || '造谣攻击'}</span>
+            <span style="color:#ff6b8b; font-weight:800;">${red.penalty || -15}分</span>
+          </div>
+          <div class="stream-card-text" title="${red.content || ''}">
+            ${red.content || '发布舆论施压爆料贴文'}
+          </div>
+          ${red.assetName ? `<div style="font-size:9.5px; color:#ff99ab; margin-top:3px;">🎬 关联物证: ${red.assetName}</div>` : ''}
+        </div>
+
+        <!-- 中轴：时序节点立柱 -->
+        <div class="stream-axis-node">
+          <div class="stream-axis-circle" title="推演节点 #${idx + 1} (${c.time || '18:57'})">
+            <span class="stream-axis-time">${c.time || '18:57'}</span>
+            <span class="stream-axis-seq">#${idx + 1}</span>
+          </div>
+        </div>
+
+        <!-- 右翼：蓝方处置卡片 -->
+        <div class="stream-card-blue">
+          ${blueCardHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 /* ==========================================================================

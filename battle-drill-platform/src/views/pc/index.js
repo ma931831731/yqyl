@@ -715,28 +715,24 @@ function onStageAdvanced(newStageIndex) {
   const tagEl = document.getElementById('warCurrentStageTag');
   if (tagEl) tagEl.textContent = nextStage.name;
 
-  // 全局同步阶段推进至状态机
+  // 全局同步阶段推进至状态机，并根据演练危机演化动态联动公信力分数
   if (window.drillEngine) {
-    window.drillEngine.state.room.stageIndex = newStageIndex;
-    window.drillEngine.state.room.stageId = nextStage.id || `STAGE-0${newStageIndex + 1}`;
-    window.drillEngine.state.room.stageName = nextStage.name;
-    window.drillEngine.broadcast('STAGE_ADVANCED', { stageIndex: newStageIndex, stageName: nextStage.name, stageId: nextStage.id });
+    window.drillEngine.advanceStage(newStageIndex, nextStage.name, nextStage.id || `STAGE-0${newStageIndex + 1}`);
   }
 
+  // 挂载该阶段的新增红方攻击至时间轴（蓝方留待学员或操作者响应处置）
   if (nextStage.confrontations && window.drillEngine) {
     nextStage.confrontations.forEach(c => {
       const state = window.drillEngine.getState();
       const exists = state.timelineConfrontations?.some(tc => tc.id === c.id);
       if (!exists && c.red) {
         window.drillEngine.postRedCombat(c.red);
-        if (c.blues && c.blues.length > 0) {
-          c.blues.forEach(b => window.drillEngine.executeBlueMeasure(b, c.id));
-        }
       }
     });
   }
 
   renderVirtualProgressTracker();
+  renderCredibilityAndFists();
   showToastNotice(`🚀 演练阶段已推进至：${nextStage.name}！双方攻防对抗升级。`);
 }
 
@@ -943,54 +939,65 @@ function renderHorizontalTimeline(force = false) {
     return;
   }
 
-  viewport.innerHTML = confrontations.map((c, idx) => {
-    const red = c.red || {};
-    const blues = c.blues || [];
-
-    const bluesHtml = blues.map(b => `
-      <div class="node-blue-box">
-        <div class="node-blue-head">
-          <span>🏛️ ${b.role || '处置席位'}</span>
-          <span style="color:var(--pc-cyan); font-weight:bold;">+${b.delta || 10}分</span>
-        </div>
-        <div style="color:#fff; font-weight:600; margin-bottom:2px;">${b.title || ''}</div>
-        <div style="color:#94a3b8; font-size:10.5px; line-height:1.4;">${b.statement || ''}</div>
+  viewport.innerHTML = `
+    <div class="fishbone-track">
+      <div class="fishbone-spine-line"></div>
+      <div class="fishbone-head-badge">
+        <span>🐟 演练博弈前沿</span>
+        <span>▶</span>
       </div>
-    `).join('') || `
-      <div style="background:rgba(255,184,0,0.1); border:1px dashed #ffb800; border-radius:4px; padding:6px; color:#ffb800; font-size:10.5px; text-align:center;">
-        ⚠️ 官方应对响应中 (持续扣分中)
-      </div>
-    `;
+      ${confrontations.map((c, idx) => {
+        const red = c.red || {};
+        const blues = c.blues || [];
 
-    return `
-      <div class="timeline-combat-node" id="cf_node_${c.id}">
-        <div class="node-time-tag">
-          <span>⏱️ ${c.time || '18:57'}</span>
-          <span style="float:right; color:#788aa6;">#节点 ${idx + 1}</span>
-        </div>
-
-        <!-- 红方攻击项 -->
-        <div class="node-red-box">
-          <div class="node-red-head">
-            <span>👤 ${red.role || red.author || '红方角色'}</span>
-            <span>${red.penalty || -15}分</span>
+        const bluesHtml = blues.length > 0 ? blues.map(b => `
+          <div style="background:rgba(0,240,255,0.06); border:1px solid rgba(0,240,255,0.25); border-radius:4px; padding:5px 8px; margin-bottom:4px;">
+            <div class="node-blue-head">
+              <span>🏛️ ${b.role || '处置席位'}</span>
+              <span style="color:var(--pc-cyan); font-weight:bold;">+${b.delta || 10}分</span>
+            </div>
+            <div style="color:#fff; font-weight:600; font-size:11px; margin-bottom:2px;">${b.title || ''}</div>
+            <div style="color:#94a3b8; font-size:10px; line-height:1.4;">${b.statement || ''}</div>
           </div>
-          <div style="color:#fecaca; margin-bottom:2px;">${red.content || ''}</div>
-          ${red.assetName ? `<div style="font-size:10px; color:#ff99ab; margin-top:2px;">🎬 关联物证: ${red.assetName}</div>` : ''}
-        </div>
+        `).join('') : `
+          <div style="background:rgba(255,184,0,0.1); border:1px dashed #ffb800; border-radius:4px; padding:6px; color:#ffb800; font-size:10px; text-align:center;">
+            ⚠️ 官方应对响应中 (公信力持续承压)
+          </div>
+        `;
 
-        <!-- VS 连接符 -->
-        <div class="node-vs-separator">
-          <span>⚔️</span>
-          <span style="letter-spacing:1px; font-weight:800; color:#fff;">VS</span>
-          <span>🛡️</span>
-        </div>
+        return `
+          <div class="fishbone-column-node" id="cf_node_${c.id}">
+            <!-- 上方红刺：红方施压卡片 -->
+            <div class="fishbone-upper-rib">
+              <div class="fishbone-card-red">
+                <div class="node-red-head">
+                  <span>👤 ${red.role || red.author || '红方角色'}</span>
+                  <span style="color:#ff6b8b; font-weight:bold;">${red.penalty || -15}分</span>
+                </div>
+                <div style="color:#fecaca; font-size:11px; margin-bottom:2px; line-height:1.4;">${red.content || ''}</div>
+                ${red.assetName ? `<div style="font-size:10px; color:#ff99ab; margin-top:2px;">🎬 关联物证: ${red.assetName}</div>` : ''}
+              </div>
+              <div class="fishbone-connector-top"></div>
+            </div>
 
-        <!-- 蓝方防守项 -->
-        ${bluesHtml}
-      </div>
-    `;
-  }).join('');
+            <!-- 中部脊椎骨节 -->
+            <div class="fishbone-vertebra-joint" title="推演节点 ${idx + 1} (${c.time || '18:57'})">
+              <span class="fishbone-joint-time">${c.time || '18:57'}</span>
+              <span class="fishbone-joint-seq">#${idx + 1}</span>
+            </div>
+
+            <!-- 下方蓝刺：蓝方应对卡片 -->
+            <div class="fishbone-lower-rib">
+              <div class="fishbone-connector-bottom"></div>
+              <div class="fishbone-card-blue">
+                ${bluesHtml}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
 
   // 仅在新增了对抗项且没有在拖拽时，顺畅滚至最右最新前沿
   if (isNewItemAdded && !isTimelineDragging) {

@@ -147,7 +147,10 @@ class DrillSyncEngine {
   startDrill(scriptId = null) {
     if (scriptId) this.state.activeScriptId = scriptId;
     this.state.drillStatus = 'RUNNING';
-    this.broadcast('DRILL_STARTED', { scriptId: this.state.activeScriptId });
+    // 演练开启进入阶段一，公信力受初发火灾爆燃舆情冲击调整为 85 分
+    this.state.battle.credibilityScore = 85;
+    this.updateTrendingList();
+    this.broadcast('DRILL_STARTED', { scriptId: this.state.activeScriptId, credibilityScore: 85 });
   }
 
   pauseDrill() {
@@ -168,6 +171,22 @@ class DrillSyncEngine {
   setDrillStatus(status) {
     this.state.drillStatus = status;
     this.broadcast('STATUS_CHANGED', { status });
+  }
+
+  // 阶段推进与公信力联动机制
+  advanceStage(stageIndex, stageName = '', stageId = '') {
+    // 5个阶段根据演练危机演化动态调整公信力基准 (阶段一初发 85分 -> 阶段二受阻 72分 -> 阶段三谣言 68分 -> 阶段四铁证 82分 -> 阶段五收官 96分)
+    const stageScores = [85, 72, 68, 82, 96];
+    const targetScore = stageScores[stageIndex] !== undefined ? stageScores[stageIndex] : 85;
+
+    this.state.room.stageIndex = stageIndex;
+    if (stageName) this.state.room.stageName = stageName;
+    if (stageId) this.state.room.stageId = stageId;
+
+    this.state.battle.credibilityScore = targetScore;
+    this.updateTrendingList();
+    this.broadcast('STAGE_ADVANCED', { stageIndex, stageName, stageId, credibilityScore: targetScore });
+    return targetScore;
   }
 
   // === 3. 攻防对抗与公信力核算 ===
