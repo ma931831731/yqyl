@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>舆情百战演练平台 · PC作战中枢 (PS主机平台模式)</title>
-  <link rel="stylesheet" href="./css/cyber-common.css">
-  <link rel="stylesheet" href="./css/pc.css">
+  <link rel="stylesheet" href="/src/styles/common/cyber-base.css">
+  <link rel="stylesheet" href="/src/styles/modules/pc.css">
 </head>
 <body>
   <div class="pc-layout">
@@ -534,8 +534,7 @@
 
   </div>
 
-  <script src="./js/cartridges-data.js"></script>
-  <script src="./js/sync-engine.js"></script>
-  <script src="./js/pc.js"></script>
+  <!-- 引入PC作战中枢分层组装入口脚本 -->
+  <script type="module" src="/src/views/pc/index.js"></script>
 </body>
 </html>

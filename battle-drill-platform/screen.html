@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>舆情百战演练态势指挥大屏 · 赛博红蓝对抗总控</title>
-  <link rel="stylesheet" href="./css/cyber-common.css">
-  <link rel="stylesheet" href="./css/screen.css">
+  <link rel="stylesheet" href="/src/styles/common/cyber-base.css">
+  <link rel="stylesheet" href="/src/styles/modules/screen.css">
 </head>
 <body>
   <div class="screen-container" id="screenContainer">
@@ -387,9 +387,7 @@
     </footer>
   </div>
 
-  <!-- 引入基础剧本卡带数据、跨端同步引擎与大屏逻辑脚本 -->
-  <script src="./js/cartridges-data.js"></script>
-  <script src="./js/sync-engine.js"></script>
-  <script src="./js/screen.js"></script>
+  <!-- 引入大屏终端分层组装入口脚本 (包含基础剧本、跨端同步引擎与大屏逻辑) -->
+  <script type="module" src="/src/views/screen/index.js"></script>
 </body>
 </html>

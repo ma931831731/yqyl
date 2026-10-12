@@ -2,6 +2,11 @@
  * 舆情百战演练平台 · PC作战中枢控制器 (PS主机平台风格 + 角色准备室 + 红蓝作战室)
  * 极致性能优化 + 复盘汇总报告 (在线预览与HTML下载) + 状态机闭环生命周期
  */
+import '../../styles/common/cyber-base.css';
+import '../../styles/modules/pc.css';
+import { drillEngine } from '../../core/sync-engine.js';
+import { getDrillCartridges, saveDrillCartridges } from '../../data/cartridges/index.js';
+import { showToast } from '../../components/common/toast.js';
 
 // ==================== 全局运行态变量 ====================
 let drillCartridges = [];

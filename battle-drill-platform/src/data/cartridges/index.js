@@ -882,3 +882,12 @@ window.saveDrillCartridges = function(cartridges) {
     }
   } catch (e) {}
 };
+
+export const DEFAULT_DRILL_CARTRIDGES = window.DEFAULT_DRILL_CARTRIDGES;
+export const getDrillCartridges = window.getDrillCartridges;
+export const saveDrillCartridges = window.saveDrillCartridges;
+export default {
+  DEFAULT_DRILL_CARTRIDGES,
+  getDrillCartridges,
+  saveDrillCartridges
+};

@@ -8,6 +8,10 @@
  * 5. 下方：红蓝即时战力对抗天平、公信力核心仪表盘、全阶段进度轴与跨部门调度跑马灯
  * 6. 状态：演练进行中、演练暂停、演练结束全景显要呈现与联动
  */
+import '../../styles/common/cyber-base.css';
+import '../../styles/modules/screen.css';
+import { drillEngine } from '../../core/sync-engine.js';
+import { getDrillCartridges } from '../../data/cartridges/index.js';
 
 let propagationGraphInstance = null;
 let currentActiveScriptId = null;

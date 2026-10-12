@@ -1,6 +1,8 @@
-# Dependencies
+# Dependencies & Build
 node_modules/
 */node_modules/
+dist/
+*/dist/
 
 # Large presentation files (> 100MB, exceeds GitHub limit)
 *.pptx

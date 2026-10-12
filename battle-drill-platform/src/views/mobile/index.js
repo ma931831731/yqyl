@@ -7,6 +7,11 @@
  * 4. 严密阵营隔离：只有蓝方才有点点密信聊天群，红方无点点密信；
  * 5. 演练结束后，全员弹出演练成功/失败结果，锁定所有操作禁止再次点击。
  */
+import '../../styles/common/cyber-base.css';
+import '../../styles/modules/mobile.css';
+import { drillEngine } from '../../core/sync-engine.js';
+import { getDrillCartridges } from '../../data/cartridges/index.js';
+import { showToast } from '../../components/common/toast.js';
 
 let myCurrentSeat = null;
 let currentViewingStageIndex = 0;

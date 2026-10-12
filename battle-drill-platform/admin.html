@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>舆情百战演练平台 · 剧本演练编排总控中心</title>
-  <link rel="stylesheet" href="./css/admin.css">
+  <link rel="stylesheet" href="/src/styles/common/cyber-base.css">
+  <link rel="stylesheet" href="/src/styles/modules/admin.css">
 </head>
 <body>
   <!-- 顶栏 (遵循 global-eye 规范：浅蓝顶栏、卡带指示、终端快速入口) -->
@@ -1093,8 +1094,7 @@
   <!-- 全局轻提示 Toast -->
   <div class="global-toast" id="globalToast" style="display:none;"></div>
 
-  <script src="./js/cartridges-data.js"></script>
-  <script src="./js/sync-engine.js"></script>
-  <script src="./js/admin.js"></script>
+  <!-- 引入后台管理端分层组装入口脚本 -->
+  <script type="module" src="/src/views/admin/index.js"></script>
 </body>
 </html>
