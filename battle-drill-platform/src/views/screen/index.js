@@ -1208,3 +1208,14 @@ function updateTimerTick() {
     cd.textContent = `${m}:${s}`;
   }
 }
+
+// ==================== 全局交互挂载 (兼容 HTML inline onclick) ====================
+if (typeof window !== 'undefined') {
+  Object.assign(window, {
+    toggleDrillPause,
+    toggleScreenFullscreen,
+    resumeDrillFromScreen,
+    restartDrillFromScreen,
+    resetGraphView
+  });
+}

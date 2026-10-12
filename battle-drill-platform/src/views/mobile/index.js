@@ -1083,3 +1083,18 @@ function showToastNotice(msg) {
     toast.style.top = '30px';
   }, 3500);
 }
+
+// ==================== 全局交互挂载 (兼容 HTML inline onclick) ====================
+if (typeof window !== 'undefined') {
+  Object.assign(window, {
+    switchMobileView,
+    openRoleSelectSheet,
+    closeRoleSelectSheet,
+    selectRole,
+    triggerRedAttack,
+    triggerBlueDefense,
+    quickSendChip,
+    closeDrillResultModal,
+    showToastNotice
+  });
+}

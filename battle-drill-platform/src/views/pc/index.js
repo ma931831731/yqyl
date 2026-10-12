@@ -1603,3 +1603,33 @@ function downloadDebriefReportAsHtml(data) {
 function showToastNotice(text) {
   console.log('[PC Notice]', text);
 }
+
+// ==================== 全局交互挂载 (兼容 HTML inline onclick) ====================
+if (typeof window !== 'undefined') {
+  Object.assign(window, {
+    switchView,
+    onTileClick,
+    enterCurrentSelectedScript,
+    previewLastDrillReport,
+    downloadLastDrillReport,
+    simulateClaimAllRoles,
+    attemptEnterWarRoom,
+    toggleSeatClaim,
+    handleStartDrill,
+    handlePauseDrill,
+    handleResumeDrill,
+    handleEndDrillManually,
+    handleEndDrillFromModal,
+    forceAdvanceStage,
+    scrollTimeline,
+    toggleFloatingIM,
+    quickSendCommand,
+    sendCommanderIMMessage,
+    openDebriefReportModal,
+    downloadCurrentDebriefReport,
+    returnToLobbyFromModal,
+    restartCurrentScriptDrill,
+    closeDebriefReportModal,
+    showToastNotice
+  });
+}

@@ -3602,3 +3602,50 @@ function broadcastActiveCartridgeToSyncEngine(cartridge) {
     console.log('Sync broadcast note:', e);
   }
 }
+
+// ==================== 全局交互挂载 (兼容 HTML inline onclick) ====================
+if (typeof window !== 'undefined') {
+  Object.assign(window, {
+    renderScriptTable,
+    resetScriptSearch,
+    openNewScriptModal,
+    returnToScriptList,
+    saveWorkbenchScriptDraft,
+    openSimulatePreviewModal,
+    publishWorkbenchScript,
+    openAddRoleModal,
+    openAddRedPostModal,
+    openAttachAssetModal,
+    openAddStageModal,
+    openAddBlueMeasureModal,
+    openUploadVideoModal,
+    closeVideoModal,
+    filterAssetCategory,
+    closeModal,
+    submitCreateScript,
+    choosePresetCover,
+    choosePresetBg,
+    saveScriptVisuals,
+    submitAddRedPost,
+    submitAddBlueMeasure,
+    submitSaveStage,
+    submitAddDefenseToCf,
+    confirmToggleScriptStatus,
+    confirmAttachSelectedAssets,
+    openScriptVisualsModal,
+    openWorkbenchForScript,
+    promptToggleCartridge,
+    promptDeleteScript,
+    scrollToStage,
+    selectActiveStage,
+    toggleRoleActive,
+    viewOfficialDocModal,
+    openDeriveWizardModal,
+    renderDeriveWizardStep,
+    finishDeriveWizard,
+    handleNewScriptLocalCover,
+    handleNewScriptLocalBg,
+    onCoverUrlInput,
+    showToast
+  });
+}
