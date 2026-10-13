@@ -2,11 +2,6 @@
  * 舆情百战演练平台 · PC作战中枢控制器 (PS主机平台风格 + 角色准备室 + 红蓝作战室)
  * 极致性能优化 + 复盘汇总报告 (在线预览与HTML下载) + 状态机闭环生命周期
  */
-import '../../styles/common/cyber-base.css';
-import '../../styles/modules/pc.css';
-import { drillEngine } from '../../core/sync-engine.js';
-import { getDrillCartridges, saveDrillCartridges } from '../../data/cartridges/index.js';
-import { showToast } from '../../components/common/toast.js';
 
 // ==================== 全局运行态变量 ====================
 let drillCartridges = [];
@@ -712,28 +707,23 @@ function onStageAdvanced(newStageIndex) {
   const nextStage = stages[newStageIndex];
   if (!nextStage) return;
 
+  currentStageIndex = newStageIndex;
+
   const tagEl = document.getElementById('warCurrentStageTag');
   if (tagEl) tagEl.textContent = nextStage.name;
 
-  // 全局同步阶段推进至状态机，并根据演练危机演化动态联动公信力分数
+  const fishboneTag = document.getElementById('fishboneActiveStageBadge');
+  if (fishboneTag) fishboneTag.textContent = nextStage.name;
+
+  // 核心：调用状态机 setDrillStage，实时核算各阶段公信力与红蓝对抗指标，全端同步
   if (window.drillEngine) {
-    window.drillEngine.advanceStage(newStageIndex, nextStage.name, nextStage.id || `STAGE-0${newStageIndex + 1}`);
+    window.drillEngine.setDrillStage(newStageIndex);
   }
 
-  // 挂载该阶段的新增红方攻击至时间轴（蓝方留待学员或操作者响应处置）
-  if (nextStage.confrontations && window.drillEngine) {
-    nextStage.confrontations.forEach(c => {
-      const state = window.drillEngine.getState();
-      const exists = state.timelineConfrontations?.some(tc => tc.id === c.id);
-      if (!exists && c.red) {
-        window.drillEngine.postRedCombat(c.red);
-      }
-    });
-  }
-
-  renderVirtualProgressTracker();
   renderCredibilityAndFists();
-  showToastNotice(`🚀 演练阶段已推进至：${nextStage.name}！双方攻防对抗升级。`);
+  renderFishboneTimeline(true);
+  renderVirtualProgressTracker();
+  showToastNotice(`🚀 演练阶段已推进至：${nextStage.name}！公信力与攻防态势已实时更新。`);
 }
 
 // 手动强制推进阶段
@@ -866,19 +856,64 @@ function renderTrendingBanner(force = false) {
   }).join('');
 }
 
-// 4.3 渲染公信力双拳与分数
-function renderCredibilityAndFists() {
-  const state = window.drillEngine ? window.drillEngine.getState() : { battle: { credibilityScore: 100 } };
-  const score = state.battle.credibilityScore;
+// 4.3 渲染公信力双拳与动态数字动效
+let currentDisplayedScore = 92;
+let scoreAnimationTimer = null;
 
+function animateScoreNumber(targetScore) {
   const scoreEl = document.getElementById('warCredScoreVal');
+  if (!scoreEl) return;
+
+  targetScore = Math.max(0, Math.min(100, Math.round(targetScore)));
+  if (currentDisplayedScore === targetScore) {
+    scoreEl.textContent = targetScore;
+    return;
+  }
+
+  if (scoreAnimationTimer) clearInterval(scoreAnimationTimer);
+
+  const startScore = currentDisplayedScore;
+  const startTime = performance.now();
+  const duration = 500;
+
+  scoreAnimationTimer = setInterval(() => {
+    const elapsed = performance.now() - startTime;
+    const progress = Math.min(1, elapsed / duration);
+    const ease = 1 - (1 - progress) * (1 - progress);
+    const val = Math.round(startScore + (targetScore - startScore) * ease);
+    scoreEl.textContent = val;
+
+    if (progress >= 1) {
+      clearInterval(scoreAnimationTimer);
+      currentDisplayedScore = targetScore;
+      scoreEl.textContent = targetScore;
+    }
+  }, 20);
+}
+
+function renderCredibilityAndFists() {
+  const state = window.drillEngine ? window.drillEngine.getState() : { battle: { credibilityScore: 92 } };
+  const score = state.battle.credibilityScore !== undefined ? state.battle.credibilityScore : 92;
+
+  animateScoreNumber(score);
+
+  // 动态更新红蓝负向施压与处置挽回分值
+  const redPenaltyEl = document.getElementById('warRedPenaltyVal');
+  const blueRestoreEl = document.getElementById('warBlueRestoreVal');
+
+  const redPenalty = state.battle.redPenalty !== undefined ? state.battle.redPenalty : -25;
+  const blueRestore = state.battle.blueRestore !== undefined ? state.battle.blueRestore : 20;
+
+  if (redPenaltyEl) {
+    redPenaltyEl.textContent = `负向施压 ${redPenalty} 分`;
+  }
+  if (blueRestoreEl) {
+    blueRestoreEl.textContent = `处置挽回 +${blueRestore} 分`;
+  }
+
   const badgeEl = document.getElementById('warCredibilityBadge');
   const ratingEl = document.getElementById('warCredRatingLabel');
   const noticeEl = document.getElementById('warAlertNoticeText');
-
-  if (scoreEl && scoreEl.textContent !== String(score)) {
-    scoreEl.textContent = score;
-  }
 
   // 判定区间与红色预警
   if (badgeEl) {
@@ -889,6 +924,8 @@ function renderCredibilityAndFists() {
       if (badgeEl.classList.contains('alert-flashing')) badgeEl.classList.remove('alert-flashing');
       if (score > 80) {
         if (noticeEl) noticeEl.innerHTML = '<span style="color:#00e676;">● 态势稳定，公信力保持在安全高位</span>';
+      } else {
+        if (noticeEl) noticeEl.innerHTML = '<b style="color:#ff2a5f;">❌ 彻底崩塌！公信力已跌破安全警戒红线！</b>';
       }
     }
   }
@@ -911,17 +948,26 @@ function renderCredibilityAndFists() {
   }
 }
 
-// 4.4 渲染横向可左右拖动时间轴 (彻底杜绝拖拽中的重绘跳闪)
-function renderHorizontalTimeline(force = false) {
+function escapeQuotes(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '&quot;')
+    .replace(/\n/g, ' ')
+    .replace(/\r/g, '');
+}
+
+// 4.4 渲染横向鱼骨图攻防时序图谱 (上红攻下蓝防 · 鱼刺时序骨骼)
+function renderFishboneTimeline(force = false) {
   const state = window.drillEngine ? window.drillEngine.getState() : {};
   const confrontations = state.timelineConfrontations || [];
   const viewport = document.getElementById('timelineScrollViewport');
   if (!viewport) return;
 
-  // 用户正在手动按住拖动时间轴时，严禁重绘打断用户视线
   if (isTimelineDragging && !force) return;
 
-  const checksum = confrontations.map(c => `${c.id}_${c.blues?.length || 0}`).join('|');
+  const checksum = confrontations.map(c => `${c.id}_${c.red ? 'R' : ''}_${c.blues?.length || 0}`).join('|');
   if (!force && checksum === lastTimelineChecksum) {
     return;
   }
@@ -932,74 +978,264 @@ function renderHorizontalTimeline(force = false) {
 
   if (confrontations.length === 0) {
     viewport.innerHTML = `
-      <div style="color:var(--pc-text-muted); font-size:12px; margin:auto;">
-        暂无攻防事件，等待红蓝双方发起推演内容...
+      <div style="color:var(--pc-text-muted); font-size:13px; margin:auto; text-align:center; padding:40px;">
+        <span style="font-size:28px;">🐟</span><br>
+        暂无攻防事件，等待红蓝双方发起时序推演内容...
       </div>
     `;
     return;
   }
 
+  const activeStageId = state.room?.stageId || 'STAGE-01';
+  const stageMap = {
+    'STAGE-01': '阶段一：初发舆情发现与核实',
+    'STAGE-02': '阶段二：现场受阻与初次通报',
+    'STAGE-03': '阶段三：家属情绪与次生舆情',
+    'STAGE-04': '阶段四：恶性造谣与辟谣执法',
+    'STAGE-05': '阶段五：新闻发布会与善后定调'
+  };
+
+  const getMiniPlatform = (platform, defaultType = 'red') => {
+    const p = platform || '';
+    if (p.includes('抖音')) return '<span class="card-mini-platform red">🎵 抖音</span>';
+    if (p.includes('微博')) return '<span class="card-mini-platform red">👁️ 微博</span>';
+    if (p.includes('快手')) return '<span class="card-mini-platform red">📹 快手</span>';
+    if (p.includes('点点密信') || p.includes('指令')) return '<span class="card-mini-platform blue">💬 密信指令</span>';
+    if (p.includes('发布会')) return '<span class="card-mini-platform blue">🎤 发布会</span>';
+    if (p.includes('通报') || p.includes('官方')) return '<span class="card-mini-platform blue">🏛️ 官方通报</span>';
+    return `<span class="card-mini-platform ${defaultType === 'red' ? 'red' : 'blue'}">📢 ${p || (defaultType === 'red' ? '网络平台' : '官方协同')}</span>`;
+  };
+
+  const getCleanSummaryText = (text) => {
+    if (!text) return '';
+    return text.replace(/<[^>]+>/g, '').trim();
+  };
+
+  const stageShortNameMap = {
+    'STAGE-01': '阶段一',
+    'STAGE-02': '阶段二',
+    'STAGE-03': '阶段三',
+    'STAGE-04': '阶段四',
+    'STAGE-05': '阶段五'
+  };
+
+  const stageDateMap = {
+    'STAGE-01': '04-08',
+    'STAGE-02': '04-08',
+    'STAGE-03': '04-08',
+    'STAGE-04': '04-09',
+    'STAGE-05': '04-09'
+  };
+
+  const columnsHtml = confrontations.map((c, idx) => {
+    const red = c.red || null;
+    const blues = (c.blues && c.blues.length > 0) ? c.blues : [];
+    const hasRed = !!(red && red.content);
+    const hasBlue = blues.length > 0;
+    const isNodeActive = c.stageId === activeStageId || idx === confrontations.length - 1;
+
+    // 清理阶段名称：删除阶段后面的具体文字，只保留“阶段一”、“阶段二”等纯净标识
+    const rawStageName = c.stageName || stageShortNameMap[c.stageId] || `阶段${idx + 1}`;
+    const cleanStageName = rawStageName.includes('：') 
+      ? rawStageName.split('：')[0] 
+      : (rawStageName.includes(':') ? rawStageName.split(':')[0] : rawStageName);
+
+    // 具体日期与时间展示 (例如 04-08 18:57)
+    let dateText = c.date;
+    if (!dateText) {
+      if (c.stageId === 'STAGE-03') {
+        const hour = parseInt(c.time || '00', 10);
+        dateText = (hour < 12) ? '04-09' : '04-08';
+      } else {
+        dateText = stageDateMap[c.stageId] || '04-08';
+      }
+    }
+    const timeText = c.time || '18:57';
+    const fullDateTime = `${dateText} ${timeText}`;
+
+    // 1. 上侧红方卡片 (极致轻量化：固定136px，角色标签、时间/得分、2行摘要、媒体缩略角标)
+    let redCardHtml = '';
+    let redBoneHtml = '';
+    if (hasRed) {
+      const hasVideo = !!(red.videoUrl || (red.assetName && red.assetName.includes('视频')) || red.assetId === 'AST-001');
+      const hasImg = !!(!hasVideo && (red.imgUrl || (red.assetName && (red.assetName.includes('照片') || red.assetName.includes('图')))));
+      const videoSrc = red.videoUrl || './media/fire_material_video.mp4';
+      const imgSrc = red.imgUrl || './media/cover.png';
+      const roleName = red.role || red.author || '网络施压角色';
+      const penaltyText = red.penalty ? `${red.penalty}分` : '-15分';
+      const summaryText = getCleanSummaryText(red.content || '');
+
+      let mediaThumbBadge = '';
+      if (hasVideo) {
+        mediaThumbBadge = `
+          <div class="card-media-badge red" onclick="event.stopPropagation(); openMediaZoomModal('video', '${videoSrc}', '【红方视频回放】${escapeQuotes(roleName)}')" title="点击播放完整视频">
+            <span class="media-badge-icon">▶</span>
+            <span class="media-badge-text">现场视频</span>
+          </div>
+        `;
+      } else if (hasImg) {
+        mediaThumbBadge = `
+          <div class="card-media-badge red" onclick="event.stopPropagation(); openMediaZoomModal('image', '${imgSrc}', '【红方现场图片】${escapeQuotes(roleName)}')" title="点击放大图片">
+            <span class="media-badge-icon">🔍</span>
+            <span class="media-badge-text">实况图片</span>
+          </div>
+        `;
+      } else {
+        mediaThumbBadge = `<span class="card-media-empty"></span>`;
+      }
+
+      redCardHtml = `
+        <div class="fishbone-card-red" onclick="openFishboneDetail('${c.id}', 'red')" title="点击查看详情与完整通报">
+          <div class="fishbone-card-head">
+            <div class="fishbone-card-role-wrap">
+              <span class="fishbone-card-avatar">${red.avatar || '🔴'}</span>
+              <span class="fishbone-card-role-name">${roleName}</span>
+              ${getMiniPlatform(red.platform, 'red')}
+            </div>
+            <div class="fishbone-card-meta-right">
+              <span class="fishbone-card-penalty">${penaltyText}</span>
+            </div>
+          </div>
+          <div class="fishbone-card-summary" title="${escapeQuotes(summaryText)}">
+            ${summaryText}
+          </div>
+          <div class="fishbone-card-foot">
+            ${mediaThumbBadge}
+            <span class="card-expand-link red">详情/全文 ❯</span>
+          </div>
+        </div>
+      `;
+      redBoneHtml = `
+        <div class="rib-laser-bone bone-down">
+          <span class="bone-arrow">▼</span>
+        </div>
+      `;
+    } else {
+      // 红方未发布留空：完全不展示任何框和文字，透明安全占位
+      redCardHtml = `<div class="fishbone-empty-transparent"></div>`;
+      redBoneHtml = `<div class="rib-laser-bone bone-transparent"></div>`;
+    }
+
+    // 2. 下侧蓝方卡片 (极致轻量化：固定136px，角色标签、时间/得分、2行摘要、媒体缩略角标)
+    let blueCardHtml = '';
+    let blueBoneHtml = '';
+    if (hasBlue) {
+      const b = blues[0];
+      const hasVideo = !!(b.videoUrl || (b.assetName && b.assetName.includes('视频')));
+      const hasImg = !!(!hasVideo && (b.imgUrl || (b.assetName && (b.assetName.includes('照片') || b.assetName.includes('图')))));
+      const videoSrc = b.videoUrl || './media/fire_material_video.mp4';
+      const imgSrc = b.imgUrl || './media/cover.png';
+      const roleName = b.role || '处置席位';
+      const restoreText = `+${b.delta || 10}分`;
+      const rawStatement = b.statement || b.desc || '已执行应急处置措施并固定证据';
+      const noticeTitle = b.title ? `【${b.title}】` : '';
+      const summaryText = getCleanSummaryText(rawStatement);
+
+      let mediaThumbBadge = '';
+      if (hasVideo) {
+        mediaThumbBadge = `
+          <div class="card-media-badge blue" onclick="event.stopPropagation(); openMediaZoomModal('video', '${videoSrc}', '【蓝方处置视频】${escapeQuotes(roleName)}')" title="点击播放完整视频">
+            <span class="media-badge-icon">▶</span>
+            <span class="media-badge-text">处置视频</span>
+          </div>
+        `;
+      } else if (hasImg) {
+        mediaThumbBadge = `
+          <div class="card-media-badge blue" onclick="event.stopPropagation(); openMediaZoomModal('image', '${imgSrc}', '【蓝方通报图片】${escapeQuotes(roleName)}')" title="点击放大图片">
+            <span class="media-badge-icon">🔍</span>
+            <span class="media-badge-text">通报图片</span>
+          </div>
+        `;
+      } else {
+        mediaThumbBadge = `<span class="card-media-empty"></span>`;
+      }
+
+      blueCardHtml = `
+        <div class="fishbone-card-blue" onclick="openFishboneDetail('${c.id}', 'blue')" title="点击查看详情与通报全文">
+          <div class="fishbone-card-head">
+            <div class="fishbone-card-role-wrap">
+              <span class="fishbone-card-avatar">${b.avatar || '🏛️'}</span>
+              <span class="fishbone-card-role-name">${roleName}</span>
+              ${getMiniPlatform(b.platform || b.category, 'blue')}
+            </div>
+            <div class="fishbone-card-meta-right">
+              <span class="fishbone-card-restore">${restoreText}</span>
+            </div>
+          </div>
+          <div class="fishbone-card-summary" title="${escapeQuotes(noticeTitle + summaryText)}">
+            ${noticeTitle ? `<span style="color:#00f0ff; font-weight:700;">${noticeTitle}</span>` : ''}${summaryText}
+          </div>
+          <div class="fishbone-card-foot">
+            ${mediaThumbBadge}
+            <span class="card-expand-link blue">查看通报 ❯</span>
+          </div>
+        </div>
+      `;
+      blueBoneHtml = `
+        <div class="rib-laser-bone bone-up">
+          <span class="bone-arrow">▲</span>
+        </div>
+      `;
+    } else {
+      // 蓝方未发布留空：完全不展示任何框和文字，透明安全占位
+      blueBoneHtml = `<div class="rib-laser-bone bone-transparent"></div>`;
+      blueCardHtml = `<div class="fishbone-empty-transparent"></div>`;
+    }
+
+    // 3. 中部时间轴节点：具体日期 + 时间与纯净所属阶段紧凑排在一起 (20% 高度区域)
+    return `
+      <div class="fishbone-vertebra-column ${isNodeActive ? 'active' : ''}" id="fb_node_${c.id}" data-cf-id="${c.id}">
+        <!-- 上部鱼刺：红方卡片或留空透明 (严格 40% 视口分配) -->
+        <div class="fishbone-rib-upper">
+          ${redCardHtml}
+          ${redBoneHtml}
+        </div>
+
+        <!-- 中部脊椎节点：具体日期与时间 + 所属阶段紧凑排在一起 (严格 20% 视口分配) -->
+        <div class="fishbone-vertebra-joint" onclick="focusFishboneNode('fb_node_${c.id}')" title="点击聚焦此节点 · ${fullDateTime} · ${cleanStageName}">
+          <div class="vertebra-compact-pill">
+            <span class="vertebra-compact-time">📅 ${fullDateTime}</span>
+            <span class="vertebra-compact-sep">|</span>
+            <span class="vertebra-compact-stage">${cleanStageName}</span>
+          </div>
+        </div>
+
+        <!-- 下部鱼刺：蓝方卡片或留空透明 (严格 40% 视口分配) -->
+        <div class="fishbone-rib-lower">
+          ${blueBoneHtml}
+          ${blueCardHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+
   viewport.innerHTML = `
     <div class="fishbone-track">
-      <div class="fishbone-spine-line"></div>
-      <div class="fishbone-head-badge">
-        <span>🐟 演练博弈前沿</span>
-        <span>▶</span>
+      <!-- 鱼头源头 -->
+      <div class="fishbone-head-hub">
+        <div class="fishbone-head-badge">
+          <span style="font-size:22px;">🔥</span>
+        </div>
+        <div class="fishbone-head-label">事发源头 18:57</div>
       </div>
-      ${confrontations.map((c, idx) => {
-        const red = c.red || {};
-        const blues = c.blues || [];
 
-        const bluesHtml = blues.length > 0 ? blues.map(b => `
-          <div style="background:rgba(0,240,255,0.06); border:1px solid rgba(0,240,255,0.25); border-radius:4px; padding:5px 8px; margin-bottom:4px;">
-            <div class="node-blue-head">
-              <span>🏛️ ${b.role || '处置席位'}</span>
-              <span style="color:var(--pc-cyan); font-weight:bold;">+${b.delta || 10}分</span>
-            </div>
-            <div style="color:#fff; font-weight:600; font-size:11px; margin-bottom:2px;">${b.title || ''}</div>
-            <div style="color:#94a3b8; font-size:10px; line-height:1.4;">${b.statement || ''}</div>
-          </div>
-        `).join('') : `
-          <div style="background:rgba(255,184,0,0.1); border:1px dashed #ffb800; border-radius:4px; padding:6px; color:#ffb800; font-size:10px; text-align:center;">
-            ⚠️ 官方应对响应中 (公信力持续承压)
-          </div>
-        `;
+      <!-- 贯穿主鱼骨中轴脊梁 -->
+      <div class="fishbone-main-spine"></div>
 
-        return `
-          <div class="fishbone-column-node" id="cf_node_${c.id}">
-            <!-- 上方红刺：红方施压卡片 -->
-            <div class="fishbone-upper-rib">
-              <div class="fishbone-card-red">
-                <div class="node-red-head">
-                  <span>👤 ${red.role || red.author || '红方角色'}</span>
-                  <span style="color:#ff6b8b; font-weight:bold;">${red.penalty || -15}分</span>
-                </div>
-                <div style="color:#fecaca; font-size:11px; margin-bottom:2px; line-height:1.4;">${red.content || ''}</div>
-                ${red.assetName ? `<div style="font-size:10px; color:#ff99ab; margin-top:2px;">🎬 关联物证: ${red.assetName}</div>` : ''}
-              </div>
-              <div class="fishbone-connector-top"></div>
-            </div>
+      <!-- 纵向鱼骨阵列 (严密对齐，节点清晰时序展现) -->
+      ${columnsHtml}
 
-            <!-- 中部脊椎骨节 -->
-            <div class="fishbone-vertebra-joint" title="推演节点 ${idx + 1} (${c.time || '18:57'})">
-              <span class="fishbone-joint-time">${c.time || '18:57'}</span>
-              <span class="fishbone-joint-seq">#${idx + 1}</span>
-            </div>
-
-            <!-- 下方蓝刺：蓝方应对卡片 -->
-            <div class="fishbone-lower-rib">
-              <div class="fishbone-connector-bottom"></div>
-              <div class="fishbone-card-blue">
-                ${bluesHtml}
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('')}
+      <!-- 鱼尾前沿 -->
+      <div class="fishbone-tail-hub">
+        <div class="fishbone-tail-badge">
+          <span style="font-size:22px;">🎯</span>
+        </div>
+        <div class="fishbone-tail-label">推演动态前沿</div>
+      </div>
     </div>
   `;
 
-  // 仅在新增了对抗项且没有在拖拽时，顺畅滚至最右最新前沿
+  // 顺畅滚至最新前沿
   if (isNewItemAdded && !isTimelineDragging) {
     requestAnimationFrame(() => {
       viewport.scrollTo({ left: viewport.scrollWidth, behavior: 'smooth' });
@@ -1007,11 +1243,33 @@ function renderHorizontalTimeline(force = false) {
   }
 }
 
+// 聚焦单个鱼骨节点并滚动居中
+function focusFishboneNode(nodeId) {
+  const node = document.getElementById(nodeId);
+  const viewport = document.getElementById('timelineScrollViewport');
+  if (node && viewport) {
+    const nodeLeft = node.offsetLeft;
+    const nodeWidth = node.clientWidth;
+    const viewWidth = viewport.clientWidth;
+    viewport.scrollTo({
+      left: Math.max(0, nodeLeft - viewWidth / 2 + nodeWidth / 2),
+      behavior: 'smooth'
+    });
+    document.querySelectorAll('.fishbone-vertebra-column').forEach(col => col.classList.remove('active'));
+    node.classList.add('active');
+  }
+}
+
+// 兼容别名
+function renderHorizontalTimeline(force = false) {
+  renderFishboneTimeline(force);
+}
+
 // 时间轴横向按钮滚动
 function scrollTimeline(direction) {
   const viewport = document.getElementById('timelineScrollViewport');
   if (!viewport) return;
-  const distance = direction === 'left' ? -340 : 340;
+  const distance = direction === 'left' ? -320 : 320;
   viewport.scrollBy({ left: distance, behavior: 'smooth' });
 }
 
@@ -1063,6 +1321,14 @@ function initTimelineMouseDrag() {
 
   window.addEventListener('mouseup', stopDrag);
   window.addEventListener('mouseleave', stopDrag);
+
+  // 支持鼠标滚轮水平滑动鱼骨图
+  viewport.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.preventDefault();
+      viewport.scrollLeft += e.deltaY * 1.2;
+    }
+  }, { passive: false });
 }
 
 // 4.5 底部虚拟时间推进进度轴
@@ -1077,6 +1343,14 @@ function renderVirtualProgressTracker() {
 
   if (fillEl) fillEl.style.width = `${percent}%`;
   if (textEl) textEl.textContent = `阶段 ${current} / ${total} · ${stages[currentStageIndex]?.name || '推演中'}`;
+
+  // 同步高亮底部阶段快捷按钮
+  for (let i = 0; i < 5; i++) {
+    const btn = document.getElementById(`pcStageBtn${i}`);
+    if (btn) {
+      btn.classList.toggle('active', i === currentStageIndex);
+    }
+  }
 }
 
 // ==================== 5. 右下角圆圈“点”字图标与点点密信群聊 ====================
@@ -1168,10 +1442,18 @@ function onEngineSync(state, action, payload) {
   if (currentActiveView === 'roster') {
     renderRosterView();
   } else if (currentActiveView === 'warroom') {
+    if (state.room?.stageIndex !== undefined) {
+      currentStageIndex = state.room.stageIndex;
+      const tagEl = document.getElementById('warCurrentStageTag');
+      if (tagEl && state.room.stageName) tagEl.textContent = state.room.stageName;
+      const fishboneTag = document.getElementById('fishboneActiveStageBadge');
+      if (fishboneTag && state.room.stageName) fishboneTag.textContent = state.room.stageName;
+    }
     renderWarRoomCampSeats();
     renderTrendingBanner();
     renderCredibilityAndFists();
-    renderHorizontalTimeline();
+    renderFishboneTimeline();
+    renderVirtualProgressTracker();
   }
 
   // IM 抽屉消息仅在展开时或收到新消息时更新
@@ -1604,32 +1886,197 @@ function showToastNotice(text) {
   console.log('[PC Notice]', text);
 }
 
-// ==================== 全局交互挂载 (兼容 HTML inline onclick) ====================
-if (typeof window !== 'undefined') {
-  Object.assign(window, {
-    switchView,
-    onTileClick,
-    enterCurrentSelectedScript,
-    previewLastDrillReport,
-    downloadLastDrillReport,
-    simulateClaimAllRoles,
-    attemptEnterWarRoom,
-    toggleSeatClaim,
-    handleStartDrill,
-    handlePauseDrill,
-    handleResumeDrill,
-    handleEndDrillManually,
-    handleEndDrillFromModal,
-    forceAdvanceStage,
-    scrollTimeline,
-    toggleFloatingIM,
-    quickSendCommand,
-    sendCommanderIMMessage,
-    openDebriefReportModal,
-    downloadCurrentDebriefReport,
-    returnToLobbyFromModal,
-    restartCurrentScriptDrill,
-    closeDebriefReportModal,
-    showToastNotice
-  });
-}
+// ==================== 通报全文、密信指令与富媒体抽屉模态弹窗 ====================
+
+window.openFishboneDetail = function(cfId, camp) {
+  const state = window.drillEngine ? window.drillEngine.getState() : {};
+  const confrontations = state.timelineConfrontations || [];
+  const c = confrontations.find(item => item.id === cfId);
+  if (!c) return;
+
+  const stageShortNameMap = {
+    'STAGE-01': '阶段一',
+    'STAGE-02': '阶段二',
+    'STAGE-03': '阶段三',
+    'STAGE-04': '阶段四',
+    'STAGE-05': '阶段五'
+  };
+  const stageDateMap = {
+    'STAGE-01': '04-08',
+    'STAGE-02': '04-08',
+    'STAGE-03': '04-08',
+    'STAGE-04': '04-09',
+    'STAGE-05': '04-09'
+  };
+
+  const rawStageName = c.stageName || stageShortNameMap[c.stageId] || '推演阶段';
+  const cleanStageName = rawStageName.includes('：') 
+    ? rawStageName.split('：')[0] 
+    : (rawStageName.includes(':') ? rawStageName.split(':')[0] : rawStageName);
+  let dateText = c.date;
+    if (!dateText) {
+      if (c.stageId === 'STAGE-03') {
+        const hour = parseInt(c.time || '00', 10);
+        dateText = (hour < 12) ? '04-09' : '04-08';
+      } else {
+        dateText = stageDateMap[c.stageId] || '04-08';
+      }
+    }
+  const timeText = c.time || '18:57';
+
+  if (camp === 'red' && c.red) {
+    const red = c.red;
+    const hasVideo = !!(red.videoUrl || (red.assetName && red.assetName.includes('视频')) || red.assetId === 'AST-001');
+    const hasImg = !!(!hasVideo && (red.imgUrl || (red.assetName && (red.assetName.includes('照片') || red.assetName.includes('图')))));
+    const videoSrc = red.videoUrl || './media/fire_material_video.mp4';
+    const imgSrc = red.imgUrl || './media/cover.png';
+    const roleName = red.role || red.author || '网络发酵施压角色';
+
+    openStatementDetailModal({
+      isRed: true,
+      avatar: red.avatar || '🔴',
+      role: roleName,
+      platform: red.platform || '抖音短视频发布',
+      date: dateText,
+      time: timeText,
+      stage: cleanStageName,
+      scoreText: red.penalty ? `${red.penalty}分` : '-15分',
+      title: `【红方施压通报】${roleName}`,
+      content: red.content || '暂无内容',
+      hasVideo: hasVideo,
+      videoSrc: videoSrc,
+      hasImg: hasImg,
+      imgSrc: imgSrc
+    });
+  } else if (camp === 'blue' && c.blues && c.blues.length > 0) {
+    const b = c.blues[0];
+    const hasVideo = !!(b.videoUrl || (b.assetName && b.assetName.includes('视频')));
+    const hasImg = !!(!hasVideo && (b.imgUrl || (b.assetName && (b.assetName.includes('照片') || b.assetName.includes('图')))));
+    const videoSrc = b.videoUrl || './media/fire_material_video.mp4';
+    const imgSrc = b.imgUrl || './media/cover.png';
+    const roleName = b.role || '应急处置席位';
+
+    openStatementDetailModal({
+      isRed: false,
+      avatar: b.avatar || '🏛️',
+      role: roleName,
+      platform: b.platform || b.category || '官方协同发布处置',
+      date: dateText,
+      time: timeText,
+      stage: cleanStageName,
+      scoreText: `+${b.delta || 10}分`,
+      title: b.title || '【官方应急协同处置通报与指令】',
+      content: b.statement || b.desc || '已执行应对处置措施并固定证据',
+      hasVideo: hasVideo,
+      videoSrc: videoSrc,
+      hasImg: hasImg,
+      imgSrc: imgSrc
+    });
+  }
+};
+
+window.openStatementDetailModal = function(data) {
+  const overlay = document.getElementById('overlayStatementDetail');
+  const avatarEl = document.getElementById('statementDetailRoleAvatar');
+  const titleEl = document.getElementById('statementDetailRoleTitle');
+  const metaEl = document.getElementById('statementDetailMeta');
+  const headingEl = document.getElementById('statementDetailHeading');
+  const fullTextEl = document.getElementById('statementDetailFullText');
+  const scoreTagEl = document.getElementById('statementDetailScoreTag');
+  const mediaBoxEl = document.getElementById('statementDetailMediaBox');
+
+  if (!overlay) return;
+
+  if (avatarEl) avatarEl.textContent = data.avatar || (data.isRed ? '🔴' : '🏛️');
+  if (titleEl) titleEl.textContent = data.role || '发布席位';
+  if (metaEl) {
+    const dateTime = `${data.date ? data.date + ' ' : ''}${data.time || '18:57'}`;
+    metaEl.textContent = `发布平台：${data.platform || '官方通报'} · ⏱️ ${dateTime} · 🚩 ${data.stage || '推演阶段'}`;
+  }
+  if (headingEl) {
+    headingEl.textContent = data.title || '发布通报与处置详情';
+    headingEl.style.color = data.isRed ? '#ff6b8b' : '#00f0ff';
+  }
+  if (fullTextEl) {
+    fullTextEl.innerHTML = (data.content || '').replace(/\n/g, '<br>');
+  }
+  if (scoreTagEl) {
+    scoreTagEl.textContent = `公信力影响：${data.scoreText || '+10分'}`;
+    scoreTagEl.style.color = data.isRed ? '#ff2a5f' : '#00e676';
+  }
+
+  // 富媒体抽屉呈现：视频播放器与大图在此居中完整播放与交互
+  if (mediaBoxEl) {
+    if (data.hasVideo) {
+      mediaBoxEl.style.display = 'block';
+      mediaBoxEl.innerHTML = `
+        <div style="background:#000; border-radius:6px; overflow:hidden; border:1px solid rgba(0,240,255,0.3); margin-bottom:12px;">
+          <div style="padding:4px 8px; font-size:11px; color:#00f0ff; background:rgba(0,240,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+            <span>🎬 现场视频素材完整回放 (支持音画控制与全屏播放)</span>
+          </div>
+          <video src="${data.videoSrc}" controls autoplay playsinline style="width:100%; max-height:280px; display:block; outline:none; background:#000;"></video>
+        </div>
+      `;
+    } else if (data.hasImg) {
+      mediaBoxEl.style.display = 'block';
+      mediaBoxEl.innerHTML = `
+        <div style="background:#000; border-radius:6px; overflow:hidden; border:1px solid rgba(0,240,255,0.3); margin-bottom:12px;">
+          <div style="padding:4px 8px; font-size:11px; color:#00f0ff; background:rgba(0,240,255,0.1);">
+            <span>🖼️ 实况证据图片 (点击放大)</span>
+          </div>
+          <img src="${data.imgSrc}" onclick="openMediaZoomModal('image', '${data.imgSrc}', '实况证据放大')" style="width:100%; max-height:260px; object-fit:contain; display:block; cursor:zoom-in;" alt="实况证据" />
+        </div>
+      `;
+    } else {
+      mediaBoxEl.style.display = 'none';
+      mediaBoxEl.innerHTML = '';
+    }
+  }
+
+  overlay.style.display = 'flex';
+};
+
+window.closeStatementDetailModal = function() {
+  const overlay = document.getElementById('overlayStatementDetail');
+  if (overlay) overlay.style.display = 'none';
+  const mediaBoxEl = document.getElementById('statementDetailMediaBox');
+  if (mediaBoxEl) {
+    const video = mediaBoxEl.querySelector('video');
+    if (video) video.pause();
+    mediaBoxEl.innerHTML = '';
+  }
+};
+
+window.openMediaZoomModal = function(type, src, title) {
+  const overlay = document.getElementById('overlayMediaZoom');
+  const titleEl = document.getElementById('mediaZoomTitle');
+  const bodyEl = document.getElementById('mediaZoomBody');
+
+  if (!overlay || !bodyEl) return;
+
+  if (titleEl) titleEl.textContent = title || '🔍 媒体素材放大查看';
+
+  if (type === 'video') {
+    bodyEl.innerHTML = `
+      <video src="${src}" controls autoplay playsinline class="media-zoom-video"></video>
+    `;
+  } else {
+    bodyEl.innerHTML = `
+      <img src="${src}" class="media-zoom-img" alt="放大查看" />
+    `;
+  }
+
+  overlay.style.display = 'flex';
+};
+
+window.closeMediaZoomModal = function(e) {
+  const overlay = document.getElementById('overlayMediaZoom');
+  const bodyEl = document.getElementById('mediaZoomBody');
+  if (overlay) overlay.style.display = 'none';
+  if (bodyEl) {
+    // 停止正在播放的视频
+    const video = bodyEl.querySelector('video');
+    if (video) video.pause();
+    bodyEl.innerHTML = '';
+  }
+};

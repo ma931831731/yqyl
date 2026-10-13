@@ -7,11 +7,6 @@
  * 4. 严密阵营隔离：只有蓝方才有点点密信聊天群，红方无点点密信；
  * 5. 演练结束后，全员弹出演练成功/失败结果，锁定所有操作禁止再次点击。
  */
-import '../../styles/common/cyber-base.css';
-import '../../styles/modules/mobile.css';
-import { drillEngine } from '../../core/sync-engine.js';
-import { getDrillCartridges } from '../../data/cartridges/index.js';
-import { showToast } from '../../components/common/toast.js';
 
 let myCurrentSeat = null;
 let currentViewingStageIndex = 0;
@@ -29,10 +24,33 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.drillEngine) {
     window.drillEngine.subscribe((state, action, payload) => {
       renderMobileView(state);
+      const score = state?.battle?.credibilityScore !== undefined ? state.battle.credibilityScore : 92;
+      updateMobileScoreBadge(score);
+
+      if (action === 'STAGE_ADVANCED') {
+        const stageName = state?.room?.stageName || '下一阶段';
+        showToastNotice(`🚀 演练阶段已推进至：【${stageName}】！`);
+      }
     });
     renderMobileView(window.drillEngine.getState());
   }
 });
+
+function updateMobileScoreBadge(score) {
+  const scoreBadge = document.getElementById('mStageScoreBadge');
+  if (!scoreBadge) return;
+  score = score !== undefined ? score : 92;
+  scoreBadge.textContent = `公信力 ${score}分`;
+  if (score >= 80) {
+    scoreBadge.className = 'm-stage-score-badge good';
+  } else if (score >= 60) {
+    scoreBadge.className = 'm-stage-score-badge warning';
+  } else {
+    scoreBadge.className = 'm-stage-score-badge danger';
+  }
+  scoreBadge.classList.add('pulse-anim');
+  setTimeout(() => scoreBadge.classList.remove('pulse-anim'), 800);
+}
 
 // ==================== 1. 选项卡与阵营隔离 ====================
 
@@ -191,7 +209,7 @@ function updateClueCardContent(seat) {
       `;
     } else {
       clueGuide.innerHTML = `
-        <div>1. 本阶段处置防守：点击【🛡️ 阶段处置防守】，选择正向协同或推诿扯皮措施，主导事态走向。</div>
+        <div>1. 本阶段处置防守：点击【🛡️ 阶段处置防守】，选择协同处置措施，快速响应并化解舆情危机。</div>
         <div>2. 点点密信指挥群：点击【💬 点点密信指挥群】，接收指挥长指令、哨兵机器人警报与协同汇报。</div>
         <div>3. 核心目标：保持各阶段信息公开与通报辟谣，确保公信力始终保持在 80 分以上直至演练成功！</div>
       `;
@@ -356,11 +374,12 @@ function renderCurrentStageCombatCards(state) {
   const scoreBadge = document.getElementById('mStageScoreBadge');
   const stageDesc = document.getElementById('mStageDescText');
 
+  const score = state?.battle?.credibilityScore !== undefined ? state.battle.credibilityScore : 92;
   if (!isRunning && !isDrillFinishedLock) {
     if (headerTitle) headerTitle.textContent = '⏳ 战备就绪 · 等待PC作战室开启实战';
     if (scoreBadge) {
-      scoreBadge.textContent = '待命中';
-      scoreBadge.className = 'm-stage-score-badge';
+      scoreBadge.textContent = `公信力 ${score}分`;
+      scoreBadge.className = 'm-stage-score-badge' + (score >= 80 ? ' good' : score >= 60 ? ' warning' : ' danger');
     }
     if (stageDesc) {
       stageDesc.textContent = `您已就绪席位【${myCurrentSeat?.name || '当前角色'}】。当前PC作战室未开启实战，只能查看身份还不能作战。作战室点击【开始演练】后将自动激活！`;
@@ -369,14 +388,9 @@ function renderCurrentStageCombatCards(state) {
     if (headerTitle) headerTitle.textContent = stage.name;
     if (stageDesc) stageDesc.textContent = stage.summary || '双方红蓝多轮博弈攻防正在进行中...';
 
-    const score = state?.battle?.credibilityScore !== undefined ? state.battle.credibilityScore : 100;
     if (scoreBadge) {
       scoreBadge.textContent = `公信力 ${score}分`;
-      if (score < 60) {
-        scoreBadge.className = 'm-stage-score-badge danger';
-      } else {
-        scoreBadge.className = 'm-stage-score-badge';
-      }
+      scoreBadge.className = 'm-stage-score-badge' + (score >= 80 ? ' good' : score >= 60 ? ' warning' : ' danger');
     }
   }
 
@@ -388,22 +402,21 @@ function renderCurrentStageCombatCards(state) {
     });
   }
 
-  // 3. 渲染红方进攻卡片
+  // 3. 渲染当前角色独有措施
   if (isRed) {
     renderRedStageCards(stage, state);
   } else {
     renderBlueStageCards(stage, state);
   }
 
-  // 4. 渲染后台配置全员席位在该阶段的任务与快速切换卡片
-  renderAllRolesOverview(stage, state);
+  // 4. 实时展示红蓝双方所有历史已经对抗的进展
+  renderTimelineConfrontationsHistory(state);
 }
 
-// 渲染红方当前阶段进攻
+// 渲染红方当前角色专属进攻措施 (不展示其他人的措施)
 function renderRedStageCards(stage, state) {
   const exclusiveContainer = document.getElementById('redRoleExclusiveList');
-  const collabContainer = document.getElementById('redRoleCollabList');
-  if (!exclusiveContainer || !collabContainer) return;
+  if (!exclusiveContainer) return;
 
   // 汇集当前阶段所有红方进攻项
   const allRedAttacks = [];
@@ -422,18 +435,10 @@ function renderRedStageCards(stage, state) {
     });
   }
 
-  const exclusiveList = [];
-  const collabList = [];
+  // 严格只筛选当前角色的专属措施，不展示该阶段其他人的措施
+  const exclusiveList = allRedAttacks.filter(att => isMatchRedRole(att.role || att.author, myCurrentSeat));
 
-  allRedAttacks.forEach(att => {
-    if (isMatchRedRole(att.role || att.author, myCurrentSeat)) {
-      exclusiveList.push(att);
-    } else {
-      collabList.push(att);
-    }
-  });
-
-  const renderCard = (att, isExclusive = false) => {
+  const renderCard = (att) => {
     const isExecuted = executedActionIds.has(att.id);
     const hasVideo = att.assetId === 'AST-001' || (att.assetName && att.assetName.includes('视频'));
     const penalty = att.penalty || -15;
@@ -442,14 +447,14 @@ function renderRedStageCards(stage, state) {
     if (hasVideo) {
       mediaHtml = `
         <div class="m-media-box">
-          <div class="m-media-tag">🎬 剧本配置素材视频 (MP4·居民楼爆燃实拍)</div>
-          <video src="./media/fire_material_video.mp4" controls playsinline preload="metadata" poster="https://images.unsplash.com/photo-1542385151-efd9000785a0?w=400" class="m-media-video"></video>
+          <div class="m-media-tag">🎬 发布视频素材 (MP4·居民楼爆燃实拍)</div>
+          <video src="./media/fire_material_video.mp4" controls playsinline preload="metadata" poster="./media/cover.png" class="m-media-video"></video>
         </div>
       `;
     } else if (att.assetName) {
       mediaHtml = `
         <div class="m-media-box" style="padding:6px 10px; font-size:11px; color:#ff99ab;">
-          📸 剧本配置多模态素材：${att.assetName}
+          📸 发布素材证据：${att.assetName}
         </div>
       `;
     }
@@ -477,10 +482,10 @@ function renderRedStageCards(stage, state) {
     }
 
     return `
-      <div class="m-action-card m-action-card-red ${isExclusive ? 'exclusive-card' : ''}">
+      <div class="m-action-card m-action-card-red exclusive-card">
         <div class="m-card-head">
-          <span class="m-card-badge ${isExclusive ? 'm-card-badge-exclusive' : 'm-card-badge-platform'}">
-            ${isExclusive ? '⭐ 本席位专属进攻' : `👤 ${att.role || '红方角色'}`}
+          <span class="m-card-badge m-card-badge-exclusive">
+            ⭐ ${myCurrentSeat?.name || '当前角色'}专属措施
           </span>
           <span class="m-card-badge m-card-badge-platform">
             ${att.platform || '抖音短视频'} · ${att.trendingRank || '冲击热搜'}
@@ -493,7 +498,7 @@ function renderRedStageCards(stage, state) {
         ${mediaHtml}
 
         <div class="m-card-impact-row" style="justify-content: flex-end;">
-          <span style="color:#788aa6; font-size:11px;">${isExecuted ? '● 进攻已发动生效' : (!isCombatActive ? '⏳ 待命中' : '● 待发起攻势')}</span>
+          <span style="color:#788aa6; font-size:10px;">${isExecuted ? '● 已推入中枢' : (!isCombatActive ? '⏳ 待命就绪' : '● 待发起')}</span>
         </div>
 
         <button class="m-action-btn btn-cyber-red action-executable-btn ${btnClass}" 
@@ -506,19 +511,16 @@ function renderRedStageCards(stage, state) {
   };
 
   exclusiveContainer.innerHTML = exclusiveList.length > 0 
-    ? exclusiveList.map(item => renderCard(item, true)).join('')
-    : `<div style="padding:12px; text-align:center; color:#788aa6; font-size:11.5px; background:rgba(0,0,0,0.25); border-radius:6px;">本阶段当前席位待命中，可协同友军发起下方攻势。</div>`;
-
-  collabContainer.innerHTML = collabList.length > 0
-    ? collabList.map(item => renderCard(item, false)).join('')
-    : `<div style="padding:10px; text-align:center; color:#64748b; font-size:11px;">暂无其他协同红方攻势</div>`;
+    ? exclusiveList.map(item => renderCard(item)).join('')
+    : `<div style="padding:16px; text-align:center; color:#94a3b8; font-size:12px; background:rgba(255,42,95,0.06); border:1px dashed rgba(255,42,95,0.3); border-radius:8px;">
+        【${myCurrentSeat?.name || '当前角色'}】在当前阶段暂无待发起的专属措施，可关注下方红蓝历史对抗进展。
+       </div>`;
 }
 
-// 渲染蓝方当前阶段防守措施 (学员移动端不展示走向与分值增减)
+// 渲染蓝方当前角色专属防守措施 (不展示其他人的措施)
 function renderBlueStageCards(stage, state) {
   const exclusiveContainer = document.getElementById('blueRoleExclusiveList');
-  const collabContainer = document.getElementById('blueRoleCollabList');
-  if (!exclusiveContainer || !collabContainer) return;
+  if (!exclusiveContainer) return;
 
   const allBlueMeasures = [];
 
@@ -538,18 +540,10 @@ function renderBlueStageCards(stage, state) {
     });
   }
 
-  const exclusiveList = [];
-  const collabList = [];
+  // 严格只筛选当前角色的专属措施，不展示该阶段其他人的措施
+  const exclusiveList = allBlueMeasures.filter(m => isMatchBlueRole(m.role, myCurrentSeat));
 
-  allBlueMeasures.forEach(m => {
-    if (isMatchBlueRole(m.role, myCurrentSeat)) {
-      exclusiveList.push(m);
-    } else {
-      collabList.push(m);
-    }
-  });
-
-  const renderCard = (m, isExclusive = false) => {
+  const renderCard = (m) => {
     const isExecuted = executedActionIds.has(m.id);
     const isNegative = m.type === 'negative' || (m.delta && m.delta < 0);
     const delta = m.delta !== undefined ? m.delta : (isNegative ? -15 : 10);
@@ -573,16 +567,16 @@ function renderBlueStageCards(stage, state) {
     } else {
       btnClass = isNegative ? 'btn-cyber-red' : 'btn-cyber';
       btnDisabled = false;
-      btnText = '🛡️ 报送并执行处置措施';
+      btnText = isNegative ? '⚠️ 执行此项应对处置' : '🛡️ 报送并执行处置措施';
     }
 
     return `
-      <div class="m-action-card m-action-card-blue ${isNegative ? 'negative-branch' : ''} ${isExclusive ? 'exclusive-card' : ''}">
+      <div class="m-action-card m-action-card-blue ${isNegative ? 'negative-branch' : ''} exclusive-card">
         <div class="m-card-head">
+          <span class="m-card-badge m-card-badge-exclusive">⭐ ${myCurrentSeat?.name || '当前角色'}专属处置措施</span>
           <span class="m-card-badge m-card-badge-platform">
-            ${m.role || myCurrentSeat?.department || '协同部门'}
+            ${m.role || myCurrentSeat?.department || '应急协同'}
           </span>
-          ${isExclusive ? '<span class="m-card-badge m-card-badge-exclusive">⭐ 本席位专属行动</span>' : ''}
         </div>
 
         <div class="m-card-title">${m.title || '前线应急处置响应与核实'}</div>
@@ -591,7 +585,7 @@ function renderBlueStageCards(stage, state) {
         </div>
 
         <div class="m-card-impact-row" style="justify-content: flex-end;">
-          <span style="color:#788aa6; font-size:11px;">${isExecuted ? '● 措施已执行上报' : (!isCombatActive ? '⏳ 待命中' : '● 待执行上报')}</span>
+          <span style="color:#788aa6; font-size:10px;">${isExecuted ? '● 措施已执行' : (!isCombatActive ? '⏳ 待命就绪' : '● 待执行上报')}</span>
         </div>
 
         <button class="m-action-btn action-executable-btn ${btnClass}"
@@ -604,70 +598,91 @@ function renderBlueStageCards(stage, state) {
   };
 
   exclusiveContainer.innerHTML = exclusiveList.length > 0
-    ? exclusiveList.map(item => renderCard(item, true)).join('')
-    : `<div style="padding:12px; text-align:center; color:#788aa6; font-size:11.5px; background:rgba(0,0,0,0.25); border-radius:6px;">本阶段当前席位未配置独立行动，可协同各部门执行下方措施。</div>`;
-
-  collabContainer.innerHTML = collabList.length > 0
-    ? collabList.map(item => renderCard(item, false)).join('')
-    : `<div style="padding:10px; text-align:center; color:#64748b; font-size:11px;">暂无其他协同部门措施</div>`;
+    ? exclusiveList.map(item => renderCard(item)).join('')
+    : `<div style="padding:16px; text-align:center; color:#94a3b8; font-size:12px; background:rgba(0,240,255,0.06); border:1px dashed rgba(0,240,255,0.3); border-radius:8px;">
+        【${myCurrentSeat?.name || '当前角色'}】在当前阶段暂无待报送的专属措施，请保持待命并关注下方红蓝历史对抗进展。
+       </div>`;
 }
 
-// 渲染后台剧本配置的全部席位在该阶段的任务概览，并支持直接切换进入对应人员视角
-function renderAllRolesOverview(stage, state) {
+// 实时渲染当前红蓝双方所有历史已经对抗的进展
+function renderTimelineConfrontationsHistory(state) {
   const isRed = myCurrentSeat?.camp === 'red';
-  const container = document.getElementById(isRed ? 'redAllRolesOverview' : 'blueAllRolesOverview');
-  if (!container || !state?.seats) return;
+  const container = document.getElementById(isRed ? 'redTimelineConfrontationList' : 'blueTimelineConfrontationList');
+  if (!container) return;
 
-  const targetCamp = isRed ? 'red' : 'blue';
-  const seatsList = Object.values(state.seats).filter(s => s.camp === targetCamp);
+  const confrontations = (state && state.timelineConfrontations) ? state.timelineConfrontations : [];
 
-  const getRoleStageDesc = (seat) => {
-    if (!stage) return '待命中';
-    if (seat.camp === 'red') {
-      if (seat.id === 'red_cloud') return '【阶段一】发布火灾现场实况视频 (MP4)，冲击热搜 Top 1';
-      if (seat.id === 'red_live') return '【阶段一】发布火势窜起十米高有人挥白毛巾';
-      if (seat.id === 'red_owner') return '【阶段二】发布私家车堵塞消防通道现场照片';
-      if (seat.id === 'red_reporter') return '【阶段二】红星新闻直播被抢设备引发采访声讨';
-      if (seat.id === 'red_parents') return '【阶段三】正义家长联盟质疑黑产补课发酵';
-      if (seat.id === 'red_xiaofei') return '【阶段四】评论区造谣担架抬出20多个死伤惨重';
-      if (seat.id === 'red_huahua') return '【阶段四】微博大V恶性造谣“据说死了50人”';
-      if (seat.id === 'red_family') return '【阶段三/四】家属群聚集声讨要说法';
-      return '依处置阶段发起网络舆情攻击';
-    } else {
-      if (seat.id === 'blue_commander') return '【阶段一】点点密信内部指令督导应急消防核查伤亡';
-      if (seat.id === 'blue_emergency') return '【阶段一】现场疏散群众展开内攻 / 以非本管辖推诿扯皮';
-      if (seat.id === 'blue_fire') return '【阶段一】高喷车内攻灭火 / 【阶段二】破拆移位阻障车辆';
-      if (seat.id === 'blue_police') return '【阶段二】交通管制疏导 / 【阶段四】依法行政拘留造谣大V';
-      if (seat.id === 'blue_spokesman') return '【阶段二】首期伤亡权威通报 / 【阶段五】新闻发布会致歉答问';
-      if (seat.id === 'blue_health') return '【阶段三】一户一专班入驻医院 / 【阶段四】公布真实救治名册';
-      if (seat.id === 'blue_housing') return '【阶段三】查封物业维保台账移交纪检监察立案';
-      if (seat.id === 'blue_street') return '【阶段三】深入社区群众开展温情抚慰善后';
-      return '跨部门应急协同与官方通报发布';
-    }
-  };
+  if (confrontations.length === 0) {
+    container.innerHTML = `
+      <div style="padding:14px; text-align:center; color:#64748b; font-size:11.5px; background:rgba(0,0,0,0.25); border-radius:6px;">
+        暂无红蓝对抗历史记录，推演开启后将在此实时流水展现...
+      </div>
+    `;
+    return;
+  }
 
-  container.innerHTML = seatsList.map(s => {
-    const isCurrent = myCurrentSeat?.id === s.id;
-    const taskDesc = getRoleStageDesc(s);
-    return `
-      <div style="background:#0e162b; border:1px solid ${isCurrent ? (isRed ? '#ff2a5f' : '#00f0ff') : 'rgba(255,255,255,0.08)'}; border-radius:6px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center;">
-        <div style="display:flex; align-items:center; gap:8px; flex:1; overflow:hidden;">
-          <span style="font-size:20px;">${s.avatar || (isRed ? '📱' : '🏛️')}</span>
-          <div style="flex:1; overflow:hidden;">
-            <div style="display:flex; align-items:center; gap:6px;">
-              <span style="font-size:12px; font-weight:700; color:#fff;">${s.name}</span>
-              ${isCurrent ? `<span style="font-size:9px; background:${isRed ? '#ff2a5f' : '#00f0ff'}; color:${isRed ? '#fff' : '#000'}; font-weight:700; padding:1px 4px; border-radius:2px;">当前视角</span>` : ''}
-            </div>
-            <div style="font-size:10px; color:#94a3b8; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${taskDesc}</div>
+  container.innerHTML = confrontations.map((c, idx) => {
+    const red = c.red || null;
+    const blues = (c.blues && c.blues.length > 0) ? c.blues : [];
+    const hasRed = !!(red && red.content);
+    const hasBlue = blues.length > 0;
+    const timeText = c.time || '18:57';
+    const stageName = c.stageName || `阶段 ${idx + 1}`;
+
+    let redBox = '';
+    if (hasRed) {
+      const hasVideo = red.videoUrl || (red.assetName && red.assetName.includes('视频')) || red.assetId === 'AST-001';
+      const videoSrc = red.videoUrl || './media/fire_material_video.mp4';
+
+      redBox = `
+        <div style="background:rgba(255,42,95,0.08); border:1px solid rgba(255,42,95,0.35); border-radius:6px; padding:8px 10px; margin-bottom:${hasBlue ? '6px' : '0'};">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="color:#ff6b8b; font-weight:700; font-size:11.5px;">${red.avatar || '🔴'} ${red.role || red.author || '红方角色'}</span>
+            <span style="color:#ff2a5f; font-size:10.5px; background:rgba(255,42,95,0.2); padding:1px 5px; border-radius:3px;">${red.penalty ? red.penalty + '分' : '-15分'}</span>
           </div>
+          <div style="font-size:10px; color:#ff99ab; margin-bottom:4px;">📢 ${red.platform || '社交媒体平台'}</div>
+          <div style="font-size:11.5px; color:#f1f5f9; line-height:1.45; word-break:break-all;">${red.content || ''}</div>
+          ${hasVideo ? `
+            <div style="margin-top:6px;">
+              <video src="${videoSrc}" controls playsinline preload="metadata" poster="./media/cover.png" style="width:100%; max-height:140px; border-radius:4px; background:#000; display:block;"></video>
+            </div>
+          ` : ''}
         </div>
-        <button class="btn-cyber ${isRed ? 'btn-cyber-red' : ''}" style="padding:3px 8px; font-size:10px; white-space:nowrap; margin-left:8px;" onclick="selectRole('${s.id}')">
-          ${isCurrent ? '当前视角' : '进入该视角 ❯'}
-        </button>
+      `;
+    }
+
+    let blueBox = '';
+    if (hasBlue) {
+      blueBox = blues.map(b => `
+        <div style="background:rgba(0,240,255,0.08); border:1px solid rgba(0,240,255,0.35); border-radius:6px; padding:8px 10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="color:#00f0ff; font-weight:700; font-size:11.5px;">${b.avatar || '🏛️'} ${b.role || '处置席位'}</span>
+            <span style="color:#00e676; font-size:10.5px; background:rgba(0,230,118,0.2); padding:1px 5px; border-radius:3px;">+${b.delta || 10}分</span>
+          </div>
+          <div style="font-size:11px; font-weight:700; color:#fff; margin-bottom:3px;">${b.title || '官方应对处置'}</div>
+          <div style="font-size:11.5px; color:#cbd5e1; line-height:1.45; word-break:break-all;">${b.statement || b.desc || ''}</div>
+        </div>
+      `).join('');
+    }
+
+    return `
+      <div style="background:#09101f; border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px; box-shadow:0 2px 6px rgba(0,0,0,0.5);">
+        <!-- 节点时间轴标志 -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:6px; border-bottom:1px dashed rgba(255,255,255,0.1);">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="background:#00f0ff; color:#000; font-size:10px; font-weight:800; padding:1px 6px; border-radius:10px;">#${idx + 1}</span>
+            <span style="font-size:11px; font-weight:700; color:#94a3b8;">${stageName}</span>
+          </div>
+          <span style="font-size:11px; font-family:monospace; color:#ffb800; font-weight:700;">⏱️ ${timeText}</span>
+        </div>
+
+        ${redBox}
+        ${blueBox}
       </div>
     `;
   }).join('');
 }
+
 
 function escapeQuotes(str) {
   if (!str) return '';
@@ -702,7 +717,7 @@ function triggerRedAttack(id, content, penalty, role, platform, assetName) {
 
   window.drillEngine.postRedCombat(postData);
 
-  alert(`🔥 进攻发动成功！\n以【${postData.role}】身份发布爆料，政府公信力已扣除 ${Math.abs(postData.penalty)} 分，PC 作战中枢与大屏已同步更新！`);
+  alert(`🔥 进攻发动成功！\n以【${postData.role}】身份发布爆料，PC 作战中枢与大屏已同步更新！`);
   renderCurrentStageCombatCards(window.drillEngine.getState());
 }
 
@@ -731,7 +746,7 @@ function triggerBlueDefense(id, title, statement, delta, role, targetCfId) {
 
   window.drillEngine.executeBlueMeasure(measureData, targetCfId || null);
 
-  const prefix = delta >= 0 ? '✅ 处置报送成功！公信力挽回 +' + delta + '分' : '⚠️ 已执行失当应对！公信力扣减 ' + delta + '分';
+  const prefix = delta >= 0 ? '✅ 处置报送成功！' : '⚠️ 已执行失当应对方案！';
   alert(`${prefix}\n已通过点点密信内部通报，并推入 PC 作战中枢时间轴！`);
   renderCurrentStageCombatCards(window.drillEngine.getState());
 }
@@ -855,7 +870,7 @@ function initMobileChat() {
       branchName: '正向有效应对'
     });
 
-    alert('✅ 处置措施已报送并同步推入作战室！公信力恢复 +' + delta + '分。');
+    alert('✅ 处置措施已报送并同步推入作战室！');
   };
 }
 
@@ -1003,7 +1018,7 @@ function renderMobileView(state) {
               <div style="font-size:13px; font-weight:bold; color:#ff6b8b;">${red.role || '网络发酵账号'}</div>
               <div style="font-size:10px; color:#687b96;">${c.time || '18:57'} · ${red.platform || '网络'}</div>
             </div>
-            <span style="font-size:11px; color:#ff2a5f; font-weight:700;">${red.penalty || -15}分</span>
+            <span style="font-size:11px; color:#ff6b8b; font-weight:600;">🔥 负面发酵</span>
           </div>
           <div style="font-size:13px; color:#e0e8f5; line-height:1.5; margin-bottom:8px;">${red.content || ''}</div>
           ${red.assetName ? `<div style="font-size:11px; color:#ff99ab; margin-bottom:6px;">🎬 ${red.assetName}</div>` : ''}
@@ -1082,19 +1097,4 @@ function showToastNotice(msg) {
     toast.style.opacity = '0';
     toast.style.top = '30px';
   }, 3500);
-}
-
-// ==================== 全局交互挂载 (兼容 HTML inline onclick) ====================
-if (typeof window !== 'undefined') {
-  Object.assign(window, {
-    switchMobileView,
-    openRoleSelectSheet,
-    closeRoleSelectSheet,
-    selectRole,
-    triggerRedAttack,
-    triggerBlueDefense,
-    quickSendChip,
-    closeDrillResultModal,
-    showToastNotice
-  });
 }

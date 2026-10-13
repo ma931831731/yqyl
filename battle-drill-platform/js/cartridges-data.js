@@ -33,38 +33,67 @@ window.DEFAULT_DRILL_CARTRIDGES = [
         timeTag: '04-08 18:57 ~ 19:30',
         summary: '抖音网民“云朵儿”发布爆燃视频引发热炒，网信巡查发现并点点迷信内部调度应急消防核实。',
         selectedBranch: 'branch_a',
-        // 环节内先红后蓝展示，支持单进攻无防守、一进攻多防守
+        // 环节内严格时序节点展现：一个节点一个发布者，未发布方留空
         confrontations: [
           {
             id: 'CF-101',
+            time: '18:57',
+            stageId: 'STAGE-01',
+            stageName: '阶段一：初发舆情发现与核实',
             red: {
               id: 'RP-101',
               role: '抖音网民“云朵儿”',
+              author: '云朵儿',
+              avatar: '📱',
               platform: '抖音短视频',
               content: '“P区X街道花园居小区高层突发爆燃事故！” 视频可见浓烟滚滚、房屋烧毁严重，逃生居民中见十余名穿着校服哭泣的学生。(获8000点赞、560条评论)',
               assetId: 'AST-001',
-              assetName: '火灾现场实况视频 (MP4)',
+              assetName: '火灾现场实况视频.mp4',
+              videoUrl: './media/fire_material_video.mp4',
               penalty: -15,
               trendingPlatform: 'douyin',
               trendingRank: 'Top 1 (爆)'
             },
+            blues: [] // 蓝方未发布留空
+          },
+          {
+            id: 'CF-102',
+            time: '19:15',
+            stageId: 'STAGE-01',
+            stageName: '阶段一：初发舆情发现与核实',
+            red: null, // 红方未发布留空
             blues: [
               {
                 id: 'BM-1A1',
                 role: '市委网信办监测专班',
+                author: '网信指挥席',
+                avatar: '👑',
                 category: 'diandian_dispatch',
-                title: '【点点密信指令】调度区应急局与消防大队30分钟内核实现场与伤亡',
+                platform: '点点密信内部指令',
+                title: '【点点密信指令】调度应急消防30分钟内核实现场伤亡',
                 statement: '【点点密信内部督导】@区应急管理局 @区消防救援大队：网络监测到花园居突发爆燃舆情，请30分钟内紧急报送初核火情、现场伤亡及首批搜救力量！',
                 branchName: '走向 1-A (协同高效核实)',
                 docAssetId: '',
                 delta: 10,
                 trendingPlatform: '',
                 trendingRank: ''
-              },
+              }
+            ]
+          },
+          {
+            id: 'CF-103',
+            time: '19:25',
+            stageId: 'STAGE-01',
+            stageName: '阶段一：初发舆情发现与核实',
+            red: null, // 红方未发布留空
+            blues: [
               {
                 id: 'BM-1A2',
                 role: '区应急管理局指挥调度席',
+                author: '应急指挥席',
+                avatar: '🛡️',
                 category: 'field_operation',
+                platform: '官方现场应急处置',
                 title: '【前线应急处置】疏散现场人员与设立警戒区，120名消防官兵展开内攻',
                 statement: '【前线处置情况】区应急管理局现场疏散转移受灾群众286人，设立外围安全警戒线，区消防8台高喷车展开内攻灭火，暂无人员死亡汇报。',
                 branchName: '走向 1-A (首战协同闭环)',
@@ -72,26 +101,19 @@ window.DEFAULT_DRILL_CARTRIDGES = [
                 delta: 10,
                 trendingPlatform: 'weibo',
                 trendingRank: '同城榜首'
-              },
-              {
-                id: 'BM-1B',
-                role: '区应急管理局指挥调度席',
-                category: 'field_operation',
-                title: '措施 1-B：以非本管辖推诿扯皮，超1小时未回应',
-                statement: '【失当推诿走向】部门间沟通迟缓，以“非本管辖权属”推诿扯皮，迟迟未划定警戒线疏散人群，任由群众围观拍摄，处置响应拖延超1小时。',
-                branchName: '走向 1-B (失当迟滞失控)',
-                docAssetId: '',
-                delta: -15,
-                trendingPlatform: '',
-                trendingRank: ''
               }
             ]
           },
           {
-            id: 'CF-102',
+            id: 'CF-104',
+            time: '19:30',
+            stageId: 'STAGE-01',
+            stageName: '阶段一：初发舆情发现与核实',
             red: {
               id: 'RP-102',
               role: '现场聚集围观群众',
+              author: '现场围观群众',
+              avatar: '👥',
               platform: '快手平台 / 微信群',
               content: '“现场火势窜起十几米高，警报声响成一片，有人在窗边挥白毛巾求救！” (多群转发数百次，现场恐慌情绪蔓延)',
               assetId: '',
@@ -100,7 +122,7 @@ window.DEFAULT_DRILL_CARTRIDGES = [
               trendingPlatform: 'kuaishou',
               trendingRank: 'Top 3 (沸)'
             },
-            blues: [] // 示范：只有进攻没有防守！待处置应对状态
+            blues: [] // 蓝方未发布留空
           }
         ],
         redCamp: {
@@ -206,22 +228,39 @@ window.DEFAULT_DRILL_CARTRIDGES = [
         confrontations: [
           {
             id: 'CF-201',
+            time: '19:45',
+            stageId: 'STAGE-02',
+            stageName: '阶段二：现场受阻与初次通报',
             red: {
               id: 'RP-201',
               role: '涉事小区业主代表',
-              platform: '微博 / 抖音',
+              author: '业主代表',
+              avatar: '🏢',
+              platform: '新浪微博 / 微信群',
               content: '小区消防通道被多辆私家车严重堵塞，消防车被堵在门外进不去！现场一度混乱，#消防通道变死亡通道#引发众怒！',
               assetId: 'AST-002',
               assetName: '消防通道堵死现场监控照片 (JPG)',
+              imgUrl: './media/cover.png',
               penalty: -15,
               trendingPlatform: 'weibo',
               trendingRank: 'Top 3 (#消防通道变死亡通道#)'
             },
+            blues: [] // 蓝方未发布留空
+          },
+          {
+            id: 'CF-202',
+            time: '20:10',
+            stageId: 'STAGE-02',
+            stageName: '阶段二：现场受阻与初次通报',
+            red: null, // 红方未发布留空
             blues: [
               {
                 id: 'BM-2A1',
                 role: '消防现场指挥部 & 交警排障组',
+                author: '消防交警联勤',
+                avatar: '🚒',
                 category: 'field_operation',
+                platform: '消防交警联勤处置',
                 title: '破拆违停私家车开辟救援通道 + 纪检监察倒查涉事物业安全责任',
                 statement: '【排障指令】交警与消防联勤联动，依法对违停阻碍救援车辆强行破拆移位，确保供水登高通道畅通。',
                 branchName: '走向 2-A (攻克救援堵点)',
@@ -233,10 +272,15 @@ window.DEFAULT_DRILL_CARTRIDGES = [
             ]
           },
           {
-            id: 'CF-202',
+            id: 'CF-203',
+            time: '20:30',
+            stageId: 'STAGE-02',
+            stageName: '阶段二：现场受阻与初次通报',
             red: {
               id: 'RP-202',
               role: '《红星新闻》驻市记者团队',
+              author: '红星新闻直播团队',
+              avatar: '📹',
               platform: '快手直播 / 微信公众号',
               content: '记者越过警戒线进行现场直播，以“警戒线标注不明”拒绝离开，疑似与现场个别安保发生争夺摄像设备，全网声讨采访遇阻！',
               assetId: 'AST-004',
@@ -245,11 +289,22 @@ window.DEFAULT_DRILL_CARTRIDGES = [
               trendingPlatform: 'toutiao',
               trendingRank: 'Top 2 (热)'
             },
+            blues: [] // 蓝方未发布留空
+          },
+          {
+            id: 'CF-204',
+            time: '20:45',
+            stageId: 'STAGE-02',
+            stageName: '阶段二：现场受阻与初次通报',
+            red: null, // 红方未发布留空
             blues: [
               {
                 id: 'BM-2A2',
                 role: '宣传部媒体协调组',
+                author: '媒体协调专员',
+                avatar: '📢',
                 category: 'media_interview',
+                platform: '宣传部媒体协调',
                 title: '【突发采访应对】引导记者至安全采访区，现场回应搜救进度保障知情权',
                 statement: '【突发采访回应】“感谢媒体监督，现场正在进行高空内攻救援，请记者朋友随同转入安全发布区，我们每半小时通报搜救进展。”',
                 branchName: '走向 2-A1 (善待媒体善用媒体)',
@@ -257,15 +312,27 @@ window.DEFAULT_DRILL_CARTRIDGES = [
                 delta: 10,
                 trendingPlatform: '',
                 trendingRank: ''
-              },
+              }
+            ]
+          },
+          {
+            id: 'CF-205',
+            time: '21:00',
+            stageId: 'STAGE-02',
+            stageName: '阶段二：现场受阻与初次通报',
+            red: null, // 红方未发布留空
+            blues: [
               {
                 id: 'BM-2A3',
                 role: '联合调查组新闻发言人',
+                author: '官方新闻发言人',
+                avatar: '🏛️',
                 category: 'official_notice',
+                platform: '新浪微博权威通报',
                 templateId: 'AST-DOC-01',
                 docAssetId: 'AST-DOC-01',
                 title: '【官方通报发布】选用模版《火灾搜救与基本情况通报》(附件一) 权威发布',
-                statement: '【第一期搜救通报】截至21时明火完全扑灭，疏散286人，搜救出伤员21人，4人不幸遇难。联合调查组已成立。',
+                statement: '【第一期搜救通报】截至21时明火完全扑灭，共疏散286人，搜救出伤员21人，4人不幸遇难。联合调查组已成立。',
                 branchName: '走向 2-A2 (抢占事实首发权)',
                 delta: 15,
                 trendingPlatform: 'weibo',
@@ -376,10 +443,16 @@ window.DEFAULT_DRILL_CARTRIDGES = [
         confrontations: [
           {
             id: 'CF-301',
+            date: '04-08',
+            time: '21:30',
+            stageId: 'STAGE-03',
+            stageName: '阶段三：家属情绪与次生舆情',
             red: {
               id: 'RP-301',
               role: '快手自媒体“@直击K市现场”',
-              platform: '快手平台',
+              author: '直击K市现场',
+              avatar: '📱',
+              platform: '快手短视频',
               content: '移花接木其它事件视频声称：“维权家属被便衣警察押上黑车，政府镇压！” 恶意渲染警民冲突。(引发跨群热议)',
               assetId: '',
               assetName: '',
@@ -387,13 +460,25 @@ window.DEFAULT_DRILL_CARTRIDGES = [
               trendingPlatform: 'kuaishou',
               trendingRank: 'Top 2 (热)'
             },
+            blues: [] // 蓝方未发布留空
+          },
+          {
+            id: 'CF-302',
+            date: '04-08',
+            time: '22:15',
+            stageId: 'STAGE-03',
+            stageName: '阶段三：家属情绪与次生舆情',
+            red: null, // 红方未发布留空
             blues: [
               {
                 id: 'BM-3A1',
                 role: '联合善后专班 (街道+卫健)',
+                author: '善后关怀专班',
+                avatar: '❤️',
                 category: 'diandian_dispatch',
-                title: '【点点迷信内部督导】一户一专班连夜入驻医院，真诚倾听家属诉求',
-                statement: '【点点迷信督导】街道与卫健联合抽调24人组建4个关怀组，一对一帮扶遇难和重伤者家庭，开辟医疗心理双通道。',
+                platform: '点点密信督导协同',
+                title: '【点点密信内部督导】一户一专班连夜入驻医院，真诚倾听家属诉求',
+                statement: '【点点密信督导】街道与卫健联合抽调24人组建4个关怀组，一对一帮扶遇难和重伤者家庭，开辟医疗心理双通道。',
                 branchName: '走向 3-A1 (温情救济化解矛盾)',
                 docAssetId: '',
                 delta: 15,
@@ -403,10 +488,16 @@ window.DEFAULT_DRILL_CARTRIDGES = [
             ]
           },
           {
-            id: 'CF-302',
+            id: 'CF-303',
+            date: '04-08',
+            time: '23:00',
+            stageId: 'STAGE-03',
+            stageName: '阶段三：家属情绪与次生舆情',
             red: {
               id: 'RP-302',
               role: '微博组织“@正义家长联盟”',
+              author: '正义家长联盟',
+              avatar: '🎓',
               platform: '微博同城话题',
               content: '“育才中学学生火灾中逃生！教育局明面取消晚自习暗地纵容居民楼补课！拿孩子命换升学率？#补课黑产业链#” (转发4.1万)',
               assetId: '',
@@ -415,11 +506,23 @@ window.DEFAULT_DRILL_CARTRIDGES = [
               trendingPlatform: 'weibo',
               trendingRank: 'Top 4 (#补课黑产业链#)'
             },
+            blues: [] // 蓝方未发布留空
+          },
+          {
+            id: 'CF-304',
+            date: '04-09',
+            time: '01:30',
+            stageId: 'STAGE-03',
+            stageName: '阶段三：家属情绪与次生舆情',
+            red: null, // 红方未发布留空
             blues: [
               {
                 id: 'BM-3A2',
                 role: '区教育局核查专班',
+                author: '教育局联合调查组',
+                avatar: '🏫',
                 category: 'official_notice',
+                platform: '官方微博通报',
                 title: '【教育核查通报】连夜联合摸排租住房源，澄清起火住户为普通陪读家庭',
                 statement: '【教育核查通报】经深入核查，起火单元为两户普通租住家庭，未开设辅导机构，逃生学生为同小区结伴复习，谣言不实。',
                 branchName: '走向 3-A2 (快速核查阻断黑产炒作)',
@@ -431,24 +534,43 @@ window.DEFAULT_DRILL_CARTRIDGES = [
             ]
           },
           {
-            id: 'CF-303',
+            id: 'CF-305',
+            date: '04-09',
+            time: '03:20',
+            stageId: 'STAGE-03',
+            stageName: '阶段三：家属情绪与次生舆情',
             red: {
               id: 'RP-303',
               role: '业主群维权爆料网民',
+              author: '业主爆料网民',
+              avatar: '🏢',
               platform: '小红书 / 微信群',
-              content: '“去年消防检查合格是物业伪造签字！消火栓箱里根本没有水枪水带！XX物业谋杀业主！” (附空箱照片)',
+              content: '“去年消防检查合格是物业伪造签字！消火栓箱里根本没有水枪水带！XX物业谋杀业主！” (附空消火栓箱照片)',
               assetId: 'AST-003',
               assetName: '空消火栓箱与伪造签字图 (PNG)',
+              imgUrl: './media/cover.png',
               penalty: -15,
               trendingPlatform: 'douyin',
               trendingRank: 'Top 5'
             },
+            blues: [] // 蓝方未发布留空
+          },
+          {
+            id: 'CF-306',
+            date: '04-09',
+            time: '05:40',
+            stageId: 'STAGE-03',
+            stageName: '阶段三：家属情绪与次生舆情',
+            red: null, // 红方未发布留空
             blues: [
               {
                 id: 'BM-3A3',
                 role: '区住建局与消防执法科',
+                author: '住建与执法科',
+                avatar: '⚖️',
                 category: 'field_operation',
-                title: '查封涉事物业历年消防台账 + 纪检监察倒查维保虚假签字',
+                platform: '今日头条权威通报',
+                title: '【立案通报】查封涉事物业历年消防台账 + 纪检监察倒查维保虚假签字',
                 statement: '【立案通报】住建与消防执法部门已查封物业公司消防安全维保档案，涉嫌虚假签字问题已移交纪检监察部门立案查处。',
                 branchName: '走向 3-A3 (铁腕执法平息众怒)',
                 docAssetId: '',
@@ -570,10 +692,15 @@ window.DEFAULT_DRILL_CARTRIDGES = [
         confrontations: [
           {
             id: 'CF-401',
+            time: '07:15',
+            stageId: 'STAGE-04',
+            stageName: '阶段四：恶性造谣与辟谣执法',
             red: {
               id: 'RP-401',
               role: '抖音造谣网民“小飞飞”',
-              platform: '潇湘晨报短视频评论区',
+              author: '小飞飞 (张某)',
+              avatar: '🚨',
+              platform: '潇湘晨报评论区',
               content: '“我就在对面小区住，亲眼看到来了好多消防员，担架都抬了二十多个，应该死了不少人！” (获点赞6820条)',
               assetId: '',
               assetName: '',
@@ -581,23 +708,66 @@ window.DEFAULT_DRILL_CARTRIDGES = [
               trendingPlatform: 'douyin',
               trendingRank: 'Top 2 (热)'
             },
+            blues: [] // 蓝方未发布留空
+          },
+          {
+            id: 'CF-402',
+            time: '08:00',
+            stageId: 'STAGE-04',
+            stageName: '阶段四：恶性造谣与辟谣执法',
+            red: null, // 红方未发布留空
             blues: [
               {
                 id: 'BM-4A1',
                 role: '市委网信辟谣专班',
+                author: '网信辟谣专班',
+                avatar: '👑',
                 category: 'diandian_dispatch',
-                title: '【点点迷信指令】指令公安网安锁定“小飞飞”账号IP与真实身份',
-                statement: '【点点迷信指令】@区公安分局网安大队：请立即对抖音造谣账号“小飞飞”进行溯源落地，锁定造谣者现住址！',
+                platform: '点点密信内部指令',
+                title: '【点点密信指令】指令公安网安锁定“小飞飞”账号IP与真实身份',
+                statement: '【点点密信指令】@区公安分局网安大队：请立即对抖音造谣账号“小飞飞”进行溯源落地，锁定造谣者现住址！',
                 branchName: '走向 4-A1 (技术溯源锁定)',
                 docAssetId: '',
                 delta: 10,
                 trendingPlatform: '',
                 trendingRank: ''
-              },
+              }
+            ]
+          },
+          {
+            id: 'CF-403',
+            time: '08:45',
+            stageId: 'STAGE-04',
+            stageName: '阶段四：恶性造谣与辟谣执法',
+            red: {
+              id: 'RP-402',
+              role: '微博造谣大V“花花的世界”',
+              author: '花花的世界 (李某)',
+              avatar: '⚡',
+              platform: '新浪微博大V评论区',
+              content: '“一直听到爆炸声，据说死了50人！” (获点赞13941，回复4328条，恐慌跨平台裂变扩散)',
+              assetId: '',
+              assetName: '',
+              penalty: -20,
+              trendingPlatform: 'weibo',
+              trendingRank: 'Top 1 (爆)'
+            },
+            blues: [] // 蓝方未发布留空
+          },
+          {
+            id: 'CF-404',
+            time: '09:30',
+            stageId: 'STAGE-04',
+            stageName: '阶段四：恶性造谣与辟谣执法',
+            red: null, // 红方未发布留空
+            blues: [
               {
                 id: 'BM-4A2',
                 role: 'K市公安局P区分局 (网安/治安)',
+                author: '公安网安支队',
+                avatar: '👮',
                 category: 'official_notice',
+                platform: '官方抖音警情通报',
                 templateId: 'AST-DOC-02',
                 docAssetId: 'AST-DOC-02',
                 title: '【官方通报发布】选用模版《K市公安局P区分局警情通报》(附件二) 拘留张某10日',
@@ -610,27 +780,23 @@ window.DEFAULT_DRILL_CARTRIDGES = [
             ]
           },
           {
-            id: 'CF-402',
-            red: {
-              id: 'RP-402',
-              role: '微博造谣大V“花花的世界”',
-              platform: '新浪微博大V评论区',
-              content: '“一直听到爆炸声，据说死了50人！” (获点赞13941，回复4328条，恐慌跨平台裂变扩散)',
-              assetId: '',
-              assetName: '',
-              penalty: -20,
-              trendingPlatform: 'weibo',
-              trendingRank: 'Top 1 (爆)'
-            },
+            id: 'CF-405',
+            time: '10:15',
+            stageId: 'STAGE-04',
+            stageName: '阶段四：恶性造谣与辟谣执法',
+            red: null, // 红方未发布留空
             blues: [
               {
                 id: 'BM-4A3',
                 role: 'K市公安局P区分局 & 市卫健委',
+                author: '公安与卫健委联合通报',
+                avatar: '🏥',
                 category: 'official_notice',
+                platform: '官方微博警情通报',
                 templateId: 'AST-DOC-02',
                 docAssetId: 'AST-DOC-02',
                 title: '【官方通报发布】公布定点收治医院真实花名册，依法行政拘留李某10日',
-                statement: '【警情通报】违法嫌疑人李某故意编造传播“据说死了50人”虚假谣言，已被依法行政拘留10日。网络不是法外之地！',
+                statement: '【警情通报】违法嫌疑人李某故意编造传播“据说死了50人”虚假谣言，已被依法行政拘留10日。网络不是法外之地！市卫健委公布定点医院真实收治花名册。',
                 branchName: '走向 4-A3 (粉碎恐慌阻断裂变)',
                 delta: 20,
                 trendingPlatform: 'weibo',
@@ -724,9 +890,14 @@ window.DEFAULT_DRILL_CARTRIDGES = [
         confrontations: [
           {
             id: 'CF-501',
+            time: '13:30',
+            stageId: 'STAGE-05',
+            stageName: '阶段五：新闻发布会与善后定调',
             red: {
               id: 'RP-501',
               role: '现场主流媒体与行业记者团',
+              author: '媒体记者连环质询',
+              avatar: '🎤',
               platform: '新闻发布会提问席',
               content: '“起火原因到底是不是燃气爆炸？” “物业去年合格检查是否存在猫腻？” “现场个别安保抢夺记者摄像机如何处理？”',
               assetId: '',
@@ -735,11 +906,22 @@ window.DEFAULT_DRILL_CARTRIDGES = [
               trendingPlatform: 'toutiao',
               trendingRank: 'Top 3 (热)'
             },
+            blues: [] // 蓝方未发布留空
+          },
+          {
+            id: 'CF-502',
+            time: '14:30',
+            stageId: 'STAGE-05',
+            stageName: '阶段五：新闻发布会与善后定调',
+            red: null, // 红方未发布留空
             blues: [
               {
                 id: 'BM-5A1',
-                role: '联合调查组新闻发言人 (区委常委/常务副区长)',
+                role: '联合调查组新闻发言人 (常务副区长)',
+                author: '官方新闻发言人',
+                avatar: '🏛️',
                 category: 'press_conf',
+                platform: '新闻发布会全网直播',
                 title: '【新闻发布会】全体肃立默哀 + 权威定性燃气爆燃 + 为推搡记者诚恳致歉',
                 statement: '【发布会统发口径】起火原因系23层住宅东侧燃气爆燃；全区开展消防生命通道大清障；对抢夺记者设备涉事人员严肃处分，捍卫公众知情权。',
                 branchName: '走向 5-A1 (担当诚恳主动定调)',
@@ -747,11 +929,23 @@ window.DEFAULT_DRILL_CARTRIDGES = [
                 delta: 25,
                 trendingPlatform: 'weibo',
                 trendingRank: 'Top 1 (权威置顶)'
-              },
+              }
+            ]
+          },
+          {
+            id: 'CF-503',
+            time: '15:15',
+            stageId: 'STAGE-05',
+            stageName: '阶段五：新闻发布会与善后定调',
+            red: null, // 红方未发布留空
+            blues: [
               {
                 id: 'BM-5A2',
                 role: '区消防救援大队大队长',
+                author: '消防大队长',
+                avatar: '🚒',
                 category: 'press_conf',
+                platform: '新闻发布会答记者问',
                 title: '【新闻发布会】详细解答消火栓水压与登高救援科学施救事实',
                 statement: '【答记者问】现场共出动3个消防救援站、8辆大跨度登高灭火平台车，首支水枪出水时间为19时08分，物业虚假签名已依法由监察机关立案。',
                 branchName: '走向 5-A2 (专业释疑回应当面关切)',
@@ -869,10 +1063,16 @@ window.getDrillCartridges = function() {
   try {
     if (typeof localStorage !== 'undefined') {
       const raw = localStorage.getItem('battle_drill_cartridges');
-      if (raw) return JSON.parse(raw);
+      if (raw && raw.includes('CF-103')) return JSON.parse(raw);
     }
   } catch (e) {}
-  return JSON.parse(JSON.stringify(window.DEFAULT_DRILL_CARTRIDGES));
+  const fresh = JSON.parse(JSON.stringify(window.DEFAULT_DRILL_CARTRIDGES));
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('battle_drill_cartridges', JSON.stringify(fresh));
+    }
+  } catch (e) {}
+  return fresh;
 };
 
 window.saveDrillCartridges = function(cartridges) {
@@ -881,13 +1081,4 @@ window.saveDrillCartridges = function(cartridges) {
       localStorage.setItem('battle_drill_cartridges', JSON.stringify(cartridges));
     }
   } catch (e) {}
-};
-
-export const DEFAULT_DRILL_CARTRIDGES = window.DEFAULT_DRILL_CARTRIDGES;
-export const getDrillCartridges = window.getDrillCartridges;
-export const saveDrillCartridges = window.saveDrillCartridges;
-export default {
-  DEFAULT_DRILL_CARTRIDGES,
-  getDrillCartridges,
-  saveDrillCartridges
 };

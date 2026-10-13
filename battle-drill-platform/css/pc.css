@@ -949,255 +949,575 @@ body {
   }
 }
 
-/* ==========================================================================
-   鱼骨图 (Fishbone Timeline Diagram) 样式与全息背景
-   ========================================================================== */
-.timeline-horizontal-container {
+/* 3. 拳头下方：横向可左右拖动时间轴 (左到右展示H5红蓝作战内容) */
+/* 3. 拳头下方：横向鱼骨图攻防时序推进轴 (支持全时序骨架联动与科技沙盘背景) */
+.timeline-horizontal-container.fishbone-panel {
   flex: 1;
-  background: 
-    radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.08) 0%, transparent 75%),
-    linear-gradient(180deg, rgba(6, 11, 24, 0.95), rgba(3, 6, 14, 0.98));
-  border: 1px solid rgba(0, 240, 255, 0.25);
-  border-radius: 6px;
+  background-color: #050814;
+  background-image: 
+    radial-gradient(circle at 50% 30%, rgba(0, 240, 255, 0.08) 0%, transparent 65%),
+    radial-gradient(circle at 15% 85%, rgba(255, 42, 95, 0.06) 0%, transparent 50%),
+    linear-gradient(rgba(5, 9, 22, 0.92), rgba(3, 6, 16, 0.95)),
+    url('../media/bg.png');
+  background-size: cover, cover, cover, cover;
+  background-position: center;
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  box-shadow: inset 0 0 35px rgba(0, 240, 255, 0.04), 0 8px 30px rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 0 35px rgba(0, 240, 255, 0.06), 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
-/* 战术全息底图网格背景图 */
-.timeline-horizontal-container::before {
+/* 鱼骨图战术蓝图装饰层 */
+.timeline-horizontal-container.fishbone-panel::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  inset: 0;
   pointer-events: none;
   background-image: 
-    linear-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px),
-    radial-gradient(circle at 10% 20%, rgba(255, 42, 95, 0.06) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(0, 240, 255, 0.08) 0%, transparent 40%);
-  background-size: 32px 32px, 32px 32px, 100% 100%, 100% 100%;
-  opacity: 0.85;
-  z-index: 0;
+    linear-gradient(to right, rgba(0, 240, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.7;
 }
 
-.timeline-nav-bar {
-  position: relative;
-  z-index: 1;
-  padding: 5px 12px;
-  background: rgba(10, 18, 36, 0.9);
+.timeline-nav-bar.fishbone-nav-bar {
+  padding: 6px 12px;
+  background: rgba(8, 14, 28, 0.94);
   border-bottom: 1px solid rgba(0, 240, 255, 0.2);
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 11.5px;
+  position: relative;
+  z-index: 2;
 }
 
-.timeline-scroll-viewport {
-  position: relative;
-  z-index: 1;
+.timeline-scroll-viewport.fishbone-viewport {
   flex: 1;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: hidden !important;
   display: flex;
-  align-items: center;
-  padding: 10px 16px;
+  padding: 8px 16px;
+  align-items: stretch;
   cursor: grab;
   user-select: none;
   -webkit-overflow-scrolling: touch;
+  position: relative;
+  z-index: 1;
+  height: calc(100% - 34px);
+  box-sizing: border-box;
 }
-.timeline-scroll-viewport:active {
+
+.timeline-scroll-viewport.fishbone-viewport:active {
   cursor: grabbing;
 }
 
 .timeline-scroll-viewport::-webkit-scrollbar {
-  height: 6px;
+  height: 8px;
+  width: 8px;
+}
+.timeline-scroll-viewport::-webkit-scrollbar-track {
+  background: rgba(4, 7, 16, 0.8);
 }
 .timeline-scroll-viewport::-webkit-scrollbar-thumb {
-  background: rgba(0, 240, 255, 0.4);
-  border-radius: 3px;
+  background: linear-gradient(90deg, #ff2a5f, #00f0ff);
+  border-radius: 4px;
 }
 
-/* 鱼骨图横向主轨道 */
+/* 鱼骨图总线轨道容器 (严格保持纵向 100% 安全视口，杜绝纵向溢出) */
 .fishbone-track {
   display: flex;
-  align-items: center;
-  min-width: 100%;
+  align-items: stretch;
   position: relative;
-  padding: 10px 40px;
+  min-width: max-content;
+  padding: 6px 20px;
+  height: 100%;
+  min-height: 100%;
+  max-height: 100%;
+  box-sizing: border-box;
 }
 
-/* 鱼骨中心发光脊梁骨中轴线 */
-.fishbone-spine-line {
+/* 鱼骨中轴脊梁激光线 (精准落在几何中心 50%，横贯鱼头至鱼尾) */
+.fishbone-main-spine {
   position: absolute;
-  left: 0;
-  right: 0;
   top: 50%;
+  left: 20px;
+  right: 25px;
   height: 4px;
-  background: linear-gradient(90deg, #ff2a5f 0%, #d946ef 30%, #00f0ff 70%, #00e676 100%);
-  box-shadow: 0 0 14px rgba(0, 240, 255, 0.7), 0 0 4px #fff;
+  background: linear-gradient(90deg, #00f0ff 0%, #00e676 45%, #ff2a5f 100%);
   transform: translateY(-50%);
-  z-index: 1;
-  border-radius: 2px;
-}
-
-/* 鱼头推进指示器 (前沿) */
-.fishbone-head-badge {
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: linear-gradient(135deg, #00f0ff, #0088ff);
-  color: #000;
-  font-weight: 900;
-  font-size: 10px;
-  padding: 3px 8px;
-  border-radius: 12px;
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.8);
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  z-index: 3;
-}
-
-/* 单个鱼骨柱节点 */
-.fishbone-column-node {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  min-width: 310px;
-  max-width: 330px;
-  margin: 0 18px;
-  flex-shrink: 0;
   z-index: 2;
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.7), 0 0 28px rgba(0, 240, 255, 0.35);
 }
 
-/* 脊椎骨节点锚点 (位于中轴线上) */
-.fishbone-vertebra-joint {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #0e1e3c 0%, #060a14 100%);
-  border: 2px solid var(--pc-cyan);
+.fishbone-main-spine::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(90deg, transparent, #fff, transparent);
+  animation: spineLaserFlow 3s linear infinite;
+  opacity: 0.7;
+}
+
+@keyframes spineLaserFlow {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* 鱼头源头徽标 (居中对齐中轴) */
+.fishbone-head-hub {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 16px rgba(0, 240, 255, 0.8), inset 0 0 8px rgba(0, 240, 255, 0.5);
+  margin-right: 24px;
   position: relative;
-  z-index: 4;
-  margin: 8px 0;
+  z-index: 5;
+  flex-shrink: 0;
+  height: 100%;
+}
+
+.fishbone-head-badge {
+  background: radial-gradient(circle, #0e2246 0%, #061124 100%);
+  border: 2px solid #00f0ff;
+  border-radius: 50%;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00f0ff;
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.5);
+}
+
+.fishbone-head-label {
+  font-size: 11px;
+  color: #00f0ff;
+  font-weight: 700;
+  margin-top: 6px;
+  white-space: nowrap;
+}
+
+/* 鱼尾收官徽标 (居中对齐中轴) */
+.fishbone-tail-hub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-left: 24px;
+  position: relative;
+  z-index: 5;
+  flex-shrink: 0;
+  height: 100%;
+}
+
+.fishbone-tail-badge {
+  background: radial-gradient(circle, #24142e 0%, #0c0816 100%);
+  border: 2px solid #ff2a5f;
+  border-radius: 50%;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff2a5f;
+  box-shadow: 0 0 18px rgba(255, 42, 95, 0.5);
+}
+
+.fishbone-tail-label {
+  font-size: 11px;
+  color: #ff2a5f;
+  font-weight: 700;
+  margin-top: 6px;
+  white-space: nowrap;
+}
+
+/* ================= 4:2:4 比例分配安全视口与鱼骨结构 ================= */
+
+/* 鱼骨时序纵列单元 (固定宽度320px，纵向100%充满，无溢出) */
+.fishbone-vertebra-column {
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+  height: 100%;
+  min-height: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+  margin: 0 14px;
+  z-index: 3;
+  box-sizing: border-box;
+}
+
+/* 1. 上方卡片区 (严格 40% 比例分配) */
+.fishbone-rib-upper {
+  width: 100%;
+  height: 40%;
+  flex: 4;
+  min-height: 0;
+  max-height: 40%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* 2. 中轴区 (严格 20% 比例分配，与主脊椎对齐) */
+.fishbone-vertebra-joint {
+  width: 100%;
+  height: 20%;
+  flex: 2;
+  min-height: 0;
+  max-height: 20%;
+  position: relative;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   cursor: pointer;
+}
+
+/* 3. 下方卡片区 (严格 40% 比例分配) */
+.fishbone-rib-lower {
+  width: 100%;
+  height: 40%;
+  flex: 4;
+  min-height: 0;
+  max-height: 40%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* 骨针激光连线 (紧凑14px) */
+.rib-laser-bone {
+  width: 2px;
+  height: 14px;
+  min-height: 14px;
+  max-height: 14px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.rib-laser-bone.bone-down {
+  background: linear-gradient(to bottom, #ff2a5f 0%, #00f0ff 100%);
+  box-shadow: 0 0 6px rgba(255, 42, 95, 0.8);
+}
+.rib-laser-bone.bone-up {
+  background: linear-gradient(to bottom, #00f0ff 0%, #00e676 100%);
+  box-shadow: 0 0 6px rgba(0, 240, 255, 0.8);
+}
+.rib-laser-bone .bone-arrow {
+  font-size: 8px;
+  position: absolute;
+  line-height: 1;
+}
+.rib-laser-bone.bone-down .bone-arrow {
+  bottom: -2px;
+  color: #00f0ff;
+  text-shadow: 0 0 4px #00f0ff;
+}
+.rib-laser-bone.bone-up .bone-arrow {
+  top: -2px;
+  color: #00f0ff;
+  text-shadow: 0 0 4px #00f0ff;
+}
+.rib-laser-bone.bone-transparent {
+  background: transparent !important;
+  box-shadow: none !important;
+  visibility: hidden;
+}
+
+/* 中轴脊椎胶囊节点 (紧凑纯净，仅时间与阶段) */
+.vertebra-compact-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(6, 13, 26, 0.96);
+  border: 1.5px solid rgba(0, 240, 255, 0.55);
+  border-radius: 18px;
+  padding: 4px 12px;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);
+  white-space: nowrap;
   transition: all 0.2s ease;
 }
-.fishbone-vertebra-joint:hover {
-  transform: scale(1.15);
-  border-color: #fff;
-  box-shadow: 0 0 25px rgba(0, 240, 255, 1);
-}
-
-.fishbone-joint-time {
-  font-size: 9px;
-  font-weight: 800;
-  color: #fff;
+.vertebra-compact-time {
+  font-size: 11.5px;
   font-family: monospace;
-  line-height: 1;
+  color: #ffb800;
+  font-weight: 800;
+  letter-spacing: 0.5px;
 }
-.fishbone-joint-seq {
-  font-size: 8px;
-  color: var(--pc-cyan);
-  line-height: 1;
-  margin-top: 1px;
+.vertebra-compact-sep {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 700;
+}
+.vertebra-compact-stage {
+  font-size: 11px;
+  font-weight: 700;
+  color: #00f0ff;
+  letter-spacing: 0.5px;
+}
+.fishbone-vertebra-column.active .vertebra-compact-pill {
+  border-color: #ffb800;
+  box-shadow: 0 0 18px rgba(255, 184, 0, 0.7);
+}
+.fishbone-vertebra-column.active .vertebra-compact-stage {
+  color: #ffb800;
 }
 
-/* 上方红方鱼刺骨架卡片 */
-.fishbone-upper-rib {
+/* 未发布留空：固定136px完全透明占位，杜绝纵向抖动与错位 */
+.fishbone-empty-transparent {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
+  height: 136px;
+  min-height: 136px;
+  max-height: 136px;
+  background: transparent;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: none;
 }
 
-.fishbone-connector-top {
-  width: 2px;
-  height: 14px;
-  background: linear-gradient(to top, rgba(0, 240, 255, 0.8), #ff2a5f);
-  box-shadow: 0 0 8px rgba(255, 42, 95, 0.6);
-}
+/* ================= 卡片高度极致轻量化 (固定 136px，整齐统一) ================= */
 
+/* 红方攻势卡片 (固定 136px 高度，轻量紧凑) */
 .fishbone-card-red {
   width: 100%;
-  background: rgba(22, 10, 18, 0.88);
-  border: 1px solid rgba(255, 42, 95, 0.45);
-  border-radius: 6px;
-  padding: 7px 10px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5), inset 0 0 12px rgba(255, 42, 95, 0.08);
-  backdrop-filter: blur(8px);
-  position: relative;
-  transition: transform 0.2s ease, border-color 0.2s ease;
-}
-.fishbone-card-red:hover {
-  border-color: var(--pc-red);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(255, 42, 95, 0.35);
-}
-
-/* 下方蓝方鱼刺骨架卡片 */
-.fishbone-lower-rib {
-  width: 100%;
+  height: 136px;
+  min-height: 136px;
+  max-height: 136px;
+  background: rgba(22, 10, 26, 0.95);
+  border: 1.5px solid rgba(255, 42, 95, 0.65);
+  border-radius: 8px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), 0 0 10px rgba(255, 42, 95, 0.2);
   position: relative;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+  box-sizing: border-box;
+  cursor: pointer;
+  overflow: hidden;
+}
+.fishbone-card-red:hover {
+  border-color: #ff2a5f;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 42, 95, 0.45);
 }
 
-.fishbone-connector-bottom {
-  width: 2px;
-  height: 14px;
-  background: linear-gradient(to bottom, rgba(0, 240, 255, 0.8), #00f0ff);
-  box-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
-}
-
+/* 蓝方防守卡片 (固定 136px 高度，轻量紧凑) */
 .fishbone-card-blue {
   width: 100%;
-  background: rgba(8, 18, 36, 0.88);
-  border: 1px solid rgba(0, 240, 255, 0.4);
-  border-radius: 6px;
-  padding: 7px 10px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5), inset 0 0 12px rgba(0, 240, 255, 0.08);
-  backdrop-filter: blur(8px);
+  height: 136px;
+  min-height: 136px;
+  max-height: 136px;
+  background: rgba(8, 20, 42, 0.95);
+  border: 1.5px solid rgba(0, 240, 255, 0.65);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), 0 0 10px rgba(0, 240, 255, 0.2);
   position: relative;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+  box-sizing: border-box;
+  cursor: pointer;
+  overflow: hidden;
 }
 .fishbone-card-blue:hover {
-  border-color: var(--pc-cyan);
+  border-color: #00f0ff;
   transform: translateY(2px);
-  box-shadow: 0 8px 24px rgba(0, 240, 255, 0.35);
+  box-shadow: 0 6px 20px rgba(0, 240, 255, 0.45);
 }
 
-.node-red-head {
+/* 1. 卡片顶部：角色标签 与 时间/得分 */
+.fishbone-card-head {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.fishbone-card-role-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+}
+.fishbone-card-avatar {
+  font-size: 13px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.fishbone-card-role-name {
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 110px;
+}
+.fishbone-card-red .fishbone-card-role-name {
   color: #ff6b8b;
-  font-weight: 700;
-  margin-bottom: 2px;
+}
+.fishbone-card-blue .fishbone-card-role-name {
+  color: #00f0ff;
 }
 
-.node-blue-head {
+.card-mini-platform {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.card-mini-platform.red {
+  background: rgba(255, 42, 95, 0.18);
+  color: #ff6b8b;
+  border: 1px solid rgba(255, 42, 95, 0.35);
+}
+.card-mini-platform.blue {
+  background: rgba(0, 240, 255, 0.15);
+  color: #00f0ff;
+  border: 1px solid rgba(0, 240, 255, 0.35);
+}
+
+.fishbone-card-meta-right {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.fishbone-card-penalty {
+  background: rgba(255, 42, 95, 0.28);
+  color: #ff2a5f;
+  font-weight: 800;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 42, 95, 0.55);
+}
+.fishbone-card-restore {
+  background: rgba(0, 230, 118, 0.22);
+  color: #00e676;
+  font-weight: 800;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 230, 118, 0.55);
+}
+
+/* 2. 核心动作摘要（严格限制 2 行，超出省略） */
+.fishbone-card-summary {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #cbd5e1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  height: 35px;
+  max-height: 35px;
+  box-sizing: border-box;
+}
+
+/* 3. 卡片底部：媒体缩略角标 与 详情/全文抽屉入口 */
+.fishbone-card-foot {
   display: flex;
   justify-content: space-between;
-  color: var(--pc-cyan);
+  align-items: center;
+  height: 24px;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 4px;
+}
+
+.card-media-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
   font-weight: 700;
-  margin-bottom: 2px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.card-media-badge.red {
+  background: rgba(255, 42, 95, 0.2);
+  color: #ff6b8b;
+  border: 1px solid rgba(255, 42, 95, 0.4);
+}
+.card-media-badge.red:hover {
+  background: rgba(255, 42, 95, 0.35);
+  box-shadow: 0 0 8px rgba(255, 42, 95, 0.5);
+}
+.card-media-badge.blue {
+  background: rgba(0, 240, 255, 0.2);
+  color: #00f0ff;
+  border: 1px solid rgba(0, 240, 255, 0.4);
+}
+.card-media-badge.blue:hover {
+  background: rgba(0, 240, 255, 0.35);
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+}
+
+.media-badge-icon {
+  font-size: 9px;
+  line-height: 1;
+}
+
+.card-media-empty {
+  width: 1px;
+  height: 1px;
+}
+
+.card-expand-link {
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s ease;
+}
+.card-expand-link.red {
+  color: #ff6b8b;
+}
+.card-expand-link.blue {
+  color: #00f0ff;
+}
+.card-expand-link:hover {
+  text-decoration: underline;
 }
 
 /* 底部虚拟时间推进轴 */
 .virtual-timeline-tracker {
-  height: 28px;
+  height: 32px;
   background: #050811;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
@@ -1205,6 +1525,62 @@ body {
   padding: 0 14px;
   gap: 12px;
   font-size: 11px;
+}
+
+/* 底部推演阶段全景切换条 */
+.pc-stages-pills-bar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pc-stage-step-btn {
+  background: rgba(14, 22, 42, 0.8);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 3px;
+  color: #7b8fae;
+  font-size: 10px;
+  padding: 2px 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.pc-stage-step-btn:hover {
+  border-color: #00f0ff;
+  color: #fff;
+  background: rgba(0, 240, 255, 0.15);
+}
+.pc-stage-step-btn.active {
+  background: linear-gradient(90deg, rgba(0, 240, 255, 0.3), rgba(0, 136, 255, 0.3));
+  border-color: #00f0ff;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+}
+.pc-stage-step-btn .score-tag {
+  color: #00e676;
+  font-size: 9.5px;
+}
+.pc-stage-step-btn.active .score-tag {
+  color: #00f0ff;
+  text-shadow: 0 0 6px rgba(0, 240, 255, 0.6);
+}
+.pc-stage-step-btn .step-num {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8.5px;
+  font-weight: 800;
+}
+.pc-stage-step-btn.active .step-num {
+  background: #00f0ff;
+  color: #040816;
 }
 
 .tracker-bar-bg {
@@ -1677,4 +2053,107 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* ================= 5.6 & 5.7 通报详情弹窗与媒体缩放查看 ================= */
+.detail-statement-modal-card {
+  width: 90%;
+  max-width: 680px;
+  background: #091124;
+  border: 1.5px solid #00f0ff;
+  border-radius: 12px;
+  box-shadow: 0 0 40px rgba(0, 240, 255, 0.4), 0 10px 40px rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  overflow: hidden;
+  animation: zoomInModal 0.25s ease-out;
+}
+
+@keyframes zoomInModal {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.detail-statement-header {
+  padding: 14px 18px;
+  background: #0e1b38;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.25);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-statement-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.statement-full-article {
+  font-size: 13.5px;
+  line-height: 1.8;
+  color: #e2e8f0;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 16px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.detail-statement-footer {
+  padding: 12px 18px;
+  background: #070d1c;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 媒体放大模态弹窗 */
+.media-zoom-container {
+  width: 90%;
+  max-width: 860px;
+  background: #060b17;
+  border: 1.5px solid #00f0ff;
+  border-radius: 12px;
+  box-shadow: 0 0 50px rgba(0, 240, 255, 0.5), 0 10px 50px rgba(0, 0, 0, 0.95);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: zoomInModal 0.25s ease-out;
+}
+
+.media-zoom-header {
+  padding: 12px 16px;
+  background: #0d172e;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.25);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.media-zoom-body {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  min-height: 380px;
+}
+
+.media-zoom-video {
+  width: 100%;
+  max-height: 70vh;
+  border-radius: 6px;
+  outline: none;
+  background: #000;
+}
+
+.media-zoom-img {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 6px;
 }

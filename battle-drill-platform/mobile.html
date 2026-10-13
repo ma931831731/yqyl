@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>百战演练移动终端 · 学员参演H5 (红蓝对决)</title>
-  <link rel="stylesheet" href="/src/styles/common/cyber-base.css">
-  <link rel="stylesheet" href="/src/styles/modules/mobile.css">
+  <link rel="stylesheet" href="./css/cyber-common.css">
+  <link rel="stylesheet" href="./css/mobile.css">
 </head>
 <body style="background:#03060d;">
   <div class="mobile-wrapper">
@@ -20,7 +20,7 @@
     <div class="m-stage-banner">
       <div class="m-stage-header-row">
         <span class="m-stage-title-text" id="mStageHeaderTitle">阶段一：初发舆情发现与核实</span>
-        <div class="m-stage-score-badge" id="mStageScoreBadge">公信力 100分</div>
+        <div class="m-stage-score-badge good" id="mStageScoreBadge">公信力 92分</div>
       </div>
       <div class="m-stage-desc-text" id="mStageDescText">
         火灾爆燃视频初现抖音，全网负面舆情发酵，红方组织进攻，蓝方开展前线核实。
@@ -56,54 +56,40 @@
       <div class="m-action-list-container">
         <!-- 属于当前席位的专属进攻 -->
         <div class="m-section-header">
-          <span style="color:#ff6b8b;">⭐ 我的专属进攻卡片</span>
-          <span style="font-size:10.5px; color:#788aa6;">后台剧本自动配发</span>
+          <span style="color:#ff6b8b;">⭐ 当前角色专属进攻措施</span>
+          <span style="font-size:10.5px; color:#788aa6;">本角色可用攻势</span>
         </div>
         <div id="redRoleExclusiveList" style="display:flex; flex-direction:column; gap:10px;"></div>
 
-        <!-- 协同友军进攻池 -->
-        <div class="m-section-header" style="margin-top:10px;">
-          <span style="color:#94a3b8;">👥 本阶段红方协同攻势池</span>
-          <span style="font-size:10.5px; color:#64748b;">支持协同发起</span>
-        </div>
-        <div id="redRoleCollabList" style="display:flex; flex-direction:column; gap:10px;"></div>
-
-        <!-- 本剧本红方全员席位概览与快速切换 -->
+        <!-- 当前红蓝双方所有历史已经对抗的实时进展 -->
         <div class="m-section-header" style="margin-top:16px;">
-          <span style="color:#ffaa00;">📋 红方全员席位与阶段进攻内容 (点击可切换身份)</span>
-          <span style="font-size:10.5px; color:#ffb800; cursor:pointer;" onclick="openRoleSelectSheet()">选单 ❯</span>
+          <span style="color:#00f0ff;">⚡ 红蓝双方实时对抗进展 (历史全景)</span>
+          <span style="font-size:10.5px; color:#00e676;">实时全量同步</span>
         </div>
-        <div id="redAllRolesOverview" style="display:flex; flex-direction:column; gap:8px;"></div>
+        <div id="redTimelineConfrontationList" style="display:flex; flex-direction:column; gap:10px;"></div>
       </div>
     </div>
 
-    <!-- 视图 2：蓝方阶段处置防守舱 (蓝方专属，包含正向走向与推诿扯皮失当走向) -->
+    <!-- 视图 2：蓝方阶段处置防守舱 (蓝方专属应急处置任务) -->
     <div class="mobile-body" id="viewBlueActions" style="display:none;">
       <div style="padding:10px 12px 6px; background:#0b1930; border-bottom:1px solid rgba(0,240,255,0.2); font-size:11.5px; color:#00f0ff;">
-        🛡️ <strong>蓝方应急处置任务</strong>：依据现场核实进展，选择有效处置或推诿失当措施，影响事态不同走向与公信力！
+        🛡️ <strong>蓝方应急处置任务</strong>：依据现场核实进展，协同报送处置措施，坚守网络安全阵地！
       </div>
 
       <div class="m-action-list-container">
         <!-- 属于当前蓝方席位的专属防守措施 -->
         <div class="m-section-header">
-          <span style="color:#00f0ff;">⭐ 我的专属处置防守措施</span>
-          <span style="font-size:10.5px; color:#788aa6;">正向应对 / 推诿失当走向</span>
+          <span style="color:#00f0ff;">⭐ 当前角色专属处置措施</span>
+          <span style="font-size:10.5px; color:#788aa6;">本角色可用措施</span>
         </div>
         <div id="blueRoleExclusiveList" style="display:flex; flex-direction:column; gap:10px;"></div>
 
-        <!-- 协同部门防守措施池 -->
-        <div class="m-section-header" style="margin-top:10px;">
-          <span style="color:#94a3b8;">🏛️ 本阶段协同部门措施池</span>
-          <span style="font-size:10.5px; color:#64748b;">网信/消防/公安/卫健</span>
-        </div>
-        <div id="blueRoleCollabList" style="display:flex; flex-direction:column; gap:10px;"></div>
-
-        <!-- 本剧本蓝方全员席位概览与快速切换 -->
+        <!-- 当前红蓝双方所有历史已经对抗的实时进展 -->
         <div class="m-section-header" style="margin-top:16px;">
-          <span style="color:#00e676;">📋 蓝方全员席位与阶段防守措施 (点击可切换身份)</span>
-          <span style="font-size:10.5px; color:#00e676; cursor:pointer;" onclick="openRoleSelectSheet()">选单 ❯</span>
+          <span style="color:#00f0ff;">⚡ 红蓝双方实时对抗进展 (历史全景)</span>
+          <span style="font-size:10.5px; color:#00e676;">实时全量同步</span>
         </div>
-        <div id="blueAllRolesOverview" style="display:flex; flex-direction:column; gap:8px;"></div>
+        <div id="blueTimelineConfrontationList" style="display:flex; flex-direction:column; gap:10px;"></div>
       </div>
     </div>
 
@@ -143,7 +129,7 @@
         
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <label style="font-size:11px; color:#ff6b8b; display:flex; align-items:center; gap:4px; cursor:pointer;">
-            <input type="checkbox" id="mIsRumorCheck" checked> 造成公信力显著下降 (-15分)
+            <input type="checkbox" id="mIsRumorCheck" checked> 造成重大负面舆论施压扩散
           </label>
           <button class="btn-cyber btn-cyber-red action-executable-btn" id="mPublishSocialBtn" style="padding:4px 14px; font-size:12px;">🔥 发帖施压</button>
         </div>
@@ -223,7 +209,8 @@
     </div>
   </div>
 
-  <!-- 引入H5移动端分层组装入口脚本 -->
-  <script type="module" src="/src/views/mobile/index.js"></script>
+  <script src="./js/cartridges-data.js"></script>
+  <script src="./js/sync-engine.js"></script>
+  <script src="./js/mobile.js"></script>
 </body>
 </html>

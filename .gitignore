@@ -1,8 +1,6 @@
-# Dependencies & Build
+# Dependencies
 node_modules/
 */node_modules/
-dist/
-*/dist/
 
 # Large presentation files (> 100MB, exceeds GitHub limit)
 *.pptx
@@ -17,3 +15,7 @@ dist/
 Thumbs.db
 .vscode/
 .idea/
+
+# Archives
+*.zip
+

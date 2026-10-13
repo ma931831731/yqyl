@@ -2,11 +2,6 @@
  * 舆情百战演练平台 · 剧本演练编排总控脚本 (V3.2 红蓝对应全平铺实战架构)
  * 核心架构：上方(基本信息、演练周期/虚拟时长与公信力天平) - 中间(红蓝对战矩阵完全平铺不折叠) - 左侧(红方发帖绑定角色与负分) - 右侧(蓝方应对回复与正向加分)
  */
-import '../../styles/common/cyber-base.css';
-import '../../styles/modules/admin.css';
-import { drillEngine } from '../../core/sync-engine.js';
-import { getDrillCartridges, saveDrillCartridges } from '../../data/cartridges/index.js';
-import { showToast } from '../../components/common/toast.js';
 
 // ==================== 1. 全局数据仓库 (State Store) ====================
 
@@ -3583,7 +3578,18 @@ function closeModal(id) {
   if (m) m.style.display = 'none';
 }
 
-// showToast 由 @components/common/toast 提供统一赛博规范
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('globalToast');
+  if (!t) return;
+  t.textContent = msg;
+  if (type === 'success') t.style.background = '#059669';
+  else if (type === 'danger') t.style.background = '#dc2626';
+  else if (type === 'warning') t.style.background = '#d97706';
+  else t.style.background = '#1e293b';
+
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 2600);
+}
 
 // 广播卡带切换到其他终端 (大屏端、PC战境端、手机端)
 function broadcastActiveCartridgeToSyncEngine(cartridge) {
@@ -3601,51 +3607,4 @@ function broadcastActiveCartridgeToSyncEngine(cartridge) {
   } catch (e) {
     console.log('Sync broadcast note:', e);
   }
-}
-
-// ==================== 全局交互挂载 (兼容 HTML inline onclick) ====================
-if (typeof window !== 'undefined') {
-  Object.assign(window, {
-    renderScriptTable,
-    resetScriptSearch,
-    openNewScriptModal,
-    returnToScriptList,
-    saveWorkbenchScriptDraft,
-    openSimulatePreviewModal,
-    publishWorkbenchScript,
-    openAddRoleModal,
-    openAddRedPostModal,
-    openAttachAssetModal,
-    openAddStageModal,
-    openAddBlueMeasureModal,
-    openUploadVideoModal,
-    closeVideoModal,
-    filterAssetCategory,
-    closeModal,
-    submitCreateScript,
-    choosePresetCover,
-    choosePresetBg,
-    saveScriptVisuals,
-    submitAddRedPost,
-    submitAddBlueMeasure,
-    submitSaveStage,
-    submitAddDefenseToCf,
-    confirmToggleScriptStatus,
-    confirmAttachSelectedAssets,
-    openScriptVisualsModal,
-    openWorkbenchForScript,
-    promptToggleCartridge,
-    promptDeleteScript,
-    scrollToStage,
-    selectActiveStage,
-    toggleRoleActive,
-    viewOfficialDocModal,
-    openDeriveWizardModal,
-    renderDeriveWizardStep,
-    finishDeriveWizard,
-    handleNewScriptLocalCover,
-    handleNewScriptLocalBg,
-    onCoverUrlInput,
-    showToast
-  });
 }

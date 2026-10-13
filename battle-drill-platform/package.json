@@ -4,16 +4,10 @@
   "description": "舆情百战演练平台 - 方案A赛博红蓝对抗多端可交互原型",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "start": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "serve": "node server/app.mjs"
+    "dev": "node server.mjs",
+    "start": "node server.mjs"
   },
   "dependencies": {
     "qrcode": "^1.5.4"
-  },
-  "devDependencies": {
-    "vite": "^8.3.4"
   }
 }

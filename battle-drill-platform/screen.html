@@ -4,11 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>舆情百战演练态势指挥大屏 · 赛博红蓝对抗总控</title>
-  <link rel="stylesheet" href="/src/styles/common/cyber-base.css">
-  <link rel="stylesheet" href="/src/styles/modules/screen.css">
+  <link rel="stylesheet" href="./css/cyber-common.css">
+  <link rel="stylesheet" href="./css/screen.css">
 </head>
 <body>
-  <div class="screen-container" id="screenContainer">
+  <div class="screen-viewport-wrapper" id="screenViewportWrapper">
+    <div class="screen-container" id="screenContainer">
     <!-- 动态背景遮罩层 -->
     <div class="screen-bg-overlay"></div>
     <div class="screen-grid-glow"></div>
@@ -33,11 +34,11 @@
       </div>
 
       <div class="header-title-box">
-        <h1 class="header-title">舆情百战演练态势指挥总控大屏</h1>
+        <h1 class="header-title" id="roomName" title="K市P区某居民楼突发火灾爆燃与网络造谣处置演练">K市P区某居民楼突发火灾爆燃与网络造谣处置演练</h1>
         <div class="header-subtitle">
-          <span class="script-title-text" id="roomName">K市P区某居民楼突发火灾爆燃与网络造谣处置演练</span>
-          <span class="alert-badge alert-ORANGE" id="alertBadge">二级橙色预警</span>
-          <span class="stage-badge-box">推演阶段: <b id="stageName">阶段二：现场受阻与初次通报</b></span>
+          <span class="tag-cyber tag-highlight" style="padding: 1px 8px; font-size: 11px;">舆情演练总控</span>
+          <span class="alert-badge alert-BLUE" id="alertBadge">四级蓝色预警</span>
+          <span class="stage-badge-box">推演阶段: <b id="stageName">阶段一：初发舆情发现与核实</b></span>
         </div>
       </div>
 
@@ -164,71 +165,182 @@
         </div>
       </section>
 
-      <!-- ==================== 2. 中间：图谱 + 左右红蓝正面对抗时序流 ==================== -->
+      <!-- ==================== 2. 中间：中枢联动总控 + 拓扑图谱 + 公信力趋势图 ==================== -->
       <section class="col-center">
-        <!-- 2.1 上半区：舆情传播扩展图谱 (力导向防重叠 · 支持单节点自由拖拽与平移) -->
-        <div class="cyber-card graph-viewport-card">
-          <div class="module-header graph-header">
-            <div class="module-title-wrap">
-              <span class="icon-pulse cyan-dot"></span>
-              <span class="title-text">🌐 舆情传播扩散与攻防拓扑图谱</span>
-              <span class="tag-cyber tag-highlight" style="margin-left:8px;">可拖拽拓扑 · 物理防重叠</span>
+        <!-- 模块 2-0：中枢调度与全域演练阶段联动总控栏 (由底栏移至此处，统领全屏联动) -->
+        <div class="cyber-card center-top-control-card" id="centerTopControlCard">
+          <div class="control-card-main-row">
+            <!-- 1. 红蓝即时声量对抗条 (精简版：仅保留两条与双方占比，无多余文字) -->
+            <div class="compact-balance-widget">
+              <div class="compact-balance-label red-txt">🔴 红方进攻 <b id="barRedVal">42%</b></div>
+              <div class="compact-dynamic-bar">
+                <div class="bar-fill-red" id="redBarFill" style="width: 42%;">
+                  <span class="bar-pct">42%</span>
+                </div>
+                <div class="bar-divider"></div>
+                <div class="bar-fill-blue" id="blueBarFill" style="width: 58%;">
+                  <span class="bar-pct">58%</span>
+                </div>
+              </div>
+              <div class="compact-balance-label blue-txt"><b id="barBlueVal">58%</b> 🔵 蓝方防御</div>
             </div>
-            
-            <div class="graph-metrics-pills">
-              <div class="metric-pill">已演化节点: <b id="graphNodeCount">12</b></div>
-              <div class="metric-pill">红方攻击链路: <b style="color:#ff2a5f;" id="graphRedLinksCount">6</b></div>
-              <div class="metric-pill">蓝方防御阻断: <b style="color:#00f0ff;" id="graphBlueLinksCount">6</b></div>
-              <button class="btn-graph-action" onclick="resetGraphView()" title="重置图谱中心视角">⟲ 居中</button>
+
+            <!-- 2. 全域统一演练阶段联动推进轴 (全屏唯一演练阶段调度，联动所有区域) -->
+            <div class="global-stages-nav-widget">
+              <div class="stages-timeline-row">
+                <div class="stage-step-pill active" id="stageStep1" onclick="setStageFromScreen(0)" title="点击切换至阶段一 (92分)">
+                  <span class="step-num">1</span>
+                  <span class="step-text">初发核实 (92分)</span>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="stage-step-pill" id="stageStep2" onclick="setStageFromScreen(1)" title="点击切换至阶段二 (83分)">
+                  <span class="step-num">2</span>
+                  <span class="step-text">现场通报 (83分)</span>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="stage-step-pill" id="stageStep3" onclick="setStageFromScreen(2)" title="点击切换至阶段三 (74分)">
+                  <span class="step-num">3</span>
+                  <span class="step-text">网络造谣 (74分)</span>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="stage-step-pill" id="stageStep4" onclick="setStageFromScreen(3)" title="点击切换至阶段四 (85分)">
+                  <span class="step-num">4</span>
+                  <span class="step-text">铁证辟谣 (85分)</span>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="stage-step-pill" id="stageStep5" onclick="setStageFromScreen(4)" title="点击切换至阶段五 (98分)">
+                  <span class="step-num">5</span>
+                  <span class="step-text">发布会定调 (98分)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. 政府公信力核心仪表盘 (紧凑正圆无变形) -->
+            <div class="compact-gauge-widget">
+              <div class="gauge-canvas-box">
+                <canvas id="gaugeCanvas" width="130" height="76"></canvas>
+                <div class="gauge-center-content">
+                  <div class="gauge-score-num" id="credibilityScoreText">92</div>
+                  <div class="gauge-score-unit">分</div>
+                </div>
+              </div>
+              <div class="gauge-info-box">
+                <div class="gauge-level-badge level-good" id="credibilityLevelBadge">良好可控</div>
+                <div class="gauge-name">公信力指数</div>
+              </div>
             </div>
           </div>
 
-          <!-- 交互式 Canvas 动态图谱画布 -->
-          <div class="graph-canvas-container" id="graphContainer">
-            <canvas id="propagationCanvas"></canvas>
-
-            <!-- 图谱悬浮提示框 (Tooltip) -->
-            <div class="graph-tooltip" id="graphTooltip" style="display:none;"></div>
-
-            <!-- 图谱图例与图层指引 -->
-            <div class="graph-legend">
-              <div class="legend-item"><span class="legend-circle core"></span> 事发源头核心</div>
-              <div class="legend-item"><span class="legend-circle red"></span> 红方负面扩散</div>
-              <div class="legend-item"><span class="legend-circle blue"></span> 蓝方研判阻断</div>
-              <div class="legend-item"><span class="legend-circle truth"></span> 官方事实通报</div>
-            </div>
-
-            <!-- 拖拽操作提示气泡 -->
-            <div class="graph-drag-hint">
-              <span>🖱️ 按住任一节点自由拖拽移动 | 拖动空白平移视角</span>
-            </div>
-
-            <!-- 图谱最新事件演化滚动指示条 -->
-            <div class="graph-event-footer" id="graphEventFeed">
-              <span class="feed-tag">⚡ 拓扑演化进展:</span>
-              <span class="feed-text" id="graphEventText">图谱随演练推进动态生长中：阶段二【消防通道堵塞】与【官方首报】链路已建立...</span>
+          <!-- 4. 点点密信跨部门直报跑马灯 -->
+          <div class="compact-dispatch-ticker">
+            <span class="dispatch-tag">点点密信 · 跨部门直报</span>
+            <div class="dispatch-marquee" id="latestDispatch">
+              正在同步市委网信办、应急管理局、区消防大队协同调度流...
             </div>
           </div>
         </div>
 
-        <!-- 2.2 下半区：左右红蓝对抗时序流 (时序推演 · 全息高大上动效) -->
-        <div class="cyber-card center-confrontation-card">
-          <div class="module-header module-header-vs">
-            <div class="module-title-wrap">
-              <span class="icon-pulse amber-dot"></span>
-              <span class="title-text">⚔️ 攻防推演时序流 · 左右红蓝正面对抗</span>
-              <span class="tag-cyber tag-amber">时序对抗演进</span>
+        <!-- 下半部分：图谱区域与趋势图区域横向排布容器 (趋势图横向短一点，给图谱多留点区域，整体向底部延伸展示完全) -->
+        <div class="center-content-row" id="centerContentRow">
+          <!-- 模块 2-1：力导向动态拓扑图谱视口 (给图谱多留点区域，无演练阶段调整按扭) -->
+          <div class="cyber-card graph-viewport-card" id="graphViewportCard">
+            <div class="module-header graph-header">
+              <div class="module-title-wrap">
+                <span class="icon-pulse cyan-dot"></span>
+                <span class="title-text" id="centerPanelMainTitle">🕸️ 舆情全网传播扩展图谱 · 动态力导向演化拓扑</span>
+                <span class="tag-cyber tag-clash" style="margin-left:8px;" id="graphStageBadge">全景拓扑</span>
+              </div>
+
+              <!-- 模式切换：传播拓扑 VS 对抗矩阵 -->
+              <div class="center-mode-toggle">
+                <button class="mode-btn active" id="btnModeGraph" onclick="switchCenterMode('graph')">🕸️ 传播拓扑</button>
+                <button class="mode-btn" id="btnModeArena" onclick="switchCenterMode('arena')">⚡ 对抗矩阵</button>
+              </div>
+
+              <!-- 指标统计与拓扑控制 -->
+              <div class="graph-metrics-pills" id="graphMetricsPills">
+                <div class="metric-pill">🌐 节点: <b style="color:#00f0ff;" id="graphNodeCount">1</b></div>
+                <div class="metric-pill">🔴 攻势: <b style="color:#ff2a5f;" id="graphRedLinksCount">0</b></div>
+                <div class="metric-pill">🔵 阻断: <b style="color:#00e676;" id="graphBlueLinksCount">0</b></div>
+                <button class="btn-cyber-reset" onclick="resetGraphView()" title="重置视角">🎯 重置</button>
+                <button class="btn-cyber-reset" onclick="zoomGraphIn()" title="放大">+</button>
+                <button class="btn-cyber-reset" onclick="zoomGraphOut()" title="缩小">-</button>
+              </div>
             </div>
-            <div class="confrontation-sub-hint">
-              <span style="color:#ff6b8b; font-weight:700;">🔴 左翼：红方施压</span>
-              <span style="color:#788aa6; margin:0 8px; font-weight:900;">⚡ VS 🛡️</span>
-              <span style="color:#00f0ff; font-weight:700;">🔵 右翼：蓝方处置</span>
+
+            <!-- 模式一：力导向动态拓扑图谱主视口容器 -->
+            <div class="graph-canvas-container" id="graphContainer" style="display:flex;">
+              <canvas class="propagation-canvas" id="propagationCanvas"></canvas>
+              <div class="graph-tooltip" id="graphTooltip" style="display:none;"></div>
+              <div class="graph-legend-overlay">
+                <div class="legend-item"><span class="legend-dot root-dot"></span><span>源头核心</span></div>
+                <div class="legend-item"><span class="legend-dot red-dot"></span><span>红方造谣施压</span></div>
+                <div class="legend-item"><span class="legend-dot blue-dot"></span><span>蓝方对冲阻断</span></div>
+              </div>
+            </div>
+
+            <!-- 模式二：红蓝对抗交锋矩阵主视口容器 -->
+            <div class="arena-battle-viewport" id="arenaBattleViewport" style="display:none;">
+              <canvas id="arenaBgCanvas" class="arena-bg-canvas"></canvas>
+              <div class="arena-combat-grid">
+                <!-- 左列：红方舆论施压流 -->
+                <div class="arena-column arena-col-red">
+                  <div class="arena-col-banner red-banner">
+                    <span class="banner-title"><span class="banner-dot">🔴</span> 红方渗透施压攻势</span>
+                    <span class="banner-tag" id="arenaRedCountTag">共 0 轮舆情攻势</span>
+                  </div>
+                  <div class="arena-cards-stream" id="arenaRedStream">
+                    <!-- 动态渲染红方攻势流卡片 -->
+                  </div>
+                </div>
+
+                <!-- 中枢：时序交锋裂隙能量带 -->
+                <div class="arena-nexus-column">
+                  <div class="nexus-title-tag">⚡ 战线交锋裂隙</div>
+                  <div class="nexus-canvas-wrapper">
+                    <canvas id="arenaNexusCanvas" class="arena-nexus-canvas"></canvas>
+                  </div>
+                </div>
+
+                <!-- 右列：蓝方应急对冲阻断流 -->
+                <div class="arena-column arena-col-blue">
+                  <div class="arena-col-banner blue-banner">
+                    <span class="banner-title"><span class="banner-dot">🛡️</span> 蓝方应急对冲阻断</span>
+                    <span class="banner-tag" id="arenaBlueCountTag">共 0 项处置阻断</span>
+                  </div>
+                  <div class="arena-cards-stream" id="arenaBlueStream">
+                    <!-- 动态渲染蓝方处置流卡片 -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 底部攻防最新战报跑马灯 -->
+            <div class="arena-event-footer" id="arenaEventFeed">
+              <span class="feed-tag">⚡ 实时攻防战报:</span>
+              <span class="feed-text" id="graphEventText">实时拓扑演化：红蓝攻防对抗实时演化拓扑，全域推演中...</span>
             </div>
           </div>
 
-          <!-- 战术全息对抗时序流视口 (带激光粒子流动背景) -->
-          <div class="confrontation-stream-viewport" id="centerConfrontationStream">
-            <!-- 动态渲染左右红蓝对抗条目 (时间顺序排列) -->
+          <!-- 模块 2-2：政府公信力时序演化态势趋势 (横向短一点，无演练阶段调整按钮) -->
+          <div class="cyber-card credibility-trend-card" id="credibilityTrendCard">
+            <div class="module-header trend-header">
+              <div class="module-title-wrap">
+                <span class="icon-pulse green-dot"></span>
+                <span class="title-text">📈 政府公信力时序演化态势趋势</span>
+                <span class="tag-cyber tag-highlight" id="trendCurrentStageTag">实时走势</span>
+              </div>
+
+              <!-- 图例说明 -->
+              <div class="trend-legend-pills">
+                <span class="legend-pill"><span class="legend-line neon-cyan-line"></span>得分曲线</span>
+                <span class="legend-pill"><span class="legend-line warn-dashed-line"></span>80分基准</span>
+              </div>
+            </div>
+            <div class="trend-chart-viewport" id="trendChartViewport">
+              <canvas id="credibilityTrendCanvas"></canvas>
+              <div class="trend-chart-tooltip" id="trendChartTooltip" style="display:none;"></div>
+            </div>
           </div>
         </div>
       </section>
@@ -332,89 +444,13 @@
       </section>
     </main>
 
-    <!-- ==================== 4. 下方：红蓝博弈总控底栏 (现有内容重构升级) ==================== -->
-    <footer class="screen-bottom-dock cyber-card">
-      <!-- 4-1 左侧：红蓝即时战力对抗天平 -->
-      <div class="dock-balance-section">
-        <div class="balance-title-row">
-          <span style="color:#ff6b8b; font-weight:700;">🔴 红方进攻声量 <b id="barRedVal">42%</b></span>
-          <span class="balance-status-tag" id="balanceVerdictTag">🛡️ 蓝方正向对冲略占优势</span>
-          <span style="color:#00f0ff; font-weight:700;"><b id="barBlueVal">58%</b> 🔵 蓝方防御声量</span>
-        </div>
-
-        <div class="confront-dynamic-bar">
-          <div class="bar-fill-red" id="redBarFill" style="width: 42%;">
-            <span class="bar-text">红方 42%</span>
-          </div>
-          <div class="bar-divider"></div>
-          <div class="bar-fill-blue" id="blueBarFill" style="width: 58%;">
-            <span class="bar-text">蓝方 58%</span>
-          </div>
-        </div>
-
-        <div class="balance-meta-row">
-          <span id="redTacticsDesc">红方主攻：现场视频曝光 + 消防通道堵塞声讨</span>
-          <span id="blueTacticsDesc">蓝方应对：内攻灭火搜救 + 官方首期情况通报</span>
-        </div>
-      </div>
-
-      <!-- 4-2 中间：政府公信力核心仪表盘 -->
-      <div class="dock-gauge-section">
-        <div class="gauge-canvas-box">
-          <canvas id="gaugeCanvas" width="180" height="110"></canvas>
-          <div class="gauge-center-content">
-            <div class="gauge-score-num" id="credibilityScoreText">72</div>
-            <div class="gauge-score-unit">分</div>
-          </div>
-        </div>
-        <div class="gauge-info-box">
-          <div class="gauge-level-badge level-good" id="credibilityLevelBadge">良好可控</div>
-          <div class="gauge-name">政府公信力安全指数</div>
-          <div class="gauge-trend-indicator" id="credibilityTrendText">▲ 较初发回升 +12分</div>
-        </div>
-      </div>
-
-      <!-- 4-3 右侧：推演全阶段进度轴与跨部门调度跑马灯 -->
-      <div class="dock-stages-section">
-        <div class="stages-timeline-row">
-          <div class="stage-step-pill done" id="stageStep1">
-            <span class="step-num">1</span>
-            <span class="step-text">初发核实</span>
-          </div>
-          <div class="step-arrow">→</div>
-          <div class="stage-step-pill active" id="stageStep2">
-            <span class="step-num">2</span>
-            <span class="step-text">现场通报</span>
-          </div>
-          <div class="step-arrow">→</div>
-          <div class="stage-step-pill" id="stageStep3">
-            <span class="step-num">3</span>
-            <span class="step-text">次生拆解</span>
-          </div>
-          <div class="step-arrow">→</div>
-          <div class="stage-step-pill" id="stageStep4">
-            <span class="step-num">4</span>
-            <span class="step-text">铁证辟谣</span>
-          </div>
-          <div class="step-arrow">→</div>
-          <div class="stage-step-pill" id="stageStep5">
-            <span class="step-num">5</span>
-            <span class="step-text">发布会定调</span>
-          </div>
-        </div>
-
-        <!-- 点点密信跨部门直报跑马灯 -->
-        <div class="dock-dispatch-ticker">
-          <span class="dispatch-tag">点点密信 · 跨部门直报</span>
-          <div class="dispatch-marquee" id="latestDispatch">
-            正在同步市委网信办、应急管理局、区消防大队协同调度流...
-          </div>
-        </div>
-      </div>
-    </footer>
+    
+    </div>
   </div>
 
-  <!-- 引入大屏终端分层组装入口脚本 (包含基础剧本、跨端同步引擎与大屏逻辑) -->
-  <script type="module" src="/src/views/screen/index.js"></script>
+  <!-- 引入基础剧本卡带数据、跨端同步引擎与大屏逻辑脚本 -->
+  <script src="./js/cartridges-data.js"></script>
+  <script src="./js/sync-engine.js"></script>
+  <script src="./js/screen.js"></script>
 </body>
 </html>
