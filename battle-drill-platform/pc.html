@@ -131,11 +131,12 @@
             <!-- 红方专属扫码区 -->
             <div class="roster-qr-box">
               <div class="qr-img-wrapper">
-                <img src="/api/qrcode?data=http://localhost:5173/mobile.html?camp=red" alt="红方扫码加入" id="qrImgRed">
+                <img src="/api/qrcode?data=/mobile.html?camp=red" alt="红方扫码加入" id="qrImgRed">
               </div>
               <div class="qr-info-wrap">
                 <div style="font-weight:700; color:#ff6b8b; font-size:12px; margin-bottom:2px;">📱 红方学员手机扫码入口</div>
                 <div style="color:var(--pc-text-muted);">微信/手机浏览器扫码，认领造谣网民、博主大V、媒体记者等红方进攻角色。</div>
+                <div id="qrLanTipRed" style="font-size:11px; color:#ff99ab; margin-top:4px; font-family:monospace; word-break:break-all;"></div>
                 <div style="margin-top:4px;">
                   <a href="./mobile.html?camp=red" target="_blank" class="btn-cyber btn-cyber-red" style="font-size:10px; padding:2px 6px;">打开红方手机端 📱</a>
                 </div>
@@ -161,11 +162,12 @@
             <!-- 蓝方专属扫码区 -->
             <div class="roster-qr-box">
               <div class="qr-img-wrapper">
-                <img src="/api/qrcode?data=http://localhost:5173/mobile.html?camp=blue" alt="蓝方扫码加入" id="qrImgBlue">
+                <img src="/api/qrcode?data=/mobile.html?camp=blue" alt="蓝方扫码加入" id="qrImgBlue">
               </div>
               <div class="qr-info-wrap">
                 <div style="font-weight:700; color:var(--pc-cyan); font-size:12px; margin-bottom:2px;">📱 蓝方部门手机扫码入口</div>
                 <div style="color:var(--pc-text-muted);">应急、消防、公安、卫健等各席位扫码就位；指挥长席位点亮后激活作战室大门！</div>
+                <div id="qrLanTipBlue" style="font-size:11px; color:var(--pc-cyan); margin-top:4px; font-family:monospace; word-break:break-all;"></div>
                 <div style="margin-top:4px;">
                   <a href="./mobile.html?camp=blue" target="_blank" class="btn-cyber" style="font-size:10px; padding:2px 6px;">打开蓝方手机端 📱</a>
                 </div>
@@ -225,8 +227,8 @@
           </div>
         </header>
 
-        <!-- 3.2 作战室主体：左红方席位 - 中拳击核心与时间轴 - 右蓝方席位 -->
-        <div class="war-arena-grid">
+        <!-- 3.2 作战室主体：常规推演核心 (左红方席位 - 中拳击核心与时间轴 - 右蓝方席位) -->
+        <div class="war-arena-grid" id="standardWarArena">
           
           <!-- 左翼：红方席位态势立柱 -->
           <aside class="war-camp-panel camp-red-border">
@@ -386,6 +388,132 @@
             </div>
           </aside>
 
+        </div>
+
+        <!-- 3.3 🎴 卡牌对抗类专属作战室 (赛博对战竞技场 · 100 HP动态血条 + AI威胁抽牌 + 碰撞裁决中枢 + 4角色手牌操盘机架) -->
+        <div class="card-battle-arena-grid" id="cardBattleWarArena" style="display:none;">
+          <!-- 3.3.1 上方：公信力动态血条仪表 + 阶段阈值刻度线 + 阶段状态 -->
+          <div class="cb-pc-hud-bar">
+            <div class="cb-pc-hp-cluster">
+              <div class="cb-pc-hp-label-row">
+                <span class="cb-pc-hp-title">🛡️ 蓝方公信力血条 (HP)</span>
+                <span class="cb-pc-hp-numbers" id="cbPcHpNumbers">100 / 100</span>
+                <span class="cb-pc-hp-status-tag tag-safe" id="cbPcHpStatusTag">🟢 安全状态</span>
+              </div>
+              <!-- 血条轨道与阶段阈值指示针 -->
+              <div class="cb-pc-hp-track">
+                <div class="cb-pc-hp-fill" id="cbPcHpFill" style="width: 100%;"></div>
+                <div class="cb-pc-threshold-marker" id="cbPcThresholdMarker" style="left: 75%;" title="本阶段存活阈值线 (75 HP)">
+                  <span class="marker-flag" id="cbPcMarkerFlag">阈值 75</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 阶段信息与快捷控制 -->
+            <div class="cb-pc-stage-status-box">
+              <div style="font-size:11px; color:var(--pc-text-muted);">🎯 当前演练阶段</div>
+              <div style="font-size:14px; font-weight:700; color:var(--pc-cyan);" id="cbPcStageName">阶段一：发酵期 (初发舆情)</div>
+              <div style="font-size:11px; color:#ff99ab;" id="cbPcStageThresholdDesc">阶段存活阈值: ≥ 75 HP (低于此值演练失败)</div>
+            </div>
+          </div>
+
+          <!-- 3.3.2 中部核心博弈台：左侧 AI 威胁出牌槽 VS 中部裁决碰撞台 VS 右侧 对战实时动态战报 -->
+          <div class="cb-pc-clash-grid">
+            <!-- 左侧：AI 威胁牌抽取槽 -->
+            <div class="cb-pc-panel cb-pc-ai-slot">
+              <div class="cb-pc-slot-header ai-header">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span class="pulse-dot-red"></span>
+                  <strong>🤖 AI 舆论攻击牌</strong>
+                </div>
+                <button class="btn-cyber" style="font-size:10px; padding:2px 6px;" onclick="cardBattleAiDrawNext()" title="AI抽取下一张威胁卡">🎲 抽下一张</button>
+              </div>
+
+              <!-- AI 威胁卡展示位 -->
+              <div class="cb-pc-ai-card-stage" id="cbPcAiCardStage">
+                <!-- JS 动态渲染当前 AI 威胁攻击卡 -->
+              </div>
+            </div>
+
+            <!-- 中部：对决判定台与行动中枢 (Play / Pass / Settle) -->
+            <div class="cb-pc-panel cb-pc-resolution-hub">
+              <div class="cb-pc-slot-header clash-header">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span>⚔️</span>
+                  <strong>舆论对抗碰撞裁决台</strong>
+                </div>
+                <span class="badge-ps badge-gold" id="cbPcTurnCounter">回合 1</span>
+              </div>
+
+              <!-- 攻防推演视觉碰撞效果区 -->
+              <div class="cb-pc-clash-display">
+                <div class="clash-ai-preview" id="cbPcClashAiPreview">
+                  <span class="clash-card-badge red">AI 攻击</span>
+                  <div class="clash-card-title" id="cbPcClashAiTitle">待抽取</div>
+                  <div class="clash-card-dmg" id="cbPcClashAiDamage">-0 HP</div>
+                </div>
+
+                <div class="clash-vs-symbol" id="cbPcClashVs">
+                  <span>VS</span>
+                </div>
+
+                <div class="clash-player-preview" id="cbPcClashPlayerPreview">
+                  <span class="clash-card-badge blue">待选手牌</span>
+                  <div class="clash-card-title" id="cbPcClashPlayerTitle">（点击下方手牌槽选中）</div>
+                  <div class="clash-card-pwr" id="cbPcClashPlayerPower">+0 HP</div>
+                </div>
+              </div>
+
+              <!-- 裁决预期提示条 -->
+              <div class="cb-pc-clash-verdict-bar" id="cbPcClashVerdictBar">
+                <span>ℹ️ 请从下方选择对应角色的手牌打出；或在无合适牌时选择【战略跳过】。</span>
+              </div>
+
+              <!-- 核心行动按钮组 -->
+              <div class="cb-pc-action-buttons">
+                <button class="btn-cyber btn-card-play" id="btnPlayCard" onclick="cardBattleExecutePlay()">
+                  <span>⚔️ 打出该手牌</span>
+                  <span style="font-size:10px; opacity:0.85;">(实施克制镇压)</span>
+                </button>
+                <button class="btn-cyber btn-card-pass" id="btnPassTurn" onclick="cardBattleExecutePass()">
+                  <span>⏸️ 战略跳过 (Pass)</span>
+                  <span style="font-size:10px; opacity:0.85;">(承受扣血保留手牌)</span>
+                </button>
+                <button class="btn-cyber btn-card-settle" id="btnSettleStage" onclick="cardBattleSettleStage()">
+                  <span>🏁 结算本阶段</span>
+                  <span style="font-size:10px; opacity:0.85;">(比对阈值进入下阶段)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 右侧：对战动态实时战报日志 -->
+            <div class="cb-pc-panel cb-pc-log-panel">
+              <div class="cb-pc-slot-header log-header">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span>📜</span>
+                  <strong>对战交锋战报日志</strong>
+                </div>
+                <button class="btn-cyber" style="font-size:10px; padding:1px 5px;" onclick="clearCardBattleLogs()">清屏</button>
+              </div>
+
+              <div class="cb-pc-logs-stream" id="cbPcLogsStream">
+                <!-- JS 动态追加对战日志流水 -->
+              </div>
+            </div>
+          </div>
+
+          <!-- 3.3.3 下部：4大角色专属手牌横向操盘机架 (Player Hand Deck) -->
+          <div class="cb-pc-hand-deck-area">
+            <!-- 角色身份席位切换导航 (4个身份切换) -->
+            <div class="cb-pc-role-tabs-bar" id="cbPcRoleTabsBar">
+              <!-- JS 渲染 4 角色切换按钮 -->
+            </div>
+
+            <!-- 手牌机架：横向精致赛博卡牌流 (10~11张手牌平铺滚动) -->
+            <div class="cb-pc-cards-rack" id="cbPcCardsRack">
+              <!-- JS 动态渲染当前角色所有手牌 -->
+            </div>
+          </div>
         </div>
       </section>
 

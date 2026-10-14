@@ -100,8 +100,8 @@
             <div class="kpi-icon-box" style="background:#eff6ff; color:#2563eb;">📼</div>
             <div class="kpi-content">
               <div class="kpi-label">演练剧本总数</div>
-              <div class="kpi-value"><strong id="kpiTotalScripts">3</strong> <span class="kpi-unit">套</span></div>
-              <div class="kpi-sub">已编排火灾/霸凌/中毒事件</div>
+              <div class="kpi-value"><strong id="kpiTotalScripts">2</strong> <span class="kpi-unit">套</span></div>
+              <div class="kpi-sub">火灾常规推演 / 景区安保卡牌对抗</div>
             </div>
           </div>
 
@@ -138,7 +138,27 @@
           <div class="query-grid">
             <div class="query-item">
               <label>剧本名称/编号</label>
-              <input type="text" class="form-input" id="searchScriptKeyword" placeholder="输入火灾、编号搜索...">
+              <input type="text" class="form-input" id="searchScriptKeyword" placeholder="输入名称、卡牌、编号搜索...">
+            </div>
+            <div class="query-item">
+              <label>剧本类型</label>
+              <select class="form-input" id="searchScriptType">
+                <option value="">全部类型</option>
+                <option value="city_safety">🏢 城市安全与突发防灾</option>
+                <option value="tourism_security">🏞️ 文化旅游与社会治安</option>
+                <option value="ecology_environment">🌿 生态环保与城市治理</option>
+                <option value="food_health">🍱 食品药品与公共卫生</option>
+                <option value="education_campus">🎓 教育校园与未成年保护</option>
+                <option value="civic_livelihood">🏛️ 政务民生与社会服务</option>
+              </select>
+            </div>
+            <div class="query-item">
+              <label>演练模式</label>
+              <select class="form-input" id="searchScriptCategory">
+                <option value="">全部模式</option>
+                <option value="standard">⏱️ 常规推演类</option>
+                <option value="card_battle">🎴 卡牌对抗类</option>
+              </select>
             </div>
             <div class="query-item">
               <label>演练难度</label>
@@ -171,22 +191,33 @@
 
         <!-- 剧本卡带数据表格 (平铺舒展无折行) -->
         <div class="data-table-card">
-          <div class="table-toolbar">
-            <div class="table-title">剧本卡带总览 (<span id="scriptListCount">3</span>)</div>
-            <div style="font-size:12px; color:var(--text-muted);">
-              💡 提示：点击【封面/背景】可自定义剧本封面图与大屏推演背景底图；点击【进入编排】体验全展开红蓝对抗。
+          <div class="table-toolbar" style="flex-wrap:wrap; gap:10px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div class="table-title">剧本卡带总览 (<span id="scriptListCount">2</span>)</div>
+              <!-- 快捷分类筛选Tab按钮组 -->
+              <div class="tab-btn-group" id="scriptCatTabGroup">
+                <button class="filter-tab active" id="tabCatAll" onclick="filterScriptCombined('all', this)">全部剧本 (<span id="countCatAll">2</span>)</button>
+                <button class="filter-tab" id="tabCatCity" onclick="filterScriptCombined('city_safety', this)">🏢 城市安全 (<span id="countCatCity">1</span>)</button>
+                <button class="filter-tab" id="tabCatTourism" onclick="filterScriptCombined('tourism_security', this)">🏞️ 文化旅游 (<span id="countCatTourism">1</span>)</button>
+                <button class="filter-tab" id="tabCatCard" onclick="filterScriptCombined('card_battle', this)" style="color:#4f46e5; font-weight:600;">🎴 卡牌对抗 (<span id="countCatCard">1</span>)</button>
+                <button class="filter-tab" id="tabCatStandard" onclick="filterScriptCombined('standard', this)">⏱️ 常规推演 (<span id="countCatStandard">1</span>)</button>
+              </div>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-left:auto;">
+              💡 提示：点击【封面/背景】可自定义大屏底图；剧本类型支持多维度情境事件分类检索与编排。
             </div>
           </div>
           <table class="global-table">
             <thead>
               <tr>
                 <th style="width:60px;">封面</th>
-                <th style="width:130px;">卡带编号</th>
+                <th style="width:135px;">卡带编号</th>
                 <th>剧本名称与背景</th>
+                <th style="width:160px;">剧本类型</th>
                 <th style="width:90px;">演练难度</th>
                 <th style="width:115px;">演练周期/时长</th>
                 <th style="width:90px;">公信力基准</th>
-                <th style="width:85px;">推进环节</th>
+                <th style="width:95px;">推进环节</th>
                 <th style="width:90px;">卡带状态</th>
                 <th style="width:125px;">更新时间</th>
                 <th style="width:250px; text-align:center;">操作</th>
@@ -197,7 +228,7 @@
             </tbody>
           </table>
           <div class="table-footer-pagination">
-            <span>共 3 条记录，当前显示第 1 至 3 条</span>
+            <span id="scriptTableFooterText">共 6 条记录</span>
             <div style="display:flex; gap:4px;">
               <button class="btn-default" style="padding:2px 8px; font-size:11px;" disabled>上一页</button>
               <button class="btn-primary" style="padding:2px 8px; font-size:11px;">1</button>
@@ -207,11 +238,13 @@
         </div>
       </section>
 
-      <!-- ==================== 视图 2：剧本编排工作台 (上中左右 + 演练周期/虚拟时长 + 红蓝配对全展开) ==================== -->
+      <!-- ==================== 视图 2：剧本编排工作台 (常规推演与卡牌对抗智能分流) ==================== -->
       <section class="admin-view-panel" id="panel_script_workbench" style="display:none; flex-direction:column; gap:10px;">
         
-        <!-- 【上方区域】：剧本全局基本信息 + 演练周期 + 虚拟时长 + 公信力天平总控栏 + 置顶榜单模块 -->
-        <div class="workbench-top-bar">
+        <!-- 2.1 常规推演类编排视图容器 (红蓝对抗平铺矩阵) -->
+        <div id="workbenchStandardView" style="display:flex; flex-direction:column; gap:10px;">
+          <!-- 【上方区域】：剧本全局基本信息 + 演练周期 + 虚拟时长 + 公信力天平总控栏 + 置顶榜单模块 -->
+          <div class="workbench-top-bar">
           <div class="wt-info-row">
             <div class="wt-title-block">
               <div class="breadcrumb" style="margin-bottom:2px;">
@@ -424,6 +457,142 @@
           </div>
 
         </div>
+        </div><!-- 结束 workbenchStandardView -->
+
+        <!-- 2.2 🎴 卡牌对抗类专属编排视图容器 (AI威胁牌库 + 4大角色专属手牌池矩阵 + 生死阈值控制) -->
+        <div id="workbenchCardBattleView" style="display:none; flex-direction:column; gap:12px;">
+          
+          <!-- 【顶部总控栏】：卡牌剧本基本信息 + 阶段切换 + 存活阈值调节 + 保存/预览 -->
+          <div class="card-workbench-top-bar">
+            <div class="wt-info-row">
+              <div class="wt-title-block">
+                <div class="breadcrumb" style="margin-bottom:2px;">
+                  <a href="javascript:void(0)" onclick="returnToScriptList()" style="color:var(--primary); text-decoration:none;">◀ 返回剧本列表</a> / 🎴 卡牌博弈剧本编排
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:nowrap;">
+                  <input type="text" class="wt-script-name-input" id="wbCardScriptName" value="" style="flex:1; min-width:320px;" placeholder="卡牌剧本名称">
+                  <span class="badge-card-battle" id="wbCardTotalBadge" style="font-size:12px; padding:3px 8px;">🎴 卡牌对抗类 (总计 56 张)</span>
+                  <span class="cartridge-status-badge badge-active" id="wbCardStatusBadge" style="white-space:nowrap; flex-shrink:0;">● 启用中</span>
+                </div>
+              </div>
+
+              <div class="wt-params-group">
+                <div class="wt-param-item">
+                  <span class="wt-label">❤️ 初始公信力血条:</span>
+                  <input type="number" class="form-input" id="wbCardInitialHp" value="100" style="width:70px; text-align:center; font-weight:700; color:#10b981;" readonly>
+                  <span style="font-size:11px; color:#10b981; font-weight:600;">HP 满槽</span>
+                </div>
+                <div class="wt-param-item">
+                  <span class="wt-label">👥 参演席位:</span>
+                  <span class="tag-badge" style="background:#e0f2fe; color:#0369a1; font-weight:700; font-size:11px;">4 大专属角色</span>
+                </div>
+                <div class="wt-param-item">
+                  <span class="wt-label">⏱️ 演练时长:</span>
+                  <select class="form-input wt-select" id="wbCardDuration" style="width:95px;" onchange="onCardDurationChange(this.value)">
+                    <option value="30">30 分钟</option>
+                    <option value="45">45 分钟</option>
+                    <option value="60" selected>60 分钟</option>
+                    <option value="90">90 分钟</option>
+                  </select>
+                </div>
+                <div style="display:flex; gap:8px; margin-left:auto;">
+                  <button class="btn-primary" onclick="saveCardBattleWorkbench()"><i class="fas fa-save"></i> 保存卡牌编排</button>
+                  <button class="btn-default" onclick="openSimulatePreviewModal()"><i class="fas fa-play"></i> 演练预览</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 阶段切换与存活阈值控制条 -->
+            <div class="cb-stages-bar">
+              <div class="cb-stages-label">🎯 演练推进阶段 / 存活阈值控制：</div>
+              <div class="cb-stages-tabs" id="wbCardStageTabs">
+                <!-- 阶段Tab由JS动态渲染 -->
+              </div>
+              <div style="margin-left:auto; display:flex; align-items:center; gap:8px; background:#fef2f2; border:1px solid #fecaca; padding:4px 10px; border-radius:6px;">
+                <span style="font-size:11.5px; color:#dc2626; font-weight:700;">⚠️ 当前阶段存活阈值:</span>
+                <input type="number" class="form-input" id="wbCardCurrentStageThreshold" style="width:65px; height:26px; text-align:center; font-weight:800; color:#dc2626;" value="75" onchange="onStageThresholdChange(this.value)">
+                <span style="font-size:11px; color:#991b1b;">HP (低于此值演练直接失败)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 【卡牌主体编排区域】：左侧 AI 威胁攻击卡池 + 右侧 4 角色专属手牌池矩阵 -->
+          <div class="card-workbench-body-grid">
+            <!-- 左栏：AI 舆论攻击威胁牌库 -->
+            <div class="cb-deck-column">
+              <div class="cb-deck-header">
+                <div>
+                  <h3 style="font-size:13.5px; font-weight:700; color:#dc2626; display:flex; align-items:center; gap:6px; margin:0;">
+                    <span>🤖 AI 舆论攻击威胁牌池</span>
+                    <span class="badge" style="background:#fee2e2; color:#b91c1c; font-size:11px; padding:2px 6px;" id="wbAiDeckCount">3 张</span>
+                  </h3>
+                  <p style="font-size:11px; color:var(--text-muted); margin:2px 0 0 0;">本阶段内 AI 从该牌池中随机抽取出牌，蓝方需打牌克制镇压</p>
+                </div>
+                <button class="btn-link" onclick="promptAddAiCard()" style="font-size:11.5px; color:#dc2626;">+ 添加AI威胁卡</button>
+              </div>
+
+              <div class="cb-cards-scroll-list" id="wbAiCardsContainer">
+                <!-- JS 动态渲染 AI 攻击牌卡片 -->
+              </div>
+            </div>
+
+            <!-- 右栏：4大角色专属手牌池矩阵 -->
+            <div class="cb-deck-column" style="flex:1;">
+              <div class="cb-deck-header">
+                <div>
+                  <h3 style="font-size:13.5px; font-weight:700; color:#2563eb; display:flex; align-items:center; gap:6px; margin:0;">
+                    <span>🛡️ 蓝方角色专属手牌矩阵</span>
+                    <span class="badge" style="background:#dbeafe; color:#1d4ed8; font-size:11px; padding:2px 6px;" id="wbRoleCardsCount">共 11 张</span>
+                  </h3>
+                  <p style="font-size:11px; color:var(--text-muted); margin:2px 0 0 0;">各席位持独立专属手牌池，涵盖专项、履职、应急、陷阱牌，支持战术不出（Pass）</p>
+                </div>
+                <button class="btn-link" onclick="promptAddPlayerCard()" style="font-size:11.5px; color:#2563eb;">+ 添加手牌</button>
+              </div>
+
+              <!-- 4 角色切换选项卡 -->
+              <div class="cb-role-tabs-bar" id="wbRoleTabsBar">
+                <!-- JS 动态渲染 4 角色 Tabs -->
+              </div>
+
+              <!-- 当前选中角色信息简要 -->
+              <div class="cb-role-info-card" id="wbCurrentRoleSummary">
+                <!-- JS 渲染当前角色职责说明 -->
+              </div>
+
+              <!-- 角色手牌网格 -->
+              <div class="cb-player-cards-grid" id="wbPlayerCardsContainer">
+                <!-- JS 动态渲染当前角色的所有手牌 -->
+              </div>
+            </div>
+          </div>
+
+          <!-- 底部博弈平衡速查与规则看板 -->
+          <div class="cb-rules-footer-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:12px; font-weight:700; color:var(--text-strong);">⚖️ 卡牌博弈演练机制 & 平衡性速查说明</span>
+              <span style="font-size:11px; color:var(--text-muted);">克制压制：双倍反击 | 打错/陷阱：反噬扣血 | 战术跳过：保留手牌但承受基础扣血</span>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; font-size:11.5px; color:var(--text-muted);">
+              <div style="background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px;">
+                <strong style="color:#0369a1; display:block; margin-bottom:3px;">🎯 克制弱点判定</strong>
+                AI出牌后暴露弱点（如刑侦通报/技术溯源），打出对应克制牌直接化解舆论并回血+10~+20 HP。
+              </div>
+              <div style="background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px;">
+                <strong style="color:#dc2626; display:block; margin-bottom:3px;">⚠️ 陷阱与反噬扣血</strong>
+                打出标有【陷阱】或被 AI 反噬锁定的卡牌，不仅无法镇压舆论，还会引火烧身倒扣 15~25 HP。
+              </div>
+              <div style="background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px;">
+                <strong style="color:#7e22ce; display:block; margin-bottom:3px;">⏸️ 战略跳过（Pass）</strong>
+                若本轮无合适克制牌，可选择跳过不出以保留核心牌，但公信力将承受 AI 攻击的基础伤害。
+              </div>
+              <div style="background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px;">
+                <strong style="color:#15803d; display:block; margin-bottom:3px;">🏁 阶段生死阈值</strong>
+                各阶段结束时，公信力血条必须 ≥ 阶段阈值（如75/55/35/1 HP）方可晋级下一阶段，低于则全盘溃败。
+              </div>
+            </div>
+          </div>
+
+        </div>
       </section>
 
       <!-- ==================== 视图 3：多模态素材中心 (已加入火灾V6两期官方通报模板) ==================== -->
@@ -472,6 +641,26 @@
           <div class="form-group">
             <label>剧本名称 <span class="required">*</span></label>
             <input type="text" class="form-input" id="newScriptName" placeholder="例如：某市高层住宅燃爆舆情实战演练">
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>剧本类型 <span class="required">*</span></label>
+            <select class="form-input" id="newScriptType">
+              <option value="city_safety" selected>🏢 城市安全与突发防灾</option>
+              <option value="tourism_security">🏞️ 文化旅游与社会治安</option>
+              <option value="ecology_environment">🌿 生态环保与城市治理</option>
+              <option value="food_health">🍱 食品药品与公共卫生</option>
+              <option value="education_campus">🎓 教育校园与未成年保护</option>
+              <option value="civic_livelihood">🏛️ 政务民生与社会服务</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>演练模式 <span class="required">*</span></label>
+            <select class="form-input" id="newScriptCategory">
+              <option value="standard" selected>⏱️ 常规推演类 (标准攻防)</option>
+              <option value="card_battle">🎴 卡牌对抗类 (多人身份博弈)</option>
+            </select>
           </div>
         </div>
         <div class="form-row-3">

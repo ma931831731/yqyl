@@ -25,13 +25,35 @@ const mimeTypes = {
 
 function getLocalIp() {
   const nets = networkInterfaces();
+  const candidates = [];
   for (const name of Object.keys(nets)) {
+    const lowerName = name.toLowerCase();
+    // 过滤虚拟网卡、VPN、TUN、WSL、Docker 等
+    const isVirtual = /tun|tap|singbox|clash|wsl|veth|docker|hyper-v|virtual/i.test(lowerName);
+
     for (const net of nets[name]) {
       if (net.family === 'IPv4' && !net.internal) {
-        return net.address;
+        if (net.address.startsWith('127.') || net.address.startsWith('169.254.')) continue;
+        candidates.push({ name, address: net.address, isVirtual });
       }
     }
   }
+
+  // 1. 优先非虚拟网卡的 192.168.x.x (最常见的家庭/办公Wi-Fi局域网网段)
+  const lan192 = candidates.find(c => !c.isVirtual && c.address.startsWith('192.168.'));
+  if (lan192) return lan192.address;
+
+  // 2. 其次非虚拟网卡的 10.x.x.x
+  const lan10 = candidates.find(c => !c.isVirtual && c.address.startsWith('10.'));
+  if (lan10) return lan10.address;
+
+  // 3. 其它任意非虚拟物理网卡 IPv4
+  const physical = candidates.find(c => !c.isVirtual);
+  if (physical) return physical.address;
+
+  // 4. 若无物理网卡，退而求其次选第一个非空候选
+  if (candidates.length > 0) return candidates[0].address;
+
   return 'localhost';
 }
 
@@ -56,14 +78,31 @@ const server = createServer(async (req, res) => {
       return res.end();
     }
 
-    // 二维码生成 API
+    // 系统网络信息 API (供前端获取真实的手机扫码局域网物理IP)
+    if (rawUrl.startsWith('/api/network') || rawUrl.startsWith('/api/ip')) {
+      const ip = getLocalIp();
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Access-Control-Allow-Origin': '*'
+      });
+      return res.end(JSON.stringify({ success: true, ip, port, origin: `http://${ip}:${port}` }));
+    }
+
+    // 二维码生成 API (自动将 localhost 替换为真实局域网 IP，保证手机扫码可用)
     if (rawUrl.startsWith('/api/qrcode')) {
       const parsed = new URL(rawUrl, `http://localhost:${port}`);
-      const text = parsed.searchParams.get('data') || parsed.searchParams.get('text') || 'https://localhost';
+      let text = parsed.searchParams.get('data') || parsed.searchParams.get('text') || `http://localhost:${port}`;
+      const bestIp = getLocalIp();
+      const lanOrigin = (bestIp && bestIp !== 'localhost') ? `http://${bestIp}:${port}` : `http://localhost:${port}`;
+      if (text.startsWith('/')) {
+        text = `${lanOrigin}${text}`;
+      } else if (bestIp && bestIp !== 'localhost') {
+        text = text.replace(/localhost/gi, bestIp).replace(/127\.0\.0\.1/g, bestIp);
+      }
       const svg = await QRCode.toString(text, { type: 'svg', margin: 1, width: 140 });
       res.writeHead(200, {
         'Content-Type': 'image/svg+xml; charset=utf-8',
-        'Cache-Control': 'public, max-age=86400',
+        'Cache-Control': 'no-cache',
         'Access-Control-Allow-Origin': '*'
       });
       return res.end(svg);

@@ -4,7 +4,9 @@
  */
 
 // ==================== 全局运行态变量 ====================
-let drillCartridges = [];
+let drillCartridges = (typeof window !== 'undefined' && typeof window.getDrillCartridges === 'function')
+  ? window.getDrillCartridges()
+  : [];
 let currentSelectedScript = null;
 let currentActiveView = 'lobby'; // 'lobby' | 'roster' | 'warroom'
 let currentStageIndex = 0;
@@ -291,12 +293,34 @@ function enterCurrentSelectedScript() {
 
 // ==================== 2. 视图二：角色就位准备室 (双二维码 + 认领卡片) ====================
 
+// 局域网物理 IP 缓存，确保手机扫码指向正确的物理机网络
+let cachedLanHost = null;
+
+async function resolveLanHost() {
+  if (cachedLanHost) return cachedLanHost;
+  try {
+    const res = await fetch('/api/network');
+    const data = await res.json();
+    if (data && data.ip && data.ip !== 'localhost') {
+      cachedLanHost = `http://${data.ip}:${data.port || window.location.port || 5173}`;
+      return cachedLanHost;
+    }
+  } catch (e) {
+    console.warn('[QR] Failed to fetch LAN IP:', e);
+  }
+  return window.location.origin || 'http://localhost:5173';
+}
+
 // 本地毫秒级快速生成二维码，消除海外网络请求阻滞
-function updateRosterQRCodes(scriptId) {
-  if (lastQRScriptId === scriptId) return;
+async function updateRosterQRCodes(scriptId) {
+  if (lastQRScriptId === scriptId && cachedLanHost) return;
   lastQRScriptId = scriptId;
 
-  const currentHost = window.location.origin || 'http://localhost:5173';
+  let currentHost = window.location.origin || 'http://localhost:5173';
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    currentHost = await resolveLanHost();
+  }
+
   const qrRed = document.getElementById('qrImgRed');
   const qrBlue = document.getElementById('qrImgBlue');
 
@@ -309,6 +333,12 @@ function updateRosterQRCodes(scriptId) {
   if (qrBlue) {
     qrBlue.src = `/api/qrcode?data=${encodeURIComponent(blueUrl)}`;
   }
+
+  // 同步更新页面提示，让用户知晓手机端直连 IP
+  const tipRed = document.getElementById('qrLanTipRed');
+  const tipBlue = document.getElementById('qrLanTipBlue');
+  if (tipRed) tipRed.textContent = `手机直达: ${currentHost}/mobile.html?camp=red`;
+  if (tipBlue) tipBlue.textContent = `手机直达: ${currentHost}/mobile.html?camp=blue`;
 }
 
 function renderRosterView(force = false) {
@@ -331,6 +361,68 @@ function renderRosterView(force = false) {
     return;
   }
   lastRenderedRosterHash = rosterHash;
+
+  // 🎴 如果是卡牌对抗类剧本，走专属的 AI 施压引擎 + 4身份专属手牌库展示
+  if (currentSelectedScript.category === 'card_battle') {
+    const redGrid = document.getElementById('rosterRedRolesGrid');
+    if (redGrid) {
+      redGrid.innerHTML = `
+        <div class="roster-role-card claimed claimed-red" style="grid-column: 1 / -1; padding: 16px; text-align: left; display: flex; align-items: center; gap: 14px;">
+          <div class="role-card-avatar" style="border-color:var(--pc-red); color:var(--pc-red); font-size: 26px; width:50px; height:50px;">
+            🤖
+          </div>
+          <div style="flex:1;">
+            <div style="color:#ff6b8b; font-weight:800; font-size:14px; margin-bottom:3px;">AI 舆论攻击施压引擎 (自主演算)</div>
+            <div style="font-size:11px; color:var(--pc-text-muted); line-height:1.4;">系统根据剧本阶段随机抽取攻击威胁卡（谣言煽动/悲情控诉/虚假索赔等），实时对蓝方施压掉血。</div>
+            <div style="margin-top:6px; display:flex; gap:6px;">
+              <span class="badge-ps badge-red" style="font-size:10px;">🎲 随机抽取出牌</span>
+              <span class="badge-ps badge-red" style="font-size:10px;">💥 真实掉血扣减</span>
+              <span class="badge-ps badge-gold" style="font-size:10px;">● 4阶段攻击库</span>
+            </div>
+          </div>
+          <span class="role-card-status-pill" style="align-self:flex-start;">● AI系统驱动</span>
+        </div>
+      `;
+    }
+    const redRatio = document.getElementById('redSeatedRatioText');
+    if (redRatio) redRatio.textContent = '🤖 AI 施压引擎已就绪';
+
+    // 蓝方 4 身份专属手牌库
+    const blueGrid = document.getElementById('rosterBlueRolesGrid');
+    const roles = currentSelectedScript.identities || [];
+    if (blueGrid) {
+      blueGrid.innerHTML = roles.map((role, idx) => {
+        const count = role.handCards ? role.handCards.length : 11;
+        return `
+          <div class="roster-role-card claimed claimed-blue" 
+               style="cursor:pointer;"
+               onclick="cardBattleQuickSelectRole(${idx})"
+               title="${role.desc}">
+            <div class="role-card-avatar" style="border-color:var(--pc-cyan); color:var(--pc-cyan);">
+              ${role.avatar || '🏛️'}
+            </div>
+            <div class="role-card-user">🎴 ${count} 张专属手牌</div>
+            <div class="role-card-name" style="color:var(--pc-cyan);">${role.name}</div>
+            <span class="role-card-status-pill">● 专属牌池就绪</span>
+          </div>
+        `;
+      }).join('');
+    }
+    const blueRatio = document.getElementById('blueSeatedRatioText');
+    if (blueRatio) blueRatio.textContent = `${roles.length} / ${roles.length} 席位牌库就绪`;
+
+    const countBadge = document.getElementById('rosterSeatedCountBadge');
+    if (countBadge) countBadge.textContent = `🎴 参演阵容: 4 履职部门 / ${currentSelectedScript.totalCards || 56} 张手牌`;
+
+    const enterBtn = document.getElementById('btnEnterWarRoom');
+    if (enterBtn) {
+      enterBtn.disabled = false;
+      enterBtn.innerHTML = '⚔️ 进入卡牌对战中枢 (开启AI卡牌博弈)';
+      enterBtn.style.opacity = '1';
+      enterBtn.style.boxShadow = '0 0 20px rgba(0, 240, 255, 0.7)';
+    }
+    return;
+  }
 
   // 1. 渲染红方角色
   const redGrid = document.getElementById('rosterRedRolesGrid');
@@ -437,6 +529,12 @@ function simulateClaimAllRoles() {
 
 // 尝试进入作战室
 function attemptEnterWarRoom() {
+  if (currentSelectedScript && currentSelectedScript.category === 'card_battle') {
+    document.querySelectorAll('.fullscreen-state-overlay').forEach(el => el.style.display = 'none');
+    switchView('warroom');
+    return;
+  }
+
   const engineState = window.drillEngine ? window.drillEngine.getState() : {};
   const commanderSeat = engineState.seats ? engineState.seats['blue_commander'] : null;
 
@@ -458,6 +556,21 @@ function renderWarRoomView() {
   const script = currentSelectedScript;
   const nameEl = document.getElementById('warCurrentScriptName');
   if (nameEl && nameEl.textContent !== script.name) nameEl.textContent = script.name;
+
+  const stdArena = document.getElementById('standardWarArena');
+  const cardArena = document.getElementById('cardBattleWarArena');
+
+  // 🎴 卡牌对抗类剧本：切换到赛博对战竞技场
+  if (script.category === 'card_battle') {
+    if (stdArena) stdArena.style.display = 'none';
+    if (cardArena) cardArena.style.display = 'flex';
+    initCardBattleWarRoom();
+    return;
+  }
+
+  // 常规推演类剧本：显示标准三栏拳击与时间轴
+  if (stdArena) stdArena.style.display = 'grid';
+  if (cardArena) cardArena.style.display = 'none';
 
   const stages = script.stages || [];
   const currentStage = stages[currentStageIndex] || stages[0];
@@ -493,6 +606,442 @@ function renderWarRoomView() {
   renderCredibilityAndFists();
   renderHorizontalTimeline(true);
   renderVirtualProgressTracker();
+}
+
+// ==================== 🎴 卡牌对抗类专属作战室 (Combat Card Battle Engine) ====================
+
+let cardBattleHp = 100;
+let cardBattleCurrentStageIndex = 0;
+let cardBattleCurrentRoleIndex = 0;
+let cardBattleCurrentAiCard = null;
+let cardBattleSelectedCard = null;
+let cardBattleTurn = 1;
+let cardBattlePlayedCardIds = new Set();
+let cardBattleLogs = [];
+
+function cardBattleQuickSelectRole(idx) {
+  cardBattleCurrentRoleIndex = idx;
+  showToastNotice(`已预选席位：${(currentSelectedScript.identities || [])[idx]?.name || ''}`);
+}
+
+function initCardBattleWarRoom() {
+  const script = currentSelectedScript;
+  if (!script) return;
+
+  cardBattleHp = 100;
+  cardBattleCurrentStageIndex = 0;
+  cardBattleCurrentRoleIndex = 0;
+  cardBattleTurn = 1;
+  cardBattlePlayedCardIds.clear();
+  cardBattleLogs = [
+    { time: getCurrentTimeStr(), type: 'stage', text: `🎴 卡牌博弈演练中枢启动！蓝方 4 大席位就位，初始公信力满槽 100 HP。` },
+    { time: getCurrentTimeStr(), type: 'stage', text: `🎯 阶段一【${script.stages[0]?.name || '发酵期'}】开启，存活阈值线为 ≥ ${script.stages[0]?.survivalThreshold || 75} HP！` }
+  ];
+
+  // 抽取第一张 AI 威胁卡
+  cardBattleDrawAiCardForCurrentStage();
+
+  // 渲染所有子组件
+  renderCardBattleHud();
+  renderCardBattleAiSlot();
+  renderCardBattleClashPreview();
+  renderCardBattleRoleTabs();
+  renderCardBattleHandRack();
+  renderCardBattleLogsStream();
+}
+
+function getCurrentTimeStr() {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+}
+
+function cardBattleDrawAiCardForCurrentStage() {
+  const script = currentSelectedScript;
+  if (!script || !script.stages) return;
+  const stage = script.stages[cardBattleCurrentStageIndex] || script.stages[0];
+  const aiDeck = stage.aiDeck || [];
+  if (aiDeck.length > 0) {
+    const randomIndex = Math.floor(Math.random() * aiDeck.length);
+    cardBattleCurrentAiCard = aiDeck[randomIndex];
+  } else {
+    cardBattleCurrentAiCard = {
+      id: 'AI-DEFAULT',
+      name: '网络次生舆情发酵',
+      attackType: '舆情发酵',
+      damage: 15,
+      desc: '网络出现不良倾向言论，要求官方立即回应。',
+      vulnerabilities: ['权威通报', '现场查证'],
+      backfireCards: []
+    };
+  }
+  cardBattleSelectedCard = null;
+}
+
+function renderCardBattleHud() {
+  const script = currentSelectedScript;
+  if (!script || !script.stages) return;
+  const stage = script.stages[cardBattleCurrentStageIndex] || script.stages[0];
+  const threshold = stage.survivalThreshold !== undefined ? stage.survivalThreshold : 75;
+
+  // 1. HP 数值与进度条
+  const numbersEl = document.getElementById('cbPcHpNumbers');
+  if (numbersEl) numbersEl.textContent = `${cardBattleHp} / 100`;
+
+  const fillEl = document.getElementById('cbPcHpFill');
+  if (fillEl) fillEl.style.width = `${Math.max(0, Math.min(100, cardBattleHp))}%`;
+
+  const statusTag = document.getElementById('cbPcHpStatusTag');
+  if (statusTag) {
+    if (cardBattleHp > threshold + 10) {
+      statusTag.className = 'cb-pc-hp-status-tag tag-safe';
+      statusTag.textContent = '🟢 处于安全防线';
+    } else if (cardBattleHp >= threshold) {
+      statusTag.className = 'cb-pc-hp-status-tag tag-warn';
+      statusTag.textContent = '⚠️ 接近生死阈值线';
+    } else {
+      statusTag.className = 'cb-pc-hp-status-tag tag-danger';
+      statusTag.textContent = '⛔ 已跌破存活阈值！';
+    }
+  }
+
+  // 2. 阈值标记指示针
+  const markerEl = document.getElementById('cbPcThresholdMarker');
+  const flagEl = document.getElementById('cbPcMarkerFlag');
+  if (markerEl) markerEl.style.left = `${threshold}%`;
+  if (flagEl) flagEl.textContent = `阈值 ${threshold}`;
+
+  // 3. 阶段信息
+  const stageNameEl = document.getElementById('cbPcStageName');
+  if (stageNameEl) stageNameEl.textContent = `${stage.name}`;
+
+  const thresholdDescEl = document.getElementById('cbPcStageThresholdDesc');
+  if (thresholdDescEl) thresholdDescEl.textContent = `阶段存活阈值: ≥ ${threshold} HP (低于此值演练失败)`;
+
+  const topStageTag = document.getElementById('warCurrentStageTag');
+  if (topStageTag) topStageTag.textContent = `🎴 卡牌博弈 · ${stage.name}`;
+}
+
+function renderCardBattleAiSlot() {
+  const stageEl = document.getElementById('cbPcAiCardStage');
+  if (!stageEl || !cardBattleCurrentAiCard) return;
+
+  const card = cardBattleCurrentAiCard;
+  const vulns = (card.vulnerabilities || []).map(v => `<span class="vuln-badge">🎯 ${v}</span>`).join(' ');
+  const backfire = card.backfireCards && card.backfireCards.length > 0
+    ? `<div class="cb-ai-trap-warning">⚠️ 反噬锁定: 打出 [${card.backfireCards.join(' / ')}] 将扣除双倍血量！</div>`
+    : '';
+
+  stageEl.innerHTML = `
+    <div class="cb-ai-threat-card-box">
+      <div class="cb-ai-card-head">
+        <span class="cb-ai-card-name">${card.name}</span>
+        <span class="cb-ai-type-pill">${card.attackType}</span>
+      </div>
+      <div class="cb-ai-card-body">${card.desc}</div>
+      <div class="cb-ai-card-stats">
+        <span class="cb-ai-stat-dmg">💥 舆论伤害: -${card.damage} HP</span>
+        <div class="cb-ai-stat-vulns">${vulns}</div>
+      </div>
+      ${backfire}
+    </div>
+  `;
+}
+
+function renderCardBattleClashPreview() {
+  // AI 预览
+  const aiTitleEl = document.getElementById('cbPcClashAiTitle');
+  const aiDmgEl = document.getElementById('cbPcClashAiDamage');
+  if (aiTitleEl && cardBattleCurrentAiCard) aiTitleEl.textContent = cardBattleCurrentAiCard.name;
+  if (aiDmgEl && cardBattleCurrentAiCard) aiDmgEl.textContent = `-${cardBattleCurrentAiCard.damage} HP`;
+
+  // 玩家预览
+  const pTitleEl = document.getElementById('cbPcClashPlayerTitle');
+  const pPwrEl = document.getElementById('cbPcClashPlayerPower');
+  const verdictBar = document.getElementById('cbPcClashVerdictBar');
+
+  if (!cardBattleSelectedCard) {
+    if (pTitleEl) pTitleEl.textContent = '（点击下方手牌槽选中）';
+    if (pPwrEl) pPwrEl.textContent = '+0 HP';
+    if (verdictBar) {
+      verdictBar.className = 'cb-pc-clash-verdict-bar';
+      verdictBar.innerHTML = `<span>ℹ️ 请从下方选择对应角色的手牌打出；或在无合适牌时选择【战略跳过】。</span>`;
+    }
+  } else {
+    const card = cardBattleSelectedCard;
+    if (pTitleEl) pTitleEl.textContent = card.name;
+    if (pPwrEl) pPwrEl.textContent = card.isTrap ? `-${Math.abs(card.power)} HP` : `+${card.power} HP`;
+
+    // 裁决预期预测
+    const isCounter = cardBattleCurrentAiCard.vulnerabilities && cardBattleCurrentAiCard.vulnerabilities.some(v => 
+      (card.counterAttr && card.counterAttr.includes(v)) || (card.type && card.type.includes(v))
+    );
+    const isTrap = card.isTrap || (cardBattleCurrentAiCard.backfireCards && cardBattleCurrentAiCard.backfireCards.some(b => card.name.includes(b)));
+
+    if (isTrap) {
+      verdictBar.className = 'cb-pc-clash-verdict-bar verdict-trap';
+      verdictBar.innerHTML = `<span>⛔ 极高风险警示！打出【${card.name}】将被 AI 恶意利用，遭到反噬扣除 ${cardBattleCurrentAiCard.damage + 12} HP！</span>`;
+    } else if (isCounter) {
+      verdictBar.className = 'cb-pc-clash-verdict-bar verdict-counter';
+      verdictBar.innerHTML = `<span>✅ 属性精准克制！命中弱点 [${card.counterAttr}]，成功镇压舆论攻势并回复 +${card.power} HP！</span>`;
+    } else {
+      verdictBar.className = 'cb-pc-clash-verdict-bar';
+      verdictBar.innerHTML = `<span>⚖️ 基础应对：可部分抵消 AI 攻势，伤害抵扣 ${card.power} HP。</span>`;
+    }
+  }
+
+  const turnEl = document.getElementById('cbPcTurnCounter');
+  if (turnEl) turnEl.textContent = `回合 ${cardBattleTurn}`;
+}
+
+function renderCardBattleRoleTabs() {
+  const tabsBar = document.getElementById('cbPcRoleTabsBar');
+  if (!tabsBar || !currentSelectedScript) return;
+  const identities = currentSelectedScript.identities || [];
+
+  tabsBar.innerHTML = identities.map((role, idx) => {
+    const isActive = idx === cardBattleCurrentRoleIndex;
+    const remainingCount = (role.handCards || []).filter(c => !cardBattlePlayedCardIds.has(c.id)).length;
+    return `
+      <button class="cb-pc-role-tab-btn ${isActive ? 'active' : ''}" onclick="switchCardBattleActiveRole(${idx})">
+        <span>${role.avatar || '👤'}</span>
+        <span>${role.name}</span>
+        <span style="font-size:10px; opacity:0.85; margin-left:4px;">(${remainingCount}张可用)</span>
+      </button>
+    `;
+  }).join('');
+}
+
+function renderCardBattleHandRack() {
+  const rack = document.getElementById('cbPcCardsRack');
+  if (!rack || !currentSelectedScript) return;
+
+  const identities = currentSelectedScript.identities || [];
+  const currentRole = identities[cardBattleCurrentRoleIndex] || identities[0];
+  const handCards = currentRole.handCards || [];
+
+  if (handCards.length === 0) {
+    rack.innerHTML = '<div style="color:#64748b; font-size:12px; padding:20px;">当前席位暂无配置手牌。</div>';
+    return;
+  }
+
+  rack.innerHTML = handCards.map(card => {
+    const isPlayed = cardBattlePlayedCardIds.has(card.id);
+    const isSelected = cardBattleSelectedCard && cardBattleSelectedCard.id === card.id;
+
+    let tagClass = 'general';
+    if (card.tag && card.tag.includes('专项')) tagClass = 'special';
+    else if (card.tag && card.tag.includes('应急')) tagClass = 'strategic';
+    else if (card.isTrap || (card.tag && card.tag.includes('陷阱'))) tagClass = 'trap';
+
+    return `
+      <div class="cb-pc-card-hand-item ${isPlayed ? 'played' : ''} ${isSelected ? 'selected' : ''} ${card.isTrap ? 'is-trap-card' : ''}"
+           onclick="selectCardBattleHandCard('${card.id}')">
+        <div class="cb-hand-top-row">
+          <span class="cb-hand-tag-badge ${tagClass}">${card.tag || '通用'}</span>
+          <span class="cb-hand-power-val ${card.isTrap ? 'trap' : ''}">
+            ${card.isTrap ? '-' + Math.abs(card.power) : '+' + card.power} HP
+          </span>
+        </div>
+        <div class="cb-hand-card-name">${card.name}</div>
+        <div class="cb-hand-card-desc">${card.effectDesc}</div>
+        <div class="cb-hand-bottom-row">
+          <span class="cb-hand-attr-text">🏷️ ${card.counterAttr || card.type}</span>
+          <span style="font-size:9px; color:#64748b;">${isPlayed ? '已打出' : '可用'}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderCardBattleLogsStream() {
+  const stream = document.getElementById('cbPcLogsStream');
+  if (!stream) return;
+
+  stream.innerHTML = cardBattleLogs.slice(0, 30).map(log => {
+    let logClass = '';
+    if (log.type === 'counter') logClass = 'log-counter';
+    else if (log.type === 'damage') logClass = 'log-damage';
+    else if (log.type === 'pass') logClass = 'log-pass';
+    else if (log.type === 'stage') logClass = 'log-stage';
+
+    return `
+      <div class="cb-log-item ${logClass}">
+        <span style="color:#64748b; margin-right:4px;">[${log.time}]</span>
+        <span>${log.text}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectCardBattleHandCard(cardId) {
+  const identities = currentSelectedScript.identities || [];
+  const currentRole = identities[cardBattleCurrentRoleIndex] || identities[0];
+  const card = (currentRole.handCards || []).find(c => c.id === cardId);
+  if (!card || cardBattlePlayedCardIds.has(card.id)) return;
+
+  if (cardBattleSelectedCard && cardBattleSelectedCard.id === card.id) {
+    cardBattleSelectedCard = null; // 取消选中
+  } else {
+    cardBattleSelectedCard = card;
+  }
+
+  renderCardBattleClashPreview();
+  renderCardBattleHandRack();
+}
+
+function switchCardBattleActiveRole(idx) {
+  cardBattleCurrentRoleIndex = idx;
+  renderCardBattleRoleTabs();
+  renderCardBattleHandRack();
+}
+
+function cardBattleAiDrawNext() {
+  cardBattleDrawAiCardForCurrentStage();
+  renderCardBattleAiSlot();
+  renderCardBattleClashPreview();
+  cardBattleLogs.unshift({
+    time: getCurrentTimeStr(),
+    type: 'damage',
+    text: `🎲 AI 重新抽取威胁牌：【${cardBattleCurrentAiCard.name}】(-${cardBattleCurrentAiCard.damage} HP)。`
+  });
+  renderCardBattleLogsStream();
+  showToastNotice(`🎲 AI 威胁抽取为：${cardBattleCurrentAiCard.name}`);
+}
+
+function cardBattleExecutePlay() {
+  if (!cardBattleSelectedCard) {
+    alert('请先在下方手牌架中点击选中一张要打出的卡牌！');
+    return;
+  }
+  if (!cardBattleCurrentAiCard) return;
+
+  const card = cardBattleSelectedCard;
+  const ai = cardBattleCurrentAiCard;
+  const role = (currentSelectedScript.identities || [])[cardBattleCurrentRoleIndex] || { name: '蓝方' };
+
+  const isCounter = ai.vulnerabilities && ai.vulnerabilities.some(v => 
+    (card.counterAttr && card.counterAttr.includes(v)) || (card.type && card.type.includes(v))
+  );
+  const isTrap = card.isTrap || (ai.backfireCards && ai.backfireCards.some(b => card.name.includes(b)));
+
+  if (isTrap) {
+    const penalty = ai.damage + 12;
+    cardBattleHp = Math.max(0, cardBattleHp - penalty);
+    cardBattleLogs.unshift({
+      time: getCurrentTimeStr(),
+      type: 'damage',
+      text: `⛔ 严重失误！${role.name} 打出陷阱牌【${card.name}】，引火烧身遭到反噬！公信力扣除 ${penalty} HP！`
+    });
+    showToastNotice(`⛔ 踩中陷阱！反噬扣除 ${penalty} HP！`);
+  } else if (isCounter) {
+    cardBattleHp = Math.min(100, cardBattleHp + card.power);
+    cardBattleLogs.unshift({
+      time: getCurrentTimeStr(),
+      type: 'counter',
+      text: `✅ 精准克制！${role.name} 打出【${card.name}】，成功克制镇压 AI 攻势！公信力回复 +${card.power} HP！`
+    });
+    showToastNotice(`✅ 克制成功！公信力回复 +${card.power} HP！`);
+  } else {
+    const netDmg = Math.max(0, ai.damage - card.power);
+    cardBattleHp = Math.max(0, cardBattleHp - netDmg);
+    cardBattleLogs.unshift({
+      time: getCurrentTimeStr(),
+      type: 'damage',
+      text: `⚖️ 寻常应对：${role.name} 打出【${card.name}】，部分化解 AI 攻势，公信力微损 -${netDmg} HP。`
+    });
+    showToastNotice(`⚖️ 伤害微损 -${netDmg} HP`);
+  }
+
+  // 消耗手牌
+  cardBattlePlayedCardIds.add(card.id);
+  cardBattleSelectedCard = null;
+  cardBattleTurn++;
+
+  // 检验是否溃败
+  checkCardBattleDefeat();
+
+  // 自动让 AI 抽取下一张威胁卡
+  cardBattleDrawAiCardForCurrentStage();
+
+  // 更新所有视图
+  renderCardBattleHud();
+  renderCardBattleAiSlot();
+  renderCardBattleClashPreview();
+  renderCardBattleRoleTabs();
+  renderCardBattleHandRack();
+  renderCardBattleLogsStream();
+}
+
+function cardBattleExecutePass() {
+  if (!cardBattleCurrentAiCard) return;
+  const ai = cardBattleCurrentAiCard;
+
+  cardBattleHp = Math.max(0, cardBattleHp - ai.damage);
+  cardBattleLogs.unshift({
+    time: getCurrentTimeStr(),
+    type: 'pass',
+    text: `⏸️ 战略跳过：蓝方选择本轮不予公开表态，战术保留核心手牌。公信力承受基础冲击 -${ai.damage} HP。`
+  });
+  showToastNotice(`⏸️ 战术跳过，保留手牌但承受 -${ai.damage} HP`);
+
+  cardBattleTurn++;
+  checkCardBattleDefeat();
+
+  cardBattleDrawAiCardForCurrentStage();
+  renderCardBattleHud();
+  renderCardBattleAiSlot();
+  renderCardBattleClashPreview();
+  renderCardBattleRoleTabs();
+  renderCardBattleHandRack();
+  renderCardBattleLogsStream();
+}
+
+function checkCardBattleDefeat() {
+  if (cardBattleHp <= 0) {
+    alert(`💥 演练全盘溃败！\n\n公信力已彻底降至 0 HP，网络舆论失控！\n点击确定将重新初始化卡牌战局。`);
+    initCardBattleWarRoom();
+  }
+}
+
+function cardBattleSettleStage() {
+  const script = currentSelectedScript;
+  if (!script || !script.stages) return;
+  const stage = script.stages[cardBattleCurrentStageIndex];
+  const threshold = stage.survivalThreshold !== undefined ? stage.survivalThreshold : 75;
+
+  if (cardBattleHp >= threshold) {
+    if (cardBattleCurrentStageIndex < script.stages.length - 1) {
+      cardBattleCurrentStageIndex++;
+      const nextStage = script.stages[cardBattleCurrentStageIndex];
+      cardBattleLogs.unshift({
+        time: getCurrentTimeStr(),
+        type: 'stage',
+        text: `🎉 阶段胜利！当前公信力 ${cardBattleHp} HP ≥ 阈值 ${threshold} HP，顺利晋级进入【${nextStage.name}】！`
+      });
+      alert(`🎉 阶段考核通过！\n\n当前公信力 ${cardBattleHp} HP ≥ 阶段存活阈值 ${threshold} HP！\n成功晋级下一阶段：【${nextStage.name}】（新阈值：≥ ${nextStage.survivalThreshold || 55} HP）！`);
+      cardBattleDrawAiCardForCurrentStage();
+      renderCardBattleHud();
+      renderCardBattleAiSlot();
+      renderCardBattleClashPreview();
+      renderCardBattleRoleTabs();
+      renderCardBattleHandRack();
+      renderCardBattleLogsStream();
+    } else {
+      cardBattleLogs.unshift({
+        time: getCurrentTimeStr(),
+        type: 'stage',
+        text: `🏆 演练大捷通关！蓝方顺利击破全部 4 阶段 AI 舆情攻击，最终存活公信力 ${cardBattleHp} HP！`
+      });
+      alert(`🏆 恭喜演练大捷通关！\n\n蓝方 4 大席位紧密协同，顺利通过全部 4 个推进阶段考验！\n最终公信力保持在 ${cardBattleHp} HP，演练取得圆满成功！`);
+    }
+  } else {
+    alert(`⛔ 阶段结算未达标！\n\n本阶段存活阈值要求为 ≥ ${threshold} HP，当前公信力仅有 ${cardBattleHp} HP！\n无法晋级下一阶段，请重新调整出牌与克制策略！`);
+  }
+}
+
+function clearCardBattleLogs() {
+  cardBattleLogs = [];
+  renderCardBattleLogsStream();
 }
 
 function updateCountdownDisplay() {

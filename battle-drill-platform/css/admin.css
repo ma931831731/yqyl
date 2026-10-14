@@ -733,6 +733,89 @@ button {
   flex-wrap: nowrap;
 }
 
+/* 剧本类型体系与情境事件展示 */
+.script-type-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.script-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  width: fit-content;
+  line-height: 1.2;
+}
+
+.script-type-badge.type-city {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.script-type-badge.type-tourism {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.script-type-badge.type-ecology {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.script-type-badge.type-food {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.script-type-badge.type-education {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.script-type-badge.type-civic {
+  background: #f5f3ff;
+  color: #7c3aed;
+  border: 1px solid #ddd6fe;
+}
+
+.script-subtype-text {
+  font-size: 11px;
+  color: #475569;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.mode-micro-pill {
+  display: inline-block;
+  padding: 1.5px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.mode-micro-pill.mode-card {
+  background: #f5f3ff;
+  color: #6366f1;
+  border: 1px solid #e0e7ff;
+}
+
+.mode-micro-pill.mode-standard {
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
 .table-footer-pagination {
   padding: 10px 16px;
   background: #fafcff;
@@ -1923,4 +2006,215 @@ button {
   opacity: 0.88;
   pointer-events: none;
   background: rgba(255, 255, 255, 0.4);
+}
+
+/* ==================== 🎴 卡牌对抗类剧本编排专属样式 ==================== */
+.card-workbench-top-bar {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 18px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cb-stages-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px dashed #e2e8f0;
+}
+.cb-stages-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-strong);
+}
+.cb-stages-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.cb-stage-tab {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: var(--text-body);
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.cb-stage-tab:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+.cb-stage-tab.active {
+  background: #4f46e5;
+  color: #fff;
+  border-color: #4338ca;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+.cb-stage-tab .th-pill {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(0,0,0,0.08);
+}
+.cb-stage-tab.active .th-pill {
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+}
+.card-workbench-body-grid {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 14px;
+}
+.cb-deck-column {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 560px;
+}
+.cb-deck-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-light);
+}
+.cb-cards-scroll-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 560px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.cb-ai-card-item {
+  border: 1px solid #fecaca;
+  background: #fffafa;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.05);
+}
+.cb-ai-card-item:hover {
+  border-color: #f87171;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.12);
+  transform: translateY(-1px);
+}
+.cb-card-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.cb-role-tabs-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.cb-role-tab {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: var(--text-body);
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.cb-role-tab:hover {
+  background: #eef2ff;
+  border-color: #a5b4fc;
+}
+.cb-role-tab.active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #1d4ed8;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+.cb-role-info-card {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+.cb-player-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.cb-player-card-item {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.cb-player-card-item:hover {
+  border-color: #4f46e5;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.15);
+  transform: translateY(-2px);
+}
+.cb-tag-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+.cb-tag-special {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+.cb-tag-general {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+.cb-tag-strategic {
+  background: #faf5ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+.cb-tag-trap {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+.cb-rules-footer-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 10px 16px;
+  border-radius: 8px;
 }

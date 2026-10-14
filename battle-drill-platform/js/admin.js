@@ -5,8 +5,10 @@
 
 // ==================== 1. 全局数据仓库 (State Store) ====================
 
-// 演练剧本集合 (以火灾事故V6为真实主卡带)
-let scriptCartridges = [
+// 演练剧本集合 (优先从 cartridges-data.js 全局读取)
+let scriptCartridges = (typeof window !== 'undefined' && typeof window.getDrillCartridges === 'function')
+  ? window.getDrillCartridges()
+  : [
   {
     id: 'JB-FIRE-20250408',
     name: 'K市P区某居民楼突发火灾爆燃与网络造谣处置演练',
@@ -22,8 +24,8 @@ let scriptCartridges = [
     status: 'active', // active (演练中), draft (草稿), disabled (未启用)
     updatedAt: '2026-10-10 11:55',
     creator: '汪艳琼 (特聘教官)',
-    coverUrl: 'https://images.unsplash.com/photo-1542385151-efd9000785a0?w=400',
-    bgUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200',
+    coverUrl: './media/fire_cover.jpg',
+    bgUrl: './media/fire_bg.jpg',
     bgDesc: 'K市P区作为省会城市核心城区，辖区面积98平方公里，常住人口超120万。4月8日18时57分，X街道花园居小区高层住宅突发火灾。该小区建成于2008年，共有居民楼15栋，入住率高达90%，常住人口超过5000人，老弱病残孕多，紧邻地铁站与大型商超。现场23层住宅东侧房间起火爆炸，浓烟滚滚，十余名校服学生惊慌逃离。',
     // 5大推进环节：红蓝完全对应，丰富平铺展示
     stages: [
@@ -814,49 +816,15 @@ let scriptCartridges = [
         }
       }
     ]
-  },
-  {
-    id: 'JB-BULLY-20250612',
-    name: 'K市P区学生遭霸凌后自杀事件处置演练',
-    type: 'school',
-    typeName: '涉校涉生纠纷',
-    difficulty: 'hard',
-    duration: 90,
-    startDate: '2026-06-12',
-    endDate: '2026-06-13',
-    virtualDuration: 48,
-    credibilityBaseline: 100,
-    status: 'draft',
-    updatedAt: '2026-10-09 16:30',
-    creator: '张建军 (教导员)',
-    coverUrl: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=400',
-    bgUrl: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1200',
-    bgDesc: '初中生在校遭遇长达半学期的言语与肢体欺凌，家属在校门口拉横幅引发公众同情与抗议。',
-    stages: []
-  },
-  {
-    id: 'JB-FOOD-20250720',
-    name: '某高校食堂疑似食物中毒舆情推演',
-    type: 'food',
-    typeName: '食品卫生安全',
-    difficulty: 'easy',
-    duration: 60,
-    startDate: '2026-07-20',
-    endDate: '2026-07-20',
-    virtualDuration: 12,
-    credibilityBaseline: 100,
-    status: 'disabled',
-    updatedAt: '2026-10-08 14:20',
-    creator: '李明 (导调组)',
-    coverUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400',
-    bgUrl: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=1200',
-    bgDesc: '数十名学生出现急性肠胃炎，疑似食品留样超标，微博校园墙出现大量吐槽。',
-    stages: []
   }
 ];
 
-// 全局同步挂载供其他终端使用
-if (typeof window !== 'undefined') {
+// 如果 window.DEFAULT_DRILL_CARTRIDGES 已经存在（由 cartridges-data.js 注入），则优先使用 cartridges-data.js 的卡牌剧本
+if (typeof window !== 'undefined' && Array.isArray(window.DEFAULT_DRILL_CARTRIDGES) && window.DEFAULT_DRILL_CARTRIDGES.length >= 2) {
+  scriptCartridges = (typeof window.getDrillCartridges === 'function')
+    ? window.getDrillCartridges()
+    : window.DEFAULT_DRILL_CARTRIDGES;
+} else if (typeof window !== 'undefined') {
   window.DEFAULT_DRILL_CARTRIDGES = scriptCartridges;
 }
 
@@ -961,19 +929,19 @@ let caseArchiveList = [
   },
   {
     id: 'CASE-02',
-    code: 'DOC-BULLY-V6',
-    title: '演练材料二：K市P区学生遭霸凌后自杀V6.docx',
-    industry: '教育校园与未成年保护',
-    fileSize: '21.8 KB',
-    parseStatus: '已完整解析 (3阶段/6话术)',
-    desc: '校园欺凌衍生网络舆情发酵，重点考察教育与公安的跨部门核查与柔性舆论引导。'
+    code: 'DOC-TOUR-V6',
+    title: '演练材料二：A市花园景区安保涉暴舆情阻击战.docx',
+    industry: '文化旅游与社会治安',
+    fileSize: '48.2 KB',
+    parseStatus: '已完整解析 (4阶段/56卡牌)',
+    desc: '景区现场工作人员与游客司机冲突涉暴/涉爆引发全网声讨，涵盖网信、公安、文旅、景区管委会四方协同卡牌身份对抗机制。'
   }
 ];
 
 // 演练历史台账
 let drillHistoryList = [
   { id: 'DR-2026-001', title: '2026年春季突发高层火灾舆情实战推演', script: 'K市P区某居民楼突发火灾爆燃与网络造谣处置演练', diff: '中等', score: '95 分 (优秀)', time: '2026-04-09 17:30' },
-  { id: 'DR-2026-002', title: '涉校学生霸凌事件红蓝攻防对抗第一期', script: 'K市P区学生遭霸凌后自杀事件处置演练', diff: '困难', score: '82 分 (良好)', time: '2026-04-02 11:00' }
+  { id: 'DR-2026-002', title: '2026年夏季文旅景区安保突发涉暴舆情卡牌阻击战', script: '【卡牌对抗】A市花园景区安保涉暴舆情阻击战', diff: '困难', score: '88 分 (良好)', time: '2026-07-25 16:30' }
 ];
 
 // 当前工作台活动剧本卡带及活动环节
@@ -1093,6 +1061,24 @@ function updateSidebarStats() {
   if (activeEl) activeEl.textContent = activeCount;
   if (draftEl) draftEl.textContent = draftCount;
   if (disabledEl) disabledEl.textContent = disabledCount;
+
+  // 剧本类型与演练模式统计
+  const cityCount = scriptCartridges.filter(s => s.type === 'city_safety' || s.type === 'fire').length;
+  const tourCount = scriptCartridges.filter(s => s.type === 'tourism_security' || s.type === 'tourism').length;
+  const cardCount = scriptCartridges.filter(s => s.category === 'card_battle').length;
+  const standardCount = scriptCartridges.filter(s => !s.category || s.category === 'standard').length;
+
+  const catAllEl = document.getElementById('countCatAll');
+  const catCityEl = document.getElementById('countCatCity');
+  const catTourEl = document.getElementById('countCatTourism');
+  const catCardEl = document.getElementById('countCatCard');
+  const catStdEl = document.getElementById('countCatStandard');
+
+  if (catAllEl) catAllEl.textContent = scriptCartridges.length;
+  if (catCityEl) catCityEl.textContent = cityCount;
+  if (catTourEl) catTourEl.textContent = tourCount;
+  if (catCardEl) catCardEl.textContent = cardCount;
+  if (catStdEl) catStdEl.textContent = standardCount;
 }
 
 // 侧边栏导航切换
@@ -1124,6 +1110,18 @@ function switchViewPanel(route) {
   const targetPanel = document.getElementById(targetPanelId);
   if (targetPanel) {
     targetPanel.style.display = 'flex';
+    if (route === 'script_workbench') {
+      const stdView = document.getElementById('workbenchStandardView');
+      const cardView = document.getElementById('workbenchCardBattleView');
+      if (currentWorkbenchScript && currentWorkbenchScript.category === 'card_battle') {
+        if (stdView) stdView.style.display = 'none';
+        if (cardView) cardView.style.display = 'flex';
+        renderCardBattleWorkbench(currentWorkbenchScript.id, cardWorkbenchActiveStageIndex, cardWorkbenchActiveRoleIndex);
+      } else {
+        if (stdView) stdView.style.display = 'flex';
+        if (cardView) cardView.style.display = 'none';
+      }
+    }
   }
 }
 
@@ -1135,25 +1133,88 @@ function returnToScriptList() {
   switchViewPanel('script_list');
 }
 
-// ==================== 3. 剧本演练列表功能 ====================
+// ==================== 3. 剧本演练列表与剧本类型分类功能 ====================
+
+let currentScriptFilterCombined = 'all';
+
+function filterScriptCombined(filterVal, btn) {
+  currentScriptFilterCombined = filterVal;
+  const typeSelect = document.getElementById('searchScriptType');
+  const catSelect = document.getElementById('searchScriptCategory');
+
+  if (filterVal === 'all') {
+    if (typeSelect) typeSelect.value = '';
+    if (catSelect) catSelect.value = '';
+  } else if (filterVal === 'city_safety' || filterVal === 'tourism_security' || filterVal === 'ecology_environment' || filterVal === 'food_health' || filterVal === 'education_campus' || filterVal === 'civic_livelihood') {
+    if (typeSelect) typeSelect.value = filterVal;
+    if (catSelect) catSelect.value = '';
+  } else if (filterVal === 'card_battle' || filterVal === 'standard') {
+    if (catSelect) catSelect.value = filterVal;
+    if (typeSelect) typeSelect.value = '';
+  }
+
+  const tabGroup = document.getElementById('scriptCatTabGroup');
+  if (tabGroup) {
+    tabGroup.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+  }
+  renderScriptTable();
+}
+
+function filterScriptCategory(cat, btn) {
+  filterScriptCombined(cat, btn);
+}
 
 function renderScriptTable() {
   const tbody = document.getElementById('scriptTableBody');
   const countEl = document.getElementById('scriptListCount');
+  const footerText = document.getElementById('scriptTableFooterText');
   if (!tbody) return;
 
   const keyword = (document.getElementById('searchScriptKeyword')?.value || '').trim().toLowerCase();
+  const typeFilter = document.getElementById('searchScriptType')?.value || '';
+  const catFilter = document.getElementById('searchScriptCategory')?.value || '';
   const diffFilter = document.getElementById('searchScriptDifficulty')?.value || '';
   const statusFilter = document.getElementById('searchScriptStatus')?.value || '';
 
   const filtered = scriptCartridges.filter(s => {
-    const matchKw = !keyword || s.name.toLowerCase().includes(keyword) || s.id.toLowerCase().includes(keyword);
+    const matchKw = !keyword || 
+      s.name.toLowerCase().includes(keyword) || 
+      s.id.toLowerCase().includes(keyword) ||
+      (s.typeName && s.typeName.toLowerCase().includes(keyword)) ||
+      (s.subtype && s.subtype.toLowerCase().includes(keyword)) ||
+      (s.bgDesc && s.bgDesc.toLowerCase().includes(keyword)) ||
+      (keyword.includes('涉爆') && s.id === 'JB-CARD-TOUR-2026') ||
+      (keyword.includes('涉暴') && s.id === 'JB-CARD-TOUR-2026') ||
+      (keyword.includes('景区') && s.id === 'JB-CARD-TOUR-2026') ||
+      (keyword.includes('火灾') && s.id === 'JB-FIRE-20250408');
+
+    let matchType = true;
+    if (typeFilter) {
+      if (typeFilter === 'city_safety') matchType = s.type === 'city_safety' || s.type === 'fire';
+      else if (typeFilter === 'tourism_security') matchType = s.type === 'tourism_security' || s.type === 'tourism';
+      else if (typeFilter === 'ecology_environment') matchType = s.type === 'ecology_environment' || s.type === 'ecology';
+      else if (typeFilter === 'food_health') matchType = s.type === 'food_health' || s.type === 'food';
+      else if (typeFilter === 'education_campus') matchType = s.type === 'education_campus' || s.type === 'school';
+      else if (typeFilter === 'civic_livelihood') matchType = s.type === 'civic_livelihood';
+      else matchType = s.type === typeFilter;
+    }
+
+    let matchCat = true;
+    if (catFilter === 'card_battle') {
+      matchCat = s.category === 'card_battle';
+    } else if (catFilter === 'standard') {
+      matchCat = !s.category || s.category === 'standard';
+    }
+
     const matchDiff = !diffFilter || s.difficulty === diffFilter;
     const matchStatus = !statusFilter || s.status === statusFilter;
-    return matchKw && matchDiff && matchStatus;
+    return matchKw && matchType && matchCat && matchDiff && matchStatus;
   });
 
   if (countEl) countEl.textContent = filtered.length;
+  if (footerText) footerText.textContent = `共 ${filtered.length} 条记录 (全库共 ${scriptCartridges.length} 套)`;
+  updateSidebarStats();
   tbody.innerHTML = '';
 
   filtered.forEach(item => {
@@ -1179,26 +1240,77 @@ function renderScriptTable() {
       'easy': '<span style="color:#16a34a; font-weight:600;">简单 (指引)</span>',
       'medium': '<span style="color:#2563eb; font-weight:600;">中等 (实战)</span>',
       'hard': '<span style="color:#ea580c; font-weight:600;">困难 (高压)</span>',
-      'hell': '<span style="color:#dc2626; font-weight:700;">地狱 (博弈)</span>'
+      'hell': '<span style="color:#dc2626; font-weight:700;">地狱 (极限博弈)</span>'
     };
+
+    // 剧本类型元数据映射体系
+    const typeMetaMap = {
+      'city_safety': { name: '城市安全与突发防灾', icon: '🏢', cls: 'type-city', defaultSub: '高层火灾爆燃 · 涉灾造谣应对' },
+      'fire': { name: '城市安全与突发防灾', icon: '🏢', cls: 'type-city', defaultSub: '高层火灾爆燃 · 涉灾造谣应对' },
+      'tourism_security': { name: '文化旅游与社会治安', icon: '🏞️', cls: 'type-tourism', defaultSub: '景区安保涉暴 · 文旅维权阻击' },
+      'tourism': { name: '文化旅游与社会治安', icon: '🏞️', cls: 'type-tourism', defaultSub: '景区安保涉暴 · 文旅维权阻击' },
+      'ecology_environment': { name: '生态环保与城市治理', icon: '🌿', cls: 'type-ecology', defaultSub: '排污超标与环境治理舆情' },
+      'food_health': { name: '食品药品与公共卫生', icon: '🍱', cls: 'type-food', defaultSub: '食品卫生安全与监督查处' },
+      'education_campus': { name: '教育校园与未成年保护', icon: '🎓', cls: 'type-education', defaultSub: '校园纠纷矛盾与家校沟通' },
+      'civic_livelihood': { name: '政务民生与社会服务', icon: '🏛️', cls: 'type-civic', defaultSub: '政务大厅作风与民生维权' }
+    };
+
+    const typeMeta = typeMetaMap[item.type] || {
+      name: item.typeName || '综合突发舆情演练',
+      icon: '📌',
+      cls: 'type-city',
+      defaultSub: '多部门应急联动综合处置'
+    };
+
+    const subtypeText = item.subtype || typeMeta.defaultSub;
+
+    let modeBadgeHtml = '';
+    if (item.category === 'card_battle') {
+      modeBadgeHtml = `<span class="mode-micro-pill mode-card">🎴 卡牌对抗 (${item.totalCardCount || 56}张)</span>`;
+    } else {
+      modeBadgeHtml = `<span class="mode-micro-pill mode-standard">⏱️ 常规推演 (${item.stages ? item.stages.length : 5}阶段)</span>`;
+    }
+
+    const typeColHtml = `
+      <div class="script-type-cell">
+        <span class="script-type-badge ${typeMeta.cls}">
+          <span>${typeMeta.icon}</span> <span>${typeMeta.name}</span>
+        </span>
+        <div class="script-subtype-text">${subtypeText}</div>
+        <div style="margin-top:2px;">${modeBadgeHtml}</div>
+      </div>
+    `;
+
+    // 环节展示
+    let stageColHtml = '';
+    if (item.category === 'card_battle') {
+      stageColHtml = `<span style="color:#4f46e5; font-weight:700;">${item.stages ? item.stages.length : 0} 关卡</span><div style="font-size:10.5px; color:#ea580c;">含阶段阈值淘汰</div>`;
+    } else {
+      stageColHtml = `<span style="color:var(--primary); font-weight:600;">${item.stages ? item.stages.length : 0} 个阶段</span>`;
+    }
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>
-        <img src="${item.coverUrl || 'https://images.unsplash.com/photo-1542385151-efd9000785a0?w=400'}" class="table-cover-thumb" alt="封面" onclick="openScriptVisualsModal('${item.id}')" title="点击配置封面与大屏背景" style="cursor:pointer;">
+        <img src="${item.coverUrl || './media/fire_cover.jpg'}" class="table-cover-thumb" alt="封面" onclick="openScriptVisualsModal('${item.id}')" title="点击配置封面与大屏背景" style="cursor:pointer;">
       </td>
       <td><strong style="color:var(--text-strong); font-size:12.5px;">${item.id}</strong></td>
       <td>
         <strong style="color:var(--text-title); font-size:13.5px;">${item.name}</strong>
-        <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${item.typeName} · 创建人: ${item.creator}</div>
+        <div style="font-size:11px; color:var(--text-muted); margin-top:3px; display:flex; align-items:center; gap:8px;">
+          <span>创建人: ${item.creator}</span>
+          <span>•</span>
+          <span style="color:#64748b; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${item.bgDesc || ''}">${item.bgDesc ? item.bgDesc.slice(0, 36) + '...' : ''}</span>
+        </div>
       </td>
+      <td>${typeColHtml}</td>
       <td>${diffMap[item.difficulty] || item.difficulty}</td>
       <td>
         <span style="font-weight:700; color:#4338ca;">${item.virtualDuration || 90} 分钟</span>
         <div style="font-size:10.5px; color:var(--text-muted);">${item.startDate || '2026-04-08'}</div>
       </td>
       <td><span style="font-weight:700; color:var(--success);">${item.credibilityBaseline || 100} 分</span></td>
-      <td><span style="color:var(--primary); font-weight:600;">${item.stages ? item.stages.length : 0} 个阶段</span></td>
+      <td>${stageColHtml}</td>
       <td>${statusBadge}</td>
       <td style="font-size:11.5px; color:var(--text-muted);">${item.updatedAt}</td>
       <td style="text-align:center;">
@@ -1216,18 +1328,349 @@ function renderScriptTable() {
 
 function resetScriptSearch() {
   if (document.getElementById('searchScriptKeyword')) document.getElementById('searchScriptKeyword').value = '';
+  if (document.getElementById('searchScriptType')) document.getElementById('searchScriptType').value = '';
+  if (document.getElementById('searchScriptCategory')) document.getElementById('searchScriptCategory').value = '';
   if (document.getElementById('searchScriptDifficulty')) document.getElementById('searchScriptDifficulty').value = '';
   if (document.getElementById('searchScriptStatus')) document.getElementById('searchScriptStatus').value = '';
+  currentScriptFilterCombined = 'all';
+  const tabGroup = document.getElementById('scriptCatTabGroup');
+  if (tabGroup) {
+    tabGroup.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('tabCatAll')?.classList.add('active');
+  }
   renderScriptTable();
 }
 
+let currentCardWorkbenchScript = null;
+let cardWorkbenchActiveStageIndex = 0;
+let cardWorkbenchActiveRoleIndex = 0;
+
 function openWorkbenchForScript(scriptId) {
-  loadScriptToTriGridWorkbench(scriptId);
+  const script = scriptCartridges.find(s => s.id === scriptId) || scriptCartridges[0];
+  if (!script) return;
+
+  const stdView = document.getElementById('workbenchStandardView');
+  const cardView = document.getElementById('workbenchCardBattleView');
+
+  if (script.category === 'card_battle') {
+    if (stdView) stdView.style.display = 'none';
+    if (cardView) cardView.style.display = 'flex';
+    renderCardBattleWorkbench(script.id, 0, 0);
+  } else {
+    if (stdView) stdView.style.display = 'flex';
+    if (cardView) cardView.style.display = 'none';
+    loadScriptToTriGridWorkbench(scriptId);
+  }
+
   const listNav = document.getElementById('nav_script_list');
   const wbNav = document.getElementById('nav_script_workbench');
   listNav?.classList.remove('active');
   wbNav?.classList.add('active');
   switchViewPanel('script_workbench');
+}
+
+// ==================== 🎴 卡牌对抗类剧本专属编排渲染引擎 ====================
+
+function renderCardBattleWorkbench(scriptId, stageIndex = 0, roleIndex = 0) {
+  const script = scriptCartridges.find(s => s.id === scriptId) || currentCardWorkbenchScript || scriptCartridges[0];
+  if (!script) return;
+
+  currentCardWorkbenchScript = script;
+  currentWorkbenchScript = script;
+  cardWorkbenchActiveStageIndex = stageIndex;
+  cardWorkbenchActiveRoleIndex = roleIndex;
+
+  // 1. 顶部总览信息
+  const nameInput = document.getElementById('wbCardScriptName');
+  if (nameInput) nameInput.value = script.name;
+
+  const totalBadge = document.getElementById('wbCardTotalBadge');
+  if (totalBadge) totalBadge.textContent = `🎴 卡牌对抗类 (总计 ${script.totalCards || 56} 张手牌)`;
+
+  const statusBadge = document.getElementById('wbCardStatusBadge');
+  if (statusBadge) {
+    if (script.status === 'active') {
+      statusBadge.className = 'cartridge-status-badge badge-active';
+      statusBadge.innerHTML = '<span class="pulse-dot"></span> 演练中';
+    } else {
+      statusBadge.className = 'cartridge-status-badge badge-draft';
+      statusBadge.textContent = '● 草稿';
+    }
+  }
+
+  const durationSelect = document.getElementById('wbCardDuration');
+  if (durationSelect) durationSelect.value = script.virtualDuration || '60';
+
+  // 2. 阶段导航与阈值
+  const stages = script.stages || [];
+  const currentStage = stages[cardWorkbenchActiveStageIndex] || stages[0] || {};
+
+  const stageTabsContainer = document.getElementById('wbCardStageTabs');
+  if (stageTabsContainer) {
+    stageTabsContainer.innerHTML = stages.map((stg, idx) => {
+      const isActive = idx === cardWorkbenchActiveStageIndex;
+      return `
+        <button class="cb-stage-tab ${isActive ? 'active' : ''}" onclick="switchCardWorkbenchStage(${idx})">
+          <span>${stg.name}</span>
+          <span class="th-pill">存活阈值 ≥${stg.survivalThreshold || 60} HP</span>
+          <span style="font-size:10px; opacity:0.85;">(${stg.aiDeck ? stg.aiDeck.length : 0}张威胁)</span>
+        </button>
+      `;
+    }).join('');
+  }
+
+  const thresholdInput = document.getElementById('wbCardCurrentStageThreshold');
+  if (thresholdInput) {
+    thresholdInput.value = currentStage.survivalThreshold !== undefined ? currentStage.survivalThreshold : 75;
+  }
+
+  // 3. 左栏：AI 威胁攻击牌池
+  const aiDeck = currentStage.aiDeck || [];
+  const aiCountEl = document.getElementById('wbAiDeckCount');
+  if (aiCountEl) aiCountEl.textContent = `${aiDeck.length} 张`;
+
+  const aiContainer = document.getElementById('wbAiCardsContainer');
+  if (aiContainer) {
+    if (aiDeck.length === 0) {
+      aiContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8; font-size:12px;">本阶段暂无 AI 威胁攻击卡，点击右上角添加。</div>';
+    } else {
+      aiContainer.innerHTML = aiDeck.map((card, idx) => {
+        const vulns = (card.vulnerabilities || []).map(v => `<span class="badge" style="background:#e0f2fe; color:#0369a1; font-size:10px; padding:1px 5px;">${v}</span>`).join(' ');
+        const backfire = card.backfireCards && card.backfireCards.length > 0
+          ? `<div style="font-size:10.5px; color:#dc2626; background:#fff1f2; border:1px dashed #fecaca; padding:4px 6px; border-radius:4px; margin-top:4px;">
+               ⚠️ 陷阱反噬锁定: 出 [${card.backfireCards.join(' / ')}] 扣双倍血量！
+             </div>`
+          : '';
+
+        return `
+          <div class="cb-ai-card-item">
+            <div class="cb-card-top-row">
+              <span style="font-weight:700; color:#991b1b; font-size:12.5px;">${idx + 1}. ${card.name}</span>
+              <span class="badge" style="background:#fee2e2; color:#b91c1c; font-size:10.5px; padding:2px 6px;">${card.attackType}</span>
+            </div>
+            <div style="font-size:11.5px; color:#475569; line-height:1.45; background:#fff; padding:6px 8px; border-radius:4px; border:1px solid #fecaca;">
+              ${card.desc}
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-top:4px;">
+              <span style="color:#dc2626; font-weight:800;">💥 舆论伤害: -${card.damage} HP</span>
+              <div style="display:flex; align-items:center; gap:4px;">
+                <span style="color:#64748b; font-size:10.5px;">弱点:</span>
+                ${vulns}
+              </div>
+            </div>
+            ${backfire}
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:4px;">
+              <button class="btn-link" style="font-size:11px; color:#dc2626;" onclick="editAiCard(${idx})">编辑</button>
+              <button class="btn-link-danger" style="font-size:11px;" onclick="deleteAiCard(${idx})">删除</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // 4. 右栏：角色 Tabs 与当前手牌
+  const identities = script.identities || [];
+  const currentRole = identities[cardWorkbenchActiveRoleIndex] || identities[0] || {};
+  const handCards = currentRole.handCards || [];
+
+  const roleCountEl = document.getElementById('wbRoleCardsCount');
+  if (roleCountEl) roleCountEl.textContent = `当前席位 ${handCards.length} 张 / 全员 ${script.totalCards || 56} 张`;
+
+  const roleTabsBar = document.getElementById('wbRoleTabsBar');
+  if (roleTabsBar) {
+    roleTabsBar.innerHTML = identities.map((role, idx) => {
+      const isRoleActive = idx === cardWorkbenchActiveRoleIndex;
+      const count = role.handCards ? role.handCards.length : 0;
+      return `
+        <button class="cb-role-tab ${isRoleActive ? 'active' : ''}" onclick="switchCardWorkbenchRole(${idx})">
+          <span>${role.avatar || '👤'} ${role.name}</span>
+          <span style="font-size:10px; opacity:0.85; margin-left:4px;">(${count}张手牌)</span>
+        </button>
+      `;
+    }).join('');
+  }
+
+  const roleSummaryEl = document.getElementById('wbCurrentRoleSummary');
+  if (roleSummaryEl) {
+    roleSummaryEl.innerHTML = `
+      <div style="font-size:18px;">${currentRole.avatar || '🏛️'}</div>
+      <div style="flex:1;">
+        <strong style="color:#1e293b; font-size:12.5px;">${currentRole.name}</strong>
+        <span style="color:#64748b; margin-left:8px;">${currentRole.desc}</span>
+      </div>
+      <div style="font-size:11px; color:#2563eb; font-weight:700;">
+        🎴 手牌池结构：案例专项 / 通用履职 / 战略应急 / 误区陷阱
+      </div>
+    `;
+  }
+
+  const playerCardsContainer = document.getElementById('wbPlayerCardsContainer');
+  if (playerCardsContainer) {
+    if (handCards.length === 0) {
+      playerCardsContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding:30px; color:#94a3b8; font-size:12px;">该席位暂无配置手牌，点击上方按钮添加。</div>';
+    } else {
+      playerCardsContainer.innerHTML = handCards.map((card, idx) => {
+        let tagClass = 'cb-tag-general';
+        if (card.tag && card.tag.includes('专项')) tagClass = 'cb-tag-special';
+        else if (card.tag && card.tag.includes('应急')) tagClass = 'cb-tag-strategic';
+        else if (card.isTrap || (card.tag && card.tag.includes('陷阱'))) tagClass = 'cb-tag-trap';
+
+        return `
+          <div class="cb-player-card-item">
+            <div class="cb-card-top-row">
+              <span style="font-weight:700; color:#0f172a; font-size:12.5px;">${idx + 1}. ${card.name}</span>
+              <span class="cb-tag-badge ${tagClass}">${card.tag || '通用履职'}</span>
+            </div>
+            <div style="font-size:11.5px; color:#475569; line-height:1.45; min-height:36px;">
+              ${card.effectDesc}
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; border-top:1px dashed #e2e8f0; padding-top:6px; margin-top:2px;">
+              <span style="color:#2563eb; font-weight:600; font-size:10.5px;">🏷️ 克制: ${card.counterAttr || card.type || '权威响应'}</span>
+              <span style="color:${card.isTrap ? '#dc2626' : '#16a34a'}; font-weight:700;">
+                ${card.isTrap ? '扣血: -' + Math.abs(card.power) : '威力: +' + card.power} HP
+              </span>
+            </div>
+            ${card.isTrap ? `
+              <div style="font-size:10px; color:#dc2626; background:#fef2f2; border:1px solid #fecaca; padding:2px 6px; border-radius:3px; margin-top:2px;">
+                ⚠️ 误区陷阱：本轮若打出此牌将被 AI 反噬倒扣血量！
+              </div>
+            ` : ''}
+            <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:2px;">
+              <button class="btn-link" style="font-size:10.5px; color:#2563eb;" onclick="editPlayerCard(${idx})">编辑</button>
+              <button class="btn-link-danger" style="font-size:10.5px;" onclick="deletePlayerCard(${idx})">删除</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+}
+
+function switchCardWorkbenchStage(idx) {
+  if (!currentCardWorkbenchScript) return;
+  renderCardBattleWorkbench(currentCardWorkbenchScript.id, idx, cardWorkbenchActiveRoleIndex);
+}
+
+function switchCardWorkbenchRole(idx) {
+  if (!currentCardWorkbenchScript) return;
+  renderCardBattleWorkbench(currentCardWorkbenchScript.id, cardWorkbenchActiveStageIndex, idx);
+}
+
+function onStageThresholdChange(val) {
+  if (!currentCardWorkbenchScript || !currentCardWorkbenchScript.stages) return;
+  const stage = currentCardWorkbenchScript.stages[cardWorkbenchActiveStageIndex];
+  if (stage) {
+    stage.survivalThreshold = Number(val) || 0;
+    showToast(`🎯 [${stage.name}] 存活阈值已更新为: ${val} HP`, 'info');
+    renderCardBattleWorkbench(currentCardWorkbenchScript.id, cardWorkbenchActiveStageIndex, cardWorkbenchActiveRoleIndex);
+  }
+}
+
+function onCardDurationChange(val) {
+  if (currentCardWorkbenchScript) {
+    currentCardWorkbenchScript.virtualDuration = Number(val) || 60;
+    showToast(`⏱️ 演练预期时长已设置为: ${val} 分钟`, 'info');
+  }
+}
+
+function saveCardBattleWorkbench() {
+  if (!currentCardWorkbenchScript) return;
+  const nameInput = document.getElementById('wbCardScriptName');
+  if (nameInput) currentCardWorkbenchScript.name = nameInput.value.trim() || currentCardWorkbenchScript.name;
+
+  persistCartridges();
+  showToast(`🎴 卡牌博弈剧本 [${currentCardWorkbenchScript.id}] 保存成功！手牌池与AI威胁牌库已同步更新。`, 'success');
+  renderScriptTable();
+}
+
+function promptAddAiCard() {
+  const name = prompt('请输入新增 AI 威胁攻击卡名称：', '【谣言发酵】网络恶意带节奏煽动通胀恐慌');
+  if (!name) return;
+  const damage = prompt('请输入该攻击卡的舆论扣血伤害 (HP)：', '20');
+  const stage = currentCardWorkbenchScript.stages[cardWorkbenchActiveStageIndex];
+  if (!stage.aiDeck) stage.aiDeck = [];
+  stage.aiDeck.push({
+    id: 'AI-CARD-' + Date.now(),
+    name: name,
+    attackType: '谣言煽动',
+    damage: Number(damage) || 18,
+    desc: '网络自媒体大量转发虚假信息并诱导对立情绪。',
+    vulnerabilities: ['权威通报', '现场查证'],
+    backfireCards: []
+  });
+  showToast('✅ 新增 AI 威胁攻击卡成功！', 'success');
+  renderCardBattleWorkbench(currentCardWorkbenchScript.id, cardWorkbenchActiveStageIndex, cardWorkbenchActiveRoleIndex);
+}
+
+function editAiCard(idx) {
+  const stage = currentCardWorkbenchScript.stages[cardWorkbenchActiveStageIndex];
+  const card = stage.aiDeck[idx];
+  if (!card) return;
+  const newName = prompt('修改 AI 威胁卡名称：', card.name);
+  if (!newName) return;
+  const newDmg = prompt('修改伤害扣血值 (HP)：', card.damage);
+  card.name = newName;
+  card.damage = Number(newDmg) || card.damage;
+  showToast('AI 威胁卡已更新！', 'success');
+  renderCardBattleWorkbench(currentCardWorkbenchScript.id, cardWorkbenchActiveStageIndex, cardWorkbenchActiveRoleIndex);
+}
+
+function deleteAiCard(idx) {
+  const stage = currentCardWorkbenchScript.stages[cardWorkbenchActiveStageIndex];
+  if (!stage || !stage.aiDeck) return;
+  if (confirm(`确定要移除 AI 威胁卡 [${stage.aiDeck[idx].name}] 吗？`)) {
+    stage.aiDeck.splice(idx, 1);
+    showToast('AI 威胁卡已移除！', 'info');
+    renderCardBattleWorkbench(currentCardWorkbenchScript.id, cardWorkbenchActiveStageIndex, cardWorkbenchActiveRoleIndex);
+  }
+}
+
+function promptAddPlayerCard() {
+  const role = currentCardWorkbenchScript.identities[cardWorkbenchActiveRoleIndex];
+  if (!role) return;
+  const name = prompt(`为 [${role.name}] 添加专属手牌名称：`, '【应急查证】调取现场监控澄清事实卡');
+  if (!name) return;
+  const power = prompt('请输入卡牌威力回复值 (HP)：', '15');
+  if (!role.handCards) role.handCards = [];
+  role.handCards.push({
+    id: 'HC-' + Date.now(),
+    name: name,
+    category: '履职通用',
+    tag: '通用履职',
+    type: '事实澄清',
+    counterAttr: '现场查证',
+    effectDesc: '迅速调取第一手关键证据并在官方渠道公示，化解攻击。',
+    power: Number(power) || 15,
+    isTrap: false
+  });
+  currentCardWorkbenchScript.totalCards = (currentCardWorkbenchScript.totalCards || 56) + 1;
+  showToast(`✅ 为 [${role.name}] 成功添加 1 张专属手牌！`, 'success');
+  renderCardBattleWorkbench(currentCardWorkbenchScript.id, cardWorkbenchActiveStageIndex, cardWorkbenchActiveRoleIndex);
+}
+
+function editPlayerCard(idx) {
+  const role = currentCardWorkbenchScript.identities[cardWorkbenchActiveRoleIndex];
+  const card = role.handCards[idx];
+  if (!card) return;
+  const newName = prompt('修改手牌名称：', card.name);
+  if (!newName) return;
+  const newPower = prompt('修改卡牌威力/扣血值：', card.power);
+  card.name = newName;
+  card.power = Number(newPower) || card.power;
+  showToast('手牌参数已更新！', 'success');
+  renderCardBattleWorkbench(currentCardWorkbenchScript.id, cardWorkbenchActiveStageIndex, cardWorkbenchActiveRoleIndex);
+}
+
+function deletePlayerCard(idx) {
+  const role = currentCardWorkbenchScript.identities[cardWorkbenchActiveRoleIndex];
+  if (!role || !role.handCards) return;
+  if (confirm(`确定要移除手牌 [${role.handCards[idx].name}] 吗？`)) {
+    role.handCards.splice(idx, 1);
+    currentCardWorkbenchScript.totalCards = Math.max(0, (currentCardWorkbenchScript.totalCards || 56) - 1);
+    showToast('手牌已从牌库移除！', 'info');
+    renderCardBattleWorkbench(currentCardWorkbenchScript.id, cardWorkbenchActiveStageIndex, cardWorkbenchActiveRoleIndex);
+  }
 }
 
 // ==================== 封面与背景图设置逻辑 (支持本地图片上传、拖拽、压缩持久化) ====================
@@ -1477,11 +1920,15 @@ function openScriptVisualsModal(scriptId) {
   const coverStatus = document.getElementById('coverUploadStatus');
   const bgStatus = document.getElementById('bgUploadStatus');
 
+  const isTour = script.id === 'JB-CARD-TOUR-2026';
+  const defaultCover = isTour ? './media/scenic_cover.jpg' : './media/fire_cover.jpg';
+  const defaultBg = isTour ? './media/scenic_bg.jpg' : './media/fire_bg.jpg';
+
   if (targetNameEl) targetNameEl.textContent = `[${script.id}] ${script.name}`;
-  if (coverInput) coverInput.value = script.coverUrl || 'https://images.unsplash.com/photo-1542385151-efd9000785a0?w=400';
-  if (coverImg) coverImg.src = script.coverUrl || 'https://images.unsplash.com/photo-1542385151-efd9000785a0?w=400';
-  if (bgInput) bgInput.value = script.bgUrl || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200';
-  if (bgImg) bgImg.src = script.bgUrl || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200';
+  if (coverInput) coverInput.value = script.coverUrl || defaultCover;
+  if (coverImg) coverImg.src = script.coverUrl || defaultCover;
+  if (bgInput) bgInput.value = script.bgUrl || defaultBg;
+  if (bgImg) bgImg.src = script.bgUrl || defaultBg;
 
   if (coverStatus) coverStatus.innerHTML = '';
   if (bgStatus) bgStatus.innerHTML = '';
@@ -1495,25 +1942,31 @@ function openScriptVisualsModal(scriptId) {
 }
 
 function choosePresetCover() {
+  const script = scriptCartridges.find(s => s.id === currentVisualTargetScriptId);
+  const isTour = script && script.id === 'JB-CARD-TOUR-2026';
   const coverInput = document.getElementById('visualCoverInput');
   const coverImg = document.getElementById('visualCoverPreviewImg');
   const statusEl = document.getElementById('coverUploadStatus');
-  const preset = 'https://images.unsplash.com/photo-1542385151-efd9000785a0?w=400';
+  const preset = isTour ? './media/scenic_cover.jpg' : './media/fire_cover.jpg';
+  const label = isTour ? '✨ 预设：A市花园景区安保涉暴舆情实况封面' : '✨ 预设：经典高层火灾突发实况封面';
   if (coverInput) coverInput.value = preset;
   if (coverImg) coverImg.src = preset;
-  if (statusEl) statusEl.innerHTML = '<span class="upload-status-tag">✨ 预设：经典高层火灾</span>';
-  showToast('已切换为经典高层火灾现场实况封面预设！', 'info');
+  if (statusEl) statusEl.innerHTML = `<span class="upload-status-tag">${label}</span>`;
+  showToast(`已切换为${isTour ? '花园景区安保冲突' : '高层火灾'}实况封面预设！`, 'info');
 }
 
 function choosePresetBg() {
+  const script = scriptCartridges.find(s => s.id === currentVisualTargetScriptId);
+  const isTour = script && script.id === 'JB-CARD-TOUR-2026';
   const bgInput = document.getElementById('visualBgInput');
   const bgImg = document.getElementById('visualBgPreviewImg');
   const statusEl = document.getElementById('bgUploadStatus');
-  const preset = 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200';
+  const preset = isTour ? './media/scenic_bg.jpg' : './media/fire_bg.jpg';
+  const label = isTour ? '✨ 预设：文旅景区应急指挥调度全景大屏' : '✨ 预设：应急处置作战室智慧监测大屏';
   if (bgInput) bgInput.value = preset;
   if (bgImg) bgImg.src = preset;
-  if (statusEl) statusEl.innerHTML = '<span class="upload-status-tag">✨ 预设：赛博红蓝战境</span>';
-  showToast('已切换为赛博红蓝实战指挥舱背景底图预设！', 'info');
+  if (statusEl) statusEl.innerHTML = `<span class="upload-status-tag">${label}</span>`;
+  showToast(`已切换为${isTour ? '景区应急指挥' : '火灾应急监测'}背景底图预设！`, 'info');
 }
 
 function saveScriptVisuals() {
@@ -1632,11 +2085,27 @@ function submitCreateScript() {
     return;
   }
 
+  const scriptType = document.getElementById('newScriptType')?.value || 'city_safety';
+  const scriptCat = document.getElementById('newScriptCategory')?.value || 'standard';
+  const typeNameMap = {
+    'city_safety': '城市安全与突发防灾',
+    'tourism_security': '文化旅游与社会治安',
+    'ecology_environment': '生态环保与城市治理',
+    'food_health': '食品药品与公共卫生',
+    'education_campus': '教育校园与未成年保护',
+    'civic_livelihood': '政务民生与社会服务'
+  };
+  const typeName = typeNameMap[scriptType] || '综合突发舆情演练';
+  const categoryName = (scriptCat === 'card_battle') ? '🎴 卡牌对抗类 (多人身份博弈)' : '常规推演类 (标准攻防)';
+
   const newScript = {
     id: code,
     name: name,
-    type: 'custom',
-    typeName: '自定义应急演练',
+    type: scriptType,
+    typeName: typeName,
+    subtype: '突发舆情协同处置',
+    category: scriptCat,
+    categoryName: categoryName,
     difficulty: diff,
     duration: duration,
     credibilityBaseline: 100,
