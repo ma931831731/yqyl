@@ -1100,6 +1100,7 @@ function switchViewPanel(route) {
 
   const targetMap = {
     'script_list': 'panel_script_list',
+    'live_console': 'panel_live_console',
     'script_workbench': 'panel_script_workbench',
     'case_archive': 'panel_case_archive',
     'asset_vault': 'panel_asset_vault',
@@ -1110,7 +1111,9 @@ function switchViewPanel(route) {
   const targetPanel = document.getElementById(targetPanelId);
   if (targetPanel) {
     targetPanel.style.display = 'flex';
-    if (route === 'script_workbench') {
+    if (route === 'live_console') {
+      renderLiveConsole();
+    } else if (route === 'script_workbench') {
       const stdView = document.getElementById('workbenchStandardView');
       const cardView = document.getElementById('workbenchCardBattleView');
       if (currentWorkbenchScript && currentWorkbenchScript.category === 'card_battle') {
@@ -4077,3 +4080,275 @@ function broadcastActiveCartridgeToSyncEngine(cartridge) {
     console.log('Sync broadcast note:', e);
   }
 }
+
+// ==================== 14. 实战演练总控台控制器 (主持人指挥 + 操作人执行 + AI判分仲裁) ====================
+
+// 阶段与导播映射
+const LIVE_PHASE_NAMES = {
+  'PHASE_STORY_VIDEO': '🎬 故事简介全景视频',
+  'PHASE_ROSTER_WALL': '👥 角色认领大屏',
+  'PHASE_RULES_VIDEO': '📖 演练玩法与防误导规则视频',
+  'PHASE_BATTLE': '⚔️ 主作战实战大屏',
+  'PHASE_STAGE_SETTLEMENT': '🏁 阶段攻防结算战报',
+  'PHASE_FINAL_SUMMARY': '🏆 终局复盘评估报告'
+};
+
+function switchLivePhase(phase) {
+  if (!window.drillEngine) return;
+  window.drillEngine.setScreenPhase(phase);
+
+  // 导播按钮状态同步
+  const stepMap = {
+    'PHASE_STORY_VIDEO': 'btnPhase1',
+    'PHASE_ROSTER_WALL': 'btnPhase2',
+    'PHASE_RULES_VIDEO': 'btnPhase3',
+    'PHASE_BATTLE': 'btnPhase4',
+    'PHASE_STAGE_SETTLEMENT': 'btnPhase5',
+    'PHASE_FINAL_SUMMARY': 'btnPhase6'
+  };
+
+  document.querySelectorAll('.btn-phase-step').forEach(btn => btn.classList.remove('active'));
+  const activeBtnId = stepMap[phase];
+  if (activeBtnId) {
+    const el = document.getElementById(activeBtnId);
+    if (el) el.classList.add('active');
+  }
+
+  showToast(`✅ 大屏幕已切换为: ${LIVE_PHASE_NAMES[phase] || phase}`, 'success');
+}
+
+function renderLiveConsole() {
+  if (!window.drillEngine) return;
+  const state = window.drillEngine.getState();
+
+  // 1. 刷新阶段
+  const liveStageBadge = document.getElementById('liveStageBadge');
+  const liveStageTitle = document.getElementById('liveStageTitle');
+  if (liveStageBadge) liveStageBadge.textContent = state.room.stageId || '阶段一';
+  if (liveStageTitle) liveStageTitle.textContent = `${state.room.stageName || '初发舆情发现与核实'} (${state.room.virtualTime || '18:57'})`;
+
+  // 2. 刷新公信力分值
+  const credVal = document.getElementById('liveCredibilityVal');
+  const redSum = document.getElementById('liveRedPenaltySum');
+  const blueSum = document.getElementById('liveBlueRestoreSum');
+  if (credVal) credVal.textContent = state.battle.credibilityScore + ' 分';
+  if (redSum) redSum.textContent = state.battle.redPenalty;
+  if (blueSum) blueSum.textContent = '+' + state.battle.blueRestore;
+
+  // 3. 渲染席位监控
+  renderLiveSeatsMonitor(state.seats);
+
+  // 4. 渲染待审核处置队列
+  renderPendingReviews(state.pendingReviews);
+}
+
+function renderLiveSeatsMonitor(seats) {
+  const container = document.getElementById('liveSeatsMonitorList');
+  if (!container || !seats) return;
+
+  const html = Object.keys(seats).map(k => {
+    const s = seats[k];
+    const isRed = s.camp === 'red';
+    return `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:${s.assigned ? '#f8fafc' : '#fff'}; border:1px solid ${s.assigned ? '#cbd5e1' : '#e2e8f0'}; border-radius:6px;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span>${s.avatar || (isRed ? '🔥' : '🛡️')}</span>
+          <strong style="color:${isRed ? '#e11d48' : '#0284c7'}; font-size:12px;">${s.role || s.name}</strong>
+        </div>
+        <span style="font-size:11px; color:${s.assigned ? '#059669' : '#94a3b8'};">
+          ${s.assigned ? `✅ ${s.user}` : '⏳ 待认领'}
+        </span>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = html;
+}
+
+function renderPendingReviews(reviews = []) {
+  const container = document.getElementById('pendingReviewsContainer');
+  if (!container) return;
+
+  if (!reviews || reviews.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:40px 20px; color:#94a3b8; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px;">
+        <span style="font-size:32px;">📭</span>
+        <div style="font-weight:bold; margin-top:6px; color:#475569;">暂无待审核的蓝方应急处置</div>
+        <div style="font-size:12px; margin-top:4px;">学员在手机或PC端提交应对措施后将实时呈现于此，AI将同步给出对比建议分</div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = reviews.map(r => {
+    const isWarning = (r.aiScore || 0) < 0;
+    return `
+      <div style="border:1px solid ${isWarning ? '#fca5a5' : '#bfdbfe'}; background:${isWarning ? '#fff5f5' : '#f0f9ff'}; border-radius:8px; padding:14px; display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="background:${isWarning ? '#ef4444' : '#0284c7'}; color:#fff; font-size:11px; padding:2px 8px; border-radius:4px; font-weight:bold;">${r.role}</span>
+            <strong style="font-size:14px; color:#0f172a;">${r.title}</strong>
+          </div>
+          <span style="font-size:12px; color:#64748b;">提交时间: ${r.time}</span>
+        </div>
+
+        <div style="font-size:13px; color:#334155; line-height:1.5; background:#fff; padding:8px 12px; border-radius:6px; border:1px solid #e2e8f0;">
+          ${r.statement || '（无具体正文）'}
+        </div>
+
+        <!-- AI 建议打分分析框 -->
+        <div style="display:flex; align-items:center; gap:12px; background:rgba(255,255,255,0.7); padding:8px 12px; border-radius:6px; border-left:3px solid ${isWarning ? '#ef4444' : '#10b981'};">
+          <div style="font-size:13px;">
+            <strong style="color:${isWarning ? '#dc2626' : '#059669'};">🤖 AI 建议打分: ${r.aiScore >= 0 ? '+' : ''}${r.aiScore} 分</strong>
+          </div>
+          <div style="font-size:12px; color:#475569; flex:1;">
+            理由: ${r.aiReason}
+          </div>
+        </div>
+
+        <!-- 主持人核定与微调操作行 -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; pt-2; border-top:1px dashed #cbd5e1; padding-top:8px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:12px; color:#475569;">核定最终分:</span>
+            <input type="number" id="review_score_${r.reviewId}" value="${r.aiScore}" style="width:70px; padding:4px 8px; border:1px solid #cbd5e1; border-radius:4px; font-weight:bold; color:${isWarning ? '#dc2626' : '#0284c7'};">
+            <span style="font-size:12px; color:#94a3b8;">点评批注:</span>
+            <input type="text" id="review_comment_${r.reviewId}" placeholder="可留空，或输入教官点评" style="width:200px; padding:4px 8px; border:1px solid #cbd5e1; border-radius:4px; font-size:12px;">
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-primary" onclick="confirmJudgeReview('${r.reviewId}')" style="font-size:12px; padding:4px 14px; background:${isWarning ? '#dc2626' : '#0284c7'};">
+              ${isWarning ? '⚠️ 核准扣分(触发大屏警报)' : '✅ 采纳并公布上屏'}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function confirmJudgeReview(reviewId) {
+  if (!window.drillEngine) return;
+  const scoreInput = document.getElementById(`review_score_${reviewId}`);
+  const commentInput = document.getElementById(`review_comment_${reviewId}`);
+
+  const finalScore = scoreInput ? Number(scoreInput.value) : 10;
+  const comment = commentInput ? commentInput.value : '';
+
+  window.drillEngine.judgeBlueMeasure(reviewId, finalScore, comment);
+  showToast(`✅ 处置已裁决生效，公信力 ${finalScore >= 0 ? '+' : ''}${finalScore} 分！`, finalScore >= 0 ? 'success' : 'danger');
+  renderLiveConsole();
+}
+
+function advanceNextStage() {
+  if (!window.drillEngine) return;
+  const state = window.drillEngine.getState();
+  const nextIdx = (state.room.stageIndex || 0) + 1;
+  if (nextIdx > 4) {
+    showToast('演练已达最后一环节，请点击【终局复盘报告】进行收官总结！', 'warning');
+    return;
+  }
+  window.drillEngine.setDrillStage(nextIdx);
+  showToast(`🚀 已推进至第 ${nextIdx + 1} 环节！`, 'success');
+  renderLiveConsole();
+}
+
+function adjustScoreDirect(delta) {
+  if (!window.drillEngine) return;
+  const state = window.drillEngine.getState();
+  state.battle.credibilityScore = Math.max(0, Math.min(100, state.battle.credibilityScore + delta));
+  if (delta < 0) {
+    state.battle.redPenalty += delta;
+    if (delta <= -10 || state.battle.credibilityScore < 60) {
+      window.drillEngine.triggerAlarm('alarm_critical', `【导调人工扣分】公信力扣减 ${Math.abs(delta)} 分！`);
+    }
+  } else {
+    state.battle.blueRestore += delta;
+  }
+  window.drillEngine.broadcast('SCORE_UPDATED', state.battle);
+  renderLiveConsole();
+}
+
+function quickFillAllSeats() {
+  if (!window.drillEngine) return;
+  window.drillEngine.claimAllSeats();
+  showToast('✅ 已一键模拟所有席位学员与圆桌组就绪！', 'success');
+  renderLiveConsole();
+}
+
+function testEmergencyAlarm() {
+  if (!window.drillEngine) return;
+  window.drillEngine.triggerAlarm('alarm_critical', '【中控测试】评分过低紧急防灾警报联动！');
+  showToast('🚨 已向全场大屏广播触发紧急警报音与声光脉冲！', 'danger');
+}
+
+function dismissLiveAlarm() {
+  if (!window.drillEngine) return;
+  window.drillEngine.resetAlarm();
+  showToast('🔕 已解除大屏声光警报状态', 'info');
+}
+
+// 模拟正向高效提交
+function simulateBlueSubmission() {
+  if (!window.drillEngine) return;
+  window.drillEngine.submitBlueMeasure({
+    roleId: 'blue_emergency',
+    role: '区应急管理局指挥调度席',
+    title: '【前线应急处置】迅速疏散转移受灾群众286人，设立外围安全警戒线',
+    statement: '区应急局联合消防大队在30分钟内完成首批内攻与疏散，现场清点暂无被困学生伤亡，第一波官方通报同步发出。',
+    isMisleading: false,
+    delta: 10,
+    branchName: '走向 1-A (协同高效核实)'
+  });
+  showToast('📥 收到蓝方提交的正向处置 measures，请在右侧审核裁决！', 'success');
+  renderLiveConsole();
+}
+
+// 模拟误导踩坑提交 (扣分超10，触发警报)
+function simulateMisleadingSubmission() {
+  if (!window.drillEngine) return;
+  window.drillEngine.submitBlueMeasure({
+    roleId: 'blue_emergency',
+    role: '区应急管理局指挥调度席',
+    title: '【失当推诿走向】部门间沟通迟缓，以“非本管辖权属”推诿扯皮，超1小时未回应',
+    statement: '未在黄金30分钟内报送初核情况，现场警戒线未及时设立，导致大批围观人员拍视频二次扩散，涉嫌严重怠职。',
+    isMisleading: true,
+    delta: -15,
+    desc: '部门间沟通迟缓，以非本管辖推诿扯皮，超1小时未回应官方舆情关切'
+  });
+  showToast('⚠️ 收到蓝方误导项踩坑提交（AI建议扣15分），请审核！', 'warning');
+  renderLiveConsole();
+}
+
+// 监听全局状态变更更新中控台
+if (window.drillEngine) {
+  window.drillEngine.subscribe(() => {
+    const livePanel = document.getElementById('panel_live_console');
+    if (livePanel && livePanel.style.display !== 'none') {
+      renderLiveConsole();
+    }
+  });
+}
+
+// 暂停/恢复演练切换（总控台暂停按钮）
+function toggleDrillPause() {
+  if (!window.drillEngine) return;
+  const state = window.drillEngine.getState();
+  const btn = document.getElementById('livePauseBtn');
+  const drillStatus = state.drillStatus || 'RUNNING';
+
+  if (drillStatus === 'PAUSED') {
+    window.drillEngine.resumeDrill();
+    if (btn) btn.textContent = '⏸️ 暂停演练';
+    showToast('▶️ 演练已恢复！', 'success');
+  } else if (drillStatus === 'RUNNING') {
+    window.drillEngine.pauseDrill();
+    if (btn) btn.textContent = '▶ 恢复演练';
+    showToast('⏸️ 演练已暂停，等待主持人指令继续推进', 'warning');
+  } else {
+    // 未开始则启动
+    window.drillEngine.startDrill();
+    if (btn) btn.textContent = '⏸️ 暂停演练';
+    showToast('🚀 演练已正式开始！', 'success');
+  }
+  renderLiveConsole();
+}
+

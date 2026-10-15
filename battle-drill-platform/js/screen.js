@@ -1979,3 +1979,319 @@ function updateTimerTick() {
     cd.textContent = `${m}:${s}`;
   }
 }
+
+/* ==========================================================================
+   10. 实战演练多阶段全屏视图总控 (Stage Layers Controller)
+   ========================================================================== */
+
+function hideAllScreenStageLayers() {
+  const layerIds = ['screenVideoLayer', 'screenRosterLayer', 'screenSettlementLayer', 'screenSummaryLayer'];
+  layerIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const battleLayer = document.getElementById('screenBattleLayer');
+  if (battleLayer) battleLayer.style.display = 'grid';
+}
+
+function renderScreenPhase(phase, meta = {}) {
+  const state = window.drillEngine ? window.drillEngine.getState() : null;
+  const currentPhase = phase || (state ? state.screenPhase : 'PHASE_LOBBY');
+
+  const videoLayer = document.getElementById('screenVideoLayer');
+  const rosterLayer = document.getElementById('screenRosterLayer');
+  const settleLayer = document.getElementById('screenSettlementLayer');
+  const summaryLayer = document.getElementById('screenSummaryLayer');
+  const battleLayer = document.getElementById('screenBattleLayer');
+
+  // 先隐藏所有阶段层
+  hideAllScreenStageLayers();
+
+  if (currentPhase === 'PHASE_STORY_VIDEO' || currentPhase === 'PHASE_RULES_VIDEO') {
+    if (battleLayer) battleLayer.style.display = 'none';
+    if (videoLayer) {
+      videoLayer.style.display = 'flex';
+      const badge = document.getElementById('videoStageBadge');
+      const title = document.getElementById('videoMainTitle');
+      const videoEl = document.getElementById('stageMainVideo');
+
+      if (currentPhase === 'PHASE_STORY_VIDEO') {
+        if (badge) badge.textContent = '🎬 故事背景还原 (第一视角)';
+        if (title) title.textContent = meta.title || '突发火灾现场全景还原与首发爆料';
+      } else {
+        if (badge) badge.textContent = '📖 演练玩法与防误导规则';
+        if (title) title.textContent = meta.title || '红蓝博弈实战演练规则与注意事项宣贯';
+      }
+
+      if (videoEl) {
+        if (meta.url) videoEl.src = meta.url;
+        videoEl.currentTime = 0;
+        videoEl.play().catch(() => {});
+      }
+    }
+  } else if (currentPhase === 'PHASE_ROSTER_WALL') {
+    if (battleLayer) battleLayer.style.display = 'none';
+    if (rosterLayer) {
+      rosterLayer.style.display = 'flex';
+      renderRosterWall();
+    }
+  } else if (currentPhase === 'PHASE_STAGE_SETTLEMENT') {
+    if (battleLayer) battleLayer.style.display = 'none';
+    if (settleLayer) {
+      settleLayer.style.display = 'flex';
+      renderSettlementWall();
+    }
+  } else if (currentPhase === 'PHASE_FINAL_SUMMARY') {
+    if (battleLayer) battleLayer.style.display = 'none';
+    if (summaryLayer) {
+      summaryLayer.style.display = 'flex';
+      renderSummaryWall();
+    }
+  } else {
+    // 默认或 PHASE_BATTLE：主作战大屏
+    if (battleLayer) battleLayer.style.display = 'grid';
+  }
+}
+
+// 跳过当前视频
+function skipScreenVideo() {
+  const videoEl = document.getElementById('stageMainVideo');
+  if (videoEl) videoEl.pause();
+  hideAllScreenStageLayers();
+}
+
+// 渲染角色认领墙 (红蓝分列展示，支持单人排座与大圆桌组)
+function renderRosterWall() {
+  const state = window.drillEngine ? window.drillEngine.getState() : null;
+  if (!state || !state.seats) return;
+
+  const blueGrid = document.getElementById('rosterBlueGrid');
+  const redGrid = document.getElementById('rosterRedGrid');
+  if (!blueGrid || !redGrid) return;
+
+  let totalCount = 0;
+  let claimedCount = 0;
+
+  const blueSeats = [];
+  const redSeats = [];
+
+  Object.keys(state.seats).forEach(key => {
+    const seat = state.seats[key];
+    totalCount++;
+    if (seat.assigned) claimedCount++;
+    if (seat.camp === 'red') {
+      redSeats.push(seat);
+    } else {
+      blueSeats.push(seat);
+    }
+  });
+
+  const rosterClaimedCount = document.getElementById('rosterClaimedCount');
+  const rosterTotalCount = document.getElementById('rosterTotalCount');
+  if (rosterClaimedCount) rosterClaimedCount.textContent = claimedCount;
+  if (rosterTotalCount) rosterTotalCount.textContent = totalCount;
+
+  // 渲染蓝方席位
+  blueGrid.innerHTML = blueSeats.map(seat => `
+    <div class="roster-seat-card ${seat.assigned ? 'claimed' : ''}">
+      <div class="seat-avatar-box">${seat.avatar || '🛡️'}</div>
+      <div class="seat-info-col">
+        <div class="seat-role-title">${seat.role || seat.name}</div>
+        <div class="seat-user-tag">${seat.assigned ? `✅ 已由 ${seat.user} 认领` : '⏳ 待认领 (扫码选择)'}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // 渲染红方席位
+  redGrid.innerHTML = redSeats.map(seat => `
+    <div class="roster-seat-card red-seat ${seat.assigned ? 'claimed' : ''}">
+      <div class="seat-avatar-box">${seat.avatar || '🔥'}</div>
+      <div class="seat-info-col">
+        <div class="seat-role-title">${seat.name}</div>
+        <div class="seat-user-tag">${seat.assigned ? `🔥 ${seat.user} 正在带节奏` : '💬 开放群演/吃瓜网民加入'}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// 渲染阶段结算战报
+function renderSettlementWall() {
+  const state = window.drillEngine ? window.drillEngine.getState() : null;
+  if (!state) return;
+
+  const numEl = document.getElementById('settleCredibilityNum');
+  const redEl = document.getElementById('settleRedPenalty');
+  const blueEl = document.getElementById('settleBlueRestore');
+  const listEl = document.getElementById('settleMeasuresList');
+  const tagEl = document.getElementById('settlementStageTag');
+
+  if (numEl) numEl.textContent = state.battle.credibilityScore;
+  if (redEl) redEl.textContent = state.battle.redPenalty + ' 分';
+  if (blueEl) blueEl.textContent = '+' + state.battle.blueRestore + ' 分';
+  if (tagEl) tagEl.textContent = state.room.stageName || '当前阶段';
+
+  if (listEl && state.timelineConfrontations) {
+    const stageCfs = state.timelineConfrontations.filter(c => c.stageId === state.room.stageId);
+    listEl.innerHTML = stageCfs.map(cf => {
+      if (cf.red) {
+        return `
+          <div class="diff-item red-diff">
+            <strong>🔥 [红方出招] ${cf.red.role || '网民'}：</strong> ${cf.red.content.slice(0, 48)}... (${cf.red.penalty}分)
+          </div>
+        `;
+      } else if (cf.blues && cf.blues.length > 0) {
+        const b = cf.blues[0];
+        const isGood = (b.delta || 0) >= 0;
+        return `
+          <div class="diff-item ${isGood ? 'blue-diff' : 'red-diff'}">
+            <strong>${isGood ? '✅' : '❌'} [蓝方响应] ${b.role || '处置部门'}：</strong> ${b.title} (${b.delta >= 0 ? '+' : ''}${b.delta}分)
+          </div>
+        `;
+      }
+      return '';
+    }).join('');
+  }
+}
+
+// 渲染终局复盘报告
+function renderSummaryWall() {
+  const state = window.drillEngine ? window.drillEngine.getState() : null;
+  if (!state) return;
+  // 保持现有终局结构并刷新最新数据
+}
+
+/* ==========================================================================
+   11. Web Audio 原生声光报警引擎 (免文件依赖，100% 极速发声)
+   ========================================================================== */
+let audioCtx = null;
+
+function playEmergencyAlarmSound() {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    if (!audioCtx) audioCtx = new AudioContextClass();
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = 'sawtooth';
+    // 警报高低双音急促交替 (880Hz / 620Hz)
+    for (let i = 0; i < 6; i++) {
+      const t = now + i * 0.4;
+      osc.frequency.setValueAtTime(880, t);
+      osc.frequency.setValueAtTime(620, t + 0.2);
+    }
+
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 2.4);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start(now);
+    osc.stop(now + 2.5);
+  } catch (err) {
+    console.warn('Audio alarm playback error:', err);
+  }
+}
+
+function triggerScreenAlarmUI(reason = '检测到严重失当处置或公信力跌破红线！') {
+  // 1. 播放报警声音
+  playEmergencyAlarmSound();
+
+  // 2. 屏幕四周呼吸脉冲光晕
+  const pulseEl = document.getElementById('screenAlarmPulse');
+  if (pulseEl) pulseEl.style.display = 'block';
+
+  // 3. 顶部警报 Banner
+  const bannerEl = document.getElementById('screenAlarmBanner');
+  const reasonEl = document.getElementById('alarmReasonText');
+  if (reasonEl) reasonEl.textContent = reason;
+  if (bannerEl) bannerEl.style.display = 'block';
+
+  // 5秒后自动弱化脉冲
+  setTimeout(() => {
+    if (pulseEl) pulseEl.style.display = 'none';
+  }, 5000);
+}
+
+function dismissScreenAlarm() {
+  const pulseEl = document.getElementById('screenAlarmPulse');
+  const bannerEl = document.getElementById('screenAlarmBanner');
+  if (pulseEl) pulseEl.style.display = 'none';
+  if (bannerEl) bannerEl.style.display = 'none';
+}
+
+/* ==========================================================================
+   12. 网民互动 (点赞/转发/评论) 实时动效
+   ========================================================================== */
+function updateCrowdStatsUI(stats, latestComment = null) {
+  if (!stats) return;
+  const lEl = document.getElementById('crowdLikeCount');
+  const sEl = document.getElementById('crowdShareCount');
+  const cEl = document.getElementById('crowdCommentCount');
+
+  if (lEl) lEl.textContent = (stats.likeCount || 0).toLocaleString();
+  if (sEl) sEl.textContent = (stats.shareCount || 0).toLocaleString();
+  if (cEl) cEl.textContent = (stats.commentCount || 0).toLocaleString();
+
+  if (latestComment) {
+    const marquee = document.getElementById('crowdCommentsMarquee');
+    if (marquee) {
+      const item = document.createElement('div');
+      item.className = 'comment-item';
+      item.innerHTML = `<strong>${latestComment.author || '网友'}：</strong> ${latestComment.text || latestComment}`;
+      marquee.insertBefore(item, marquee.firstChild);
+      if (marquee.children.length > 8) {
+        marquee.removeChild(marquee.lastChild);
+      }
+    }
+  }
+}
+
+/* ==========================================================================
+   13. 全局同步事件监听与启动绑定
+   ========================================================================== */
+if (window.drillEngine) {
+  window.drillEngine.subscribe((state, action, payload) => {
+    // 监听阶段变更
+    if (action === 'SCREEN_PHASE_CHANGED') {
+      renderScreenPhase(payload.phase, payload.video);
+    }
+
+    // 监听警报事件
+    if (action === 'TRIGGER_ALARM') {
+      triggerScreenAlarmUI(payload.reason);
+    }
+
+    // 监听席位认领变更
+    if (action === 'ROLE_CLAIMED' || action === 'ROLE_UNCLAIMED' || action === 'ALL_ROLES_CLAIMED') {
+      renderRosterWall();
+    }
+
+    // 监听网民互动
+    if (action === 'CROWD_INTERACTION') {
+      updateCrowdStatsUI(payload.stats, payload.type === 'COMMENT' ? { author: payload.author, text: payload.content } : null);
+    }
+
+    // 监听阶段结算
+    if (action === 'STAGE_ADVANCED') {
+      if (state.screenPhase === 'PHASE_STAGE_SETTLEMENT') {
+        renderSettlementWall();
+      }
+    }
+  });
+
+  // 页面就绪后初次渲染阶段
+  window.addEventListener('DOMContentLoaded', () => {
+    const s = window.drillEngine.getState();
+    if (s && s.screenPhase) {
+      renderScreenPhase(s.screenPhase, s.screenVideo);
+    }
+  });
+}
+

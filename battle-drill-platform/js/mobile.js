@@ -779,18 +779,31 @@ function initSocialFreePost() {
         const penalty = isRumor ? -15 : -8;
         const author = myCurrentSeat ? myCurrentSeat.name : '抖音网民“云朵儿”';
 
-        window.drillEngine.postRedCombat({
+        const videoPayload = currentUploadedVideoUrl ? {
+          videoUrl: currentUploadedVideoUrl,
+          assetName: '手机实拍现场视频.mp4',
+          assetId: 'AST-MOBILE-' + Date.now()
+        } : {};
+
+        window.drillEngine.postRedCombat(Object.assign({
           id: 'RP-' + Date.now(),
           role: author,
           author: author,
           platform: myCurrentSeat?.platform || '抖音短视频',
           content: text,
           penalty: penalty,
-          assetName: '学员现场自主撰写',
-          trendingRank: 'Top 2 (沸)'
-        });
+          assetName: currentUploadedVideoUrl ? '手机现场实拍视频' : '学员现场自主撰写',
+          trendingRank: 'Top 1 (爆)'
+        }, videoPayload));
 
-        alert('🔥 发帖成功！已同步推入 PC 作战中枢时间轴，哨兵机器人已在群内告警！');
+        // 清空视频预览状态
+        currentUploadedVideoUrl = '';
+        const previewBox = document.getElementById('mVideoPreviewBox');
+        if (previewBox) previewBox.style.display = 'none';
+        const uploadStatus = document.getElementById('mVideoUploadStatus');
+        if (uploadStatus) uploadStatus.textContent = '支持手机实拍现场视频';
+
+        alert('🔥 发帖成功！现场短视频与爆料已推送到战场大屏，哨兵机器人已告警！');
       }
       inputEl.value = '';
     });
@@ -1098,3 +1111,117 @@ function showToastNotice(msg) {
     toast.style.top = '30px';
   }, 3500);
 }
+
+// ==================== 15. 手机端现场短视频拍摄与上传 ====================
+let currentUploadedVideoUrl = '';
+
+function handleMobileVideoSelect(input) {
+  const file = input?.files?.[0];
+  if (!file) return;
+
+  const statusEl = document.getElementById('mVideoUploadStatus');
+  const previewBox = document.getElementById('mVideoPreviewBox');
+  const previewEl = document.getElementById('mVideoPreview');
+
+  if (statusEl) statusEl.textContent = '⏳ 正在压缩与上传现场视频...';
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const base64Data = e.target.result;
+    fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'mobile_live_' + Date.now(),
+        data: base64Data
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && data.url) {
+        currentUploadedVideoUrl = data.url;
+        if (statusEl) statusEl.textContent = '✅ 视频已就绪，发布后全场大屏同步播报！';
+        if (previewBox) previewBox.style.display = 'block';
+        if (previewEl) previewEl.src = data.url;
+
+        // 如果发帖框为空，自动填充第一视角文案
+        const inputArea = document.getElementById('mSocialInput');
+        if (inputArea && !inputArea.value) {
+          inputArea.value = '【现场突发短视频曝光】现场黑烟滚滚直冲云霄，有居民在窗边呼救，疑似还有学生受困！';
+        }
+        showToastNotice('📹 现场短视频上传成功！点击下方发帖即可推送大屏！');
+      } else {
+        if (statusEl) statusEl.textContent = '❌ 上传失败: ' + (data.error || '网络错误');
+      }
+    })
+    .catch(err => {
+      if (statusEl) statusEl.textContent = '❌ 发生异常: ' + err.message;
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+// ==================== 16. 网民吃瓜高频互动 (点赞、转发、尖锐弹幕) ====================
+
+function sendCrowdReaction(type) {
+  if (!window.drillEngine) return;
+  const author = myCurrentSeat?.name || '热心网友';
+  window.drillEngine.addCrowdInteraction(type, '', author);
+
+  if (type === 'LIKE') {
+    showToastNotice('❤️ 已疯狂点赞！大屏热度正在飙升！');
+  } else if (type === 'SHARE') {
+    showToastNotice('🔄 已转发至微信群/朋友圈！舆论负面情绪扩散！');
+  }
+}
+
+function sendQuickComment(text) {
+  if (!window.drillEngine) return;
+  const author = myCurrentSeat?.name || '吃瓜网民';
+  window.drillEngine.addCrowdInteraction('COMMENT', text, author);
+  showToastNotice(`💬 弹幕已发射大屏：“${text}”`);
+}
+
+function submitCustomCrowdComment() {
+  const input = document.getElementById('mCrowdCommentInput');
+  const text = input ? input.value.trim() : '';
+  if (!text) {
+    showToastNotice('请输入评论内容后发射！');
+    return;
+  }
+  sendQuickComment(text);
+  input.value = '';
+}
+
+// ==================== 17. 蓝方自主拟定处置提交 (AI 初评 + 裁判仲裁) ====================
+
+function submitCustomBlueAction() {
+  if (!window.drillEngine) return;
+  const titleInput = document.getElementById('mCustomMeasureTitle');
+  const textInput = document.getElementById('mCustomMeasureText');
+
+  const title = titleInput ? titleInput.value.trim() : '';
+  const statement = textInput ? textInput.value.trim() : '';
+
+  if (!title || !statement) {
+    showToastNotice('⚠️ 请完整填写处置主题与具体措施正文！');
+    return;
+  }
+
+  const role = myCurrentSeat?.role || myCurrentSeat?.name || '区应急管理局指挥调度席';
+  const roleId = myCurrentSeat?.id || 'blue_emergency';
+
+  window.drillEngine.submitBlueMeasure({
+    roleId,
+    role,
+    title,
+    statement,
+    isCustom: true
+  });
+
+  showToastNotice('🚀 处置措施已报送至现场中控台！AI 正在比对采分标准，待主持人裁决！');
+
+  titleInput.value = '';
+  textInput.value = '';
+}
+

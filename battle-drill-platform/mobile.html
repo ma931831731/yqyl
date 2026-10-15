@@ -84,6 +84,19 @@
         </div>
         <div id="blueRoleExclusiveList" style="display:flex; flex-direction:column; gap:10px;"></div>
 
+        <!-- 自主拟定处置措施 (支持手填输入，AI智能初评) -->
+        <div class="cyber-card" style="margin-top:14px; padding:12px; background:#08152c; border:1px solid rgba(0,240,255,0.3);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="color:#00f0ff; font-size:13px;">✍️ 自主拟定官方通报/处置措施</strong>
+            <span style="font-size:10px; color:#00e676;">AI初评 + 裁判仲裁</span>
+          </div>
+          <input type="text" id="mCustomMeasureTitle" class="m-input" placeholder="输入处置主题 (如: 调集高喷车与排查火因)" style="margin-bottom:6px; font-size:12px; width:100%;">
+          <textarea id="mCustomMeasureText" rows="2" class="m-input" placeholder="输入具体处置口径、通报内容或调度指令（AI将依据标准采分点进行初评赋分）..." style="width:100%; margin-bottom:8px; font-size:12px;"></textarea>
+          <div style="display:flex; justify-content:flex-end;">
+            <button class="btn-cyber action-executable-btn" onclick="submitCustomBlueAction()" style="padding:5px 14px; font-size:12px;">🚀 提交中控审核</button>
+          </div>
+        </div>
+
         <!-- 当前红蓝双方所有历史已经对抗的实时进展 -->
         <div class="m-section-header" style="margin-top:16px;">
           <span style="color:#00f0ff;">⚡ 红蓝双方实时对抗进展 (历史全景)</span>
@@ -125,13 +138,49 @@
           <span style="font-size:10px; color:#788aa6;">将实时同步至PC作战室时间轴</span>
         </div>
 
-        <textarea id="mSocialInput" rows="2" style="width:100%; background:#070b14; border:1px solid rgba(0,240,255,0.3); color:#fff; padding:8px; font-size:12px; border-radius:4px; margin-bottom:8px;" placeholder="以当前红方角色身份发布自主编写的网络爆料、质疑或带节奏文案..."></textarea>
+        <!-- 短视频拍摄与上传 -->
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+          <label class="btn-cyber" style="padding:4px 10px; font-size:11px; cursor:pointer; background:rgba(0,240,255,0.15);">
+            📹 拍摄/上传现场短视频
+            <input type="file" id="mVideoUploadInput" accept="video/*" capture="environment" style="display:none;" onchange="handleMobileVideoSelect(this)">
+          </label>
+          <span id="mVideoUploadStatus" style="font-size:11px; color:#94a3b8;">支持手机实拍现场视频</span>
+        </div>
+        <div id="mVideoPreviewBox" style="display:none; margin-bottom:8px;">
+          <video id="mVideoPreview" style="width:100%; max-height:160px; border-radius:4px; background:#000;" controls></video>
+        </div>
+
+        <textarea id="mSocialInput" rows="2" style="width:100%; background:#070b14; border:1px solid rgba(0,240,255,0.3); color:#fff; padding:8px; font-size:12px; border-radius:4px; margin-bottom:8px;" placeholder="以当前红方角色身份发布自主编写的网络爆料、现场视频说明或造谣带节奏文案..."></textarea>
         
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <label style="font-size:11px; color:#ff6b8b; display:flex; align-items:center; gap:4px; cursor:pointer;">
             <input type="checkbox" id="mIsRumorCheck" checked> 造成重大负面舆论施压扩散
           </label>
-          <button class="btn-cyber btn-cyber-red action-executable-btn" id="mPublishSocialBtn" style="padding:4px 14px; font-size:12px;">🔥 发帖施压</button>
+          <button class="btn-cyber btn-cyber-red action-executable-btn" id="mPublishSocialBtn" style="padding:4px 14px; font-size:12px;">🔥 发帖爆料施压</button>
+        </div>
+
+        <!-- 网民高频互动与评论带节奏专区 (点赞/转发/实时弹幕) -->
+        <div class="cyber-card" style="margin-top:14px; padding:12px; background:#11192e; border:1px solid rgba(255,42,95,0.3);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="color:#ff6b8b; font-size:13px;">💬 网民高频互动 (实时投射大屏)</strong>
+            <span style="font-size:10px; color:#94a3b8;">全员可点击</span>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
+            <button class="btn-cyber btn-cyber-red" onclick="sendCrowdReaction('LIKE')" style="padding:6px; font-size:12px;">❤️ 疯狂点赞 (+20热度)</button>
+            <button class="btn-cyber" onclick="sendCrowdReaction('SHARE')" style="padding:6px; font-size:12px;">🔄 转发扩散 (+5声量)</button>
+          </div>
+          <!-- 快捷弹幕热评 -->
+          <div style="display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:6px;">
+            <button class="m-chip-btn" onclick="sendQuickComment('起火原因到底查清楚没有？')">起火原因查清没？</button>
+            <button class="m-chip-btn" onclick="sendQuickComment('十几个孩子跑出来看着太心酸了！')">十几个孩子太心酸</button>
+            <button class="m-chip-btn" onclick="sendQuickComment('消防通道是不是又被私家车堵了？')">消防通道堵没堵？</button>
+            <button class="m-chip-btn" onclick="sendQuickComment('官方别装聋作哑，赶紧出情况通报！')">官方赶紧出通报！</button>
+          </div>
+          <!-- 自定义评论输入 -->
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="mCrowdCommentInput" class="m-input" placeholder="发表尖锐网民评论，大屏实时弹幕滚动..." style="font-size:12px;">
+            <button class="btn-cyber btn-cyber-red" onclick="submitCustomCrowdComment()" style="padding:4px 10px; font-size:12px;">发送弹幕</button>
+          </div>
         </div>
       </div>
 

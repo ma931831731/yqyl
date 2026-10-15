@@ -52,8 +52,11 @@
       <div>
         <div class="nav-section-title">核心业务</div>
         <nav aria-label="主导航">
-          <button class="nav-item active" data-route="script_list" id="nav_script_list">
+          <button class="nav-item" data-route="script_list" id="nav_script_list">
             <span class="nav-icon">📼</span> 剧本演练列表
+          </button>
+          <button class="nav-item highlight-live" data-route="live_console" id="nav_live_console" style="border-left: 3px solid #00f0ff; background: rgba(0,240,255,0.08);">
+            <span class="nav-icon">🎛️</span> 实战演练总控台
           </button>
           <button class="nav-item sub-item" data-route="script_workbench" id="nav_script_workbench">
             <span class="nav-icon">🛠️</span> 剧本编排工作台
@@ -235,6 +238,124 @@
               <button class="btn-default" style="padding:2px 8px; font-size:11px;" disabled>下一页</button>
             </div>
           </div>
+        </div>
+      </section>
+
+      <!-- ==================== 视图 0：实战演练总控台 (主持人口令导调 + 操作人执行播控 + AI初评仲裁) ==================== -->
+      <section class="admin-view-panel" id="panel_live_console" style="display:none; flex-direction:column; gap:12px;">
+        
+        <!-- 导播主控条：大屏 6 大演练阶段流水线步进 -->
+        <div class="live-director-bar" style="background:#0f172a; border:1px solid #1e293b; border-radius:8px; padding:12px 16px; color:#fff; display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="background:rgba(0,240,255,0.15); color:#00f0ff; border:1px solid #00f0ff; padding:3px 8px; border-radius:4px; font-size:12px; font-weight:bold;">🎛️ 现场导调大屏播控</span>
+              <span style="font-size:13px; color:#94a3b8;">主持人现场口述指挥 · 操作人点击对应阶段一键切换大屏展示</span>
+            </div>
+            <!-- 警报声效控制 -->
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:12px; color:#f87171;">⚠️ 低分预警联动: 扣分≥10分或公信力&lt;60自动鸣笛</span>
+              <button class="btn-default" onclick="testEmergencyAlarm()" style="font-size:11px; padding:3px 8px; background:#450a0a; color:#fca5a5; border-color:#991b1b;">🔊 测试警报笛</button>
+              <button class="btn-default" onclick="dismissLiveAlarm()" style="font-size:11px; padding:3px 8px;">🔕 解除大屏警报</button>
+            </div>
+          </div>
+
+          <!-- 六阶段一键导播步进按钮群 -->
+          <div class="phase-stepper-row" style="display:grid; grid-template-columns: repeat(6, 1fr); gap:8px;">
+            <button class="btn-phase-step active" id="btnPhase1" onclick="switchLivePhase('PHASE_STORY_VIDEO')">
+              <span class="step-num">1</span>
+              <span class="step-name">🎬 故事简介视频</span>
+            </button>
+            <button class="btn-phase-step" id="btnPhase2" onclick="switchLivePhase('PHASE_ROSTER_WALL')">
+              <span class="step-num">2</span>
+              <span class="step-name">👥 角色认领大屏</span>
+            </button>
+            <button class="btn-phase-step" id="btnPhase3" onclick="switchLivePhase('PHASE_RULES_VIDEO')">
+              <span class="step-num">3</span>
+              <span class="step-name">📖 玩法与规则视频</span>
+            </button>
+            <button class="btn-phase-step" id="btnPhase4" onclick="switchLivePhase('PHASE_BATTLE')">
+              <span class="step-num">4</span>
+              <span class="step-name">⚔️ 切换作战大屏</span>
+            </button>
+            <button class="btn-phase-step" id="btnPhase5" onclick="switchLivePhase('PHASE_STAGE_SETTLEMENT')">
+              <span class="step-num">5</span>
+              <span class="step-name">🏁 公布阶段结算</span>
+            </button>
+            <button class="btn-phase-step" id="btnPhase6" onclick="switchLivePhase('PHASE_FINAL_SUMMARY')">
+              <span class="step-num">6</span>
+              <span class="step-name">🏆 终局复盘报告</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 中控双栏布局：左侧推进与状态 + 右侧蓝方处置AI审核仲裁 -->
+        <div style="display:grid; grid-template-columns: 380px 1fr; gap:12px; flex:1; min-height:0;">
+          
+          <!-- 左栏：阶段推进与攻防态势 -->
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div class="kpi-card" style="padding:14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-weight:bold; font-size:14px; color:#0f172a;">🚩 当前演练环节推进</span>
+                <span class="cartridge-status-badge badge-active" id="liveStageBadge">阶段一</span>
+              </div>
+              <div style="font-size:13px; color:#475569; margin-bottom:10px;" id="liveStageTitle">
+                初发舆情发现与核实 (18:57 ~ 19:30)
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn-primary" onclick="advanceNextStage()" style="flex:1;">▶ 推进到下一环节</button>
+                <button class="btn-default" onclick="toggleDrillPause()" id="livePauseBtn">⏸️ 暂停演练</button>
+              </div>
+            </div>
+
+            <!-- 公信力指数与对抗数据 -->
+            <div class="kpi-card" style="padding:14px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="font-size:13px; font-weight:bold;">⚖️ 当前政府公信力得分</span>
+                <b id="liveCredibilityVal" style="font-size:20px; color:#0284c7;">92 分</b>
+              </div>
+              <div style="font-size:11px; color:#64748b; margin-bottom:8px;">
+                红方冲击: <span id="liveRedPenaltySum" style="color:#ef4444; font-weight:bold;">-25</span> 分 | 蓝方修复: <span id="liveBlueRestoreSum" style="color:#10b981; font-weight:bold;">+20</span> 分
+              </div>
+              <!-- 快捷加扣分 -->
+              <div style="display:flex; gap:6px; margin-top:6px;">
+                <button class="btn-default" onclick="adjustScoreDirect(-10)" style="font-size:11px; color:#b91c1c;">-10 (重大失误)</button>
+                <button class="btn-default" onclick="adjustScoreDirect(-5)" style="font-size:11px; color:#b91c1c;">-5 (响应迟滞)</button>
+                <button class="btn-default" onclick="adjustScoreDirect(5)" style="font-size:11px; color:#047857;">+5 (应对规范)</button>
+                <button class="btn-default" onclick="adjustScoreDirect(10)" style="font-size:11px; color:#047857;">+10 (卓越闭环)</button>
+              </div>
+            </div>
+
+            <!-- 角色就绪监视 -->
+            <div class="kpi-card" style="padding:14px; flex:1; overflow-y:auto;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-size:13px; font-weight:bold;">👥 学员/圆桌席位认领状态</span>
+                <button class="btn-default" onclick="quickFillAllSeats()" style="font-size:10px; padding:2px 6px;">一键全员就绪</button>
+              </div>
+              <div id="liveSeatsMonitorList" style="display:flex; flex-direction:column; gap:6px; font-size:12px;">
+                <!-- 动态填充席位 -->
+              </div>
+            </div>
+          </div>
+
+          <!-- 右栏：蓝方处置待裁决队列 (AI初评与裁判仲裁中心) -->
+          <div class="kpi-card" style="padding:16px; display:flex; flex-direction:column; gap:12px; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+              <div>
+                <strong style="font-size:15px; color:#0f172a;">⚖️ 蓝方应急处置审批与 AI 判分仲裁中心</strong>
+                <p style="margin:2px 0 0 0; font-size:12px; color:#64748b;">正方角色提交应对措施后在此汇聚，AI 提供标准对比建议分，由主持人指示操作人核定上屏</p>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn-default" onclick="simulateBlueSubmission()" style="font-size:12px;">+ 模拟蓝方提交</button>
+                <button class="btn-default" onclick="simulateMisleadingSubmission()" style="font-size:12px; color:#b91c1c;">+ 模拟误导踩坑(触发预警)</button>
+              </div>
+            </div>
+
+            <!-- 待裁决流水卡片容器 -->
+            <div id="pendingReviewsContainer" style="display:flex; flex-direction:column; gap:12px;">
+              <!-- 动态渲染待审核卡片 -->
+            </div>
+          </div>
+
         </div>
       </section>
 

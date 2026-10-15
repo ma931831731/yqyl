@@ -2753,3 +2753,390 @@
     padding: 6px 12px;
   }
 }
+
+/* ==================== 多阶段演练全屏图层 (Stage Layers) ==================== */
+.screen-stage-layer {
+  position: absolute;
+  top: 72px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 80;
+  background: radial-gradient(circle at center, #0a1124 0%, #030611 100%);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 36px;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.99); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* 视频播放层 */
+.screen-video-layer {
+  align-items: center;
+  justify-content: center;
+}
+.video-layer-overlay {
+  width: 90%;
+  max-width: 1400px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.video-header-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+  padding-bottom: 12px;
+}
+.video-badge {
+  background: rgba(0, 240, 255, 0.15);
+  color: #00f0ff;
+  border: 1px solid #00f0ff;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 13px;
+}
+.video-main-title {
+  margin: 0;
+  font-size: 24px;
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+  flex: 1;
+}
+.video-player-container {
+  width: 100%;
+  height: 680px;
+  background: #000;
+  border-radius: 12px;
+  border: 2px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 40px rgba(0, 240, 255, 0.15);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stage-cinema-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* 角色认领墙 (Roster Wall) */
+.roster-wall-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.roster-wall-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+  padding-bottom: 12px;
+}
+.roster-title {
+  font-size: 26px;
+  margin: 6px 0 2px 0;
+  color: #fff;
+  text-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+}
+.roster-subtitle {
+  margin: 0;
+  color: #8da3c7;
+  font-size: 13px;
+}
+.roster-ready-stats {
+  display: flex;
+  gap: 14px;
+}
+.stat-pill {
+  background: rgba(10, 25, 50, 0.6);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #b8cde8;
+}
+.roster-camps-split {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+  min-height: 0;
+}
+.roster-camp-card {
+  background: rgba(12, 22, 45, 0.7);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+.blue-camp-roster {
+  border-color: rgba(0, 240, 255, 0.3);
+}
+.red-camp-roster {
+  border-color: rgba(255, 42, 95, 0.3);
+}
+.roster-camp-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+}
+.camp-flag {
+  font-size: 16px;
+  font-weight: 700;
+}
+.blue-flag { color: #00f0ff; }
+.red-flag { color: #ff2a5f; }
+.camp-desc {
+  font-size: 11px;
+  color: #8fa5c4;
+}
+.roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.roster-seat-card {
+  background: rgba(5, 12, 28, 0.8);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  transition: all 0.3s;
+}
+.roster-seat-card.claimed {
+  border-color: #00e676;
+  background: rgba(0, 230, 118, 0.1);
+  box-shadow: 0 0 15px rgba(0, 230, 118, 0.2);
+}
+.roster-seat-card.red-seat.claimed {
+  border-color: #ff2a5f;
+  background: rgba(255, 42, 95, 0.1);
+  box-shadow: 0 0 15px rgba(255, 42, 95, 0.2);
+}
+.seat-avatar-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+.seat-info-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.seat-role-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+.seat-user-tag {
+  font-size: 11px;
+  color: #64748b;
+}
+.roster-seat-card.claimed .seat-user-tag {
+  color: #00e676;
+  font-weight: bold;
+}
+.roster-footer-qrcode-bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(6, 14, 32, 0.85);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 8px;
+  padding: 10px 20px;
+}
+.qr-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.qr-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  background: #fff;
+  padding: 2px;
+}
+.qr-label {
+  font-size: 13px;
+  font-weight: bold;
+  color: #00f0ff;
+}
+
+/* 结算与复盘战报 */
+.settlement-container, .summary-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.settlement-title, .summary-title {
+  font-size: 26px;
+  color: #fff;
+  margin: 6px 0 2px 0;
+  text-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+}
+.settlement-cards-grid, .summary-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 340px 1fr 1fr;
+  gap: 20px;
+}
+.summary-grid {
+  grid-template-columns: 1fr 1fr;
+}
+.settle-card, .summary-card {
+  background: rgba(10, 20, 42, 0.7);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.settle-score-big {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 0;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+}
+.score-num {
+  font-size: 64px;
+  font-weight: 900;
+  color: #00f0ff;
+  text-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+  font-family: monospace;
+}
+.score-unit {
+  font-size: 13px;
+  color: #8ea7c9;
+}
+.diff-item {
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  margin-top: 6px;
+}
+.red-diff { background: rgba(255, 42, 95, 0.15); color: #ff2a5f; }
+.blue-diff { background: rgba(0, 230, 118, 0.15); color: #00e676; }
+
+/* 警报光晕脉冲动效 */
+.screen-alarm-pulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99;
+  pointer-events: none;
+  box-shadow: inset 0 0 120px rgba(255, 0, 60, 0.8), inset 0 0 40px rgba(255, 0, 60, 0.9);
+  animation: alarmPulseAnimation 1s infinite alternate;
+}
+@keyframes alarmPulseAnimation {
+  0% { box-shadow: inset 0 0 60px rgba(255, 0, 60, 0.4); }
+  100% { box-shadow: inset 0 0 160px rgba(255, 0, 60, 0.95); }
+}
+
+.screen-alarm-banner {
+  position: absolute;
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  width: 80%;
+  max-width: 900px;
+  background: linear-gradient(90deg, #990022, #e60033);
+  border: 2px solid #ff4d6d;
+  border-radius: 8px;
+  box-shadow: 0 0 30px rgba(255, 0, 60, 0.7);
+  padding: 12px 24px;
+  animation: slideDownBanner 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+@keyframes slideDownBanner {
+  from { top: -60px; opacity: 0; }
+  to { top: 76px; opacity: 1; }
+}
+.alarm-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.alarm-icon-flash {
+  font-size: 32px;
+  animation: flashIcon 0.8s infinite;
+}
+@keyframes flashIcon {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+}
+.alarm-headline {
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+.alarm-subtext {
+  font-size: 12px;
+  color: #ffe6eb;
+}
+
+/* 网民高频互动栏 */
+.crowd-stats-mini-row {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  padding: 8px;
+  margin: 6px 0;
+}
+.crowd-stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.cs-label { font-size: 10px; color: #ff9cb3; }
+.cs-val { font-size: 15px; font-weight: bold; color: #fff; font-family: monospace; }
+.crowd-comments-marquee {
+  max-height: 90px;
+  overflow-y: hidden;
+  font-size: 11px;
+  color: #cad8ee;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.comment-item {
+  background: rgba(255, 255, 255, 0.04);
+  padding: 4px 8px;
+  border-radius: 4px;
+  animation: fadeIn 0.3s;
+}
+

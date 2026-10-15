@@ -88,8 +88,177 @@
       </div>
     </div>
 
-    <!-- 三栏核心作战态势区域 -->
-    <main class="screen-main-grid">
+    <!-- 全局警报声光脉冲遮罩与预警弹窗 -->
+    <div class="screen-alarm-pulse" id="screenAlarmPulse" style="display:none;"></div>
+    <div class="screen-alarm-banner" id="screenAlarmBanner" style="display:none;">
+      <div class="alarm-banner-content">
+        <span class="alarm-icon-flash">🚨</span>
+        <div class="alarm-text-group">
+          <div class="alarm-headline">⚠️ 严重处置失当预警 · 公信力重度受挫！</div>
+          <div class="alarm-subtext" id="alarmReasonText">检测到处置措施存在严重推诿或违规发声，全网负面情绪激增！</div>
+        </div>
+        <button class="btn-cyber-ghost" onclick="dismissScreenAlarm()" style="margin-left:auto;">✕ 消除预警</button>
+      </div>
+    </div>
+
+    <!-- ==================== 阶段视角 1 & 3：全屏沉浸多媒体视频播放层 ==================== -->
+    <section class="screen-stage-layer screen-video-layer" id="screenVideoLayer" style="display:none;">
+      <div class="video-layer-overlay">
+        <div class="video-header-bar">
+          <span class="video-badge" id="videoStageBadge">🎬 故事背景还原</span>
+          <h2 class="video-main-title" id="videoMainTitle">突发火灾现场全景还原与首发爆料</h2>
+          <div class="video-controls-hint">
+            <span class="hint-text">由中控操作台统一播控 · 全屏沉浸视听</span>
+            <button class="btn-cyber-ghost" onclick="skipScreenVideo()">跳过视频 ⏩</button>
+          </div>
+        </div>
+        <div class="video-player-container">
+          <video id="stageMainVideo" class="stage-cinema-video" playsinline controls autoplay muted>
+            <source src="./media/fire_material_video.mp4" type="video/mp4">
+            您的浏览器不支持视频播放
+          </video>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 阶段视角 2：全员角色认领墙 (支持单人排座与大圆桌组) ==================== -->
+    <section class="screen-stage-layer screen-roster-layer" id="screenRosterLayer" style="display:none;">
+      <div class="roster-wall-container">
+        <div class="roster-wall-header">
+          <div class="roster-title-box">
+            <span class="tag-cyber tag-highlight">阶段二 · 角色席位分配</span>
+            <h2 class="roster-title">红蓝实战攻防席位与全员认领墙</h2>
+            <p class="roster-subtitle">请各排参演学员或各大圆桌小组代表使用手机扫码，认领对应作战席位</p>
+          </div>
+          <div class="roster-ready-stats">
+            <div class="stat-pill"><span class="stat-label">已认领席位:</span> <b class="stat-val" id="rosterClaimedCount">0</b> / <span id="rosterTotalCount">9</span></div>
+            <div class="stat-pill"><span class="stat-label">演练模式:</span> <b class="stat-val" style="color:#00f0ff;">单人排座 / 圆桌协同</b></div>
+          </div>
+        </div>
+
+        <div class="roster-camps-split">
+          <!-- 蓝方处置部门席位 -->
+          <div class="roster-camp-card blue-camp-roster">
+            <div class="roster-camp-title">
+              <span class="camp-flag blue-flag">🛡️ 蓝方应急处置席位 (职能专班)</span>
+              <span class="camp-desc">负责监测核实、抢险调度、辟谣发声</span>
+            </div>
+            <div class="roster-grid" id="rosterBlueGrid">
+              <!-- 动态填充蓝方席位卡片 -->
+            </div>
+          </div>
+
+          <!-- 红方攻击与网民群演席位 -->
+          <div class="roster-camp-card red-camp-roster">
+            <div class="roster-camp-title">
+              <span class="camp-flag red-flag">🔥 红方进攻与网民席位 (舆论发酵)</span>
+              <span class="camp-desc">负责现场拍摄爆料、造谣起哄、点赞评论转发</span>
+            </div>
+            <div class="roster-grid" id="rosterRedGrid">
+              <!-- 动态填充红方席位卡片 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部手机快速扫码进入提示 -->
+        <div class="roster-footer-qrcode-bar">
+          <div class="qr-box">
+            <img src="/api/qrcode?text=/mobile.html" alt="扫码选角色" class="qr-img">
+            <span class="qr-label">📱 手机扫码选角色/参演</span>
+          </div>
+          <div class="qr-guide-text">
+            <strong>参演指引：</strong> 手机端扫码后，选择自己所属的排位角色或圆桌桌号即可完成绑定，大屏将实时点亮就绪光效。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 阶段视角 5：阶段攻防结算战报 ==================== -->
+    <section class="screen-stage-layer screen-settlement-layer" id="screenSettlementLayer" style="display:none;">
+      <div class="settlement-container">
+        <div class="settlement-header">
+          <span class="tag-cyber tag-highlight" id="settlementStageTag">阶段一 · 初发舆情发现与核实</span>
+          <h2 class="settlement-title">🏁 阶段攻防对抗裁决与得失分结算战报</h2>
+          <p class="settlement-sub">主持人与裁判长阶段点评公布 · 标准答案与误导选项深度剖析</p>
+        </div>
+
+        <div class="settlement-cards-grid">
+          <div class="settle-card settle-score-overview">
+            <div class="card-inner-title">📊 阶段公信力与战力总结</div>
+            <div class="settle-score-big">
+              <span class="score-num" id="settleCredibilityNum">92</span>
+              <span class="score-unit">当前公信力</span>
+            </div>
+            <div class="settle-diff-row">
+              <div class="diff-item red-diff">🔥 红方冲击: <b id="settleRedPenalty">-25</b> 分</div>
+              <div class="diff-item blue-diff">🛡️ 蓝方修复: <b id="settleBlueRestore">+20</b> 分</div>
+            </div>
+          </div>
+
+          <div class="settle-card settle-details">
+            <div class="card-inner-title">⚖️ 蓝方处置措施判别与采分明细</div>
+            <div class="settle-stream-list" id="settleMeasuresList">
+              <!-- 动态填充处置得失分 -->
+            </div>
+          </div>
+
+          <div class="settle-card settle-rubric-card">
+            <div class="card-inner-title">💡 演练复盘要点与误导避坑指引</div>
+            <div class="rubric-body" id="settleRubricBody">
+              <div class="rubric-point good"><strong>✅ 标准处置黄金法则：</strong> 30分钟内完成首批内攻力量通报与人员安全搜救，掌握第一发布权。</div>
+              <div class="rubric-point warn"><strong>❌ 常见误导陷阱：</strong> 以“管辖权争议”为由拖延通报，引发全网质疑“官方失语隐瞒”。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 阶段视角 6：终局全景复盘与案例报告 ==================== -->
+    <section class="screen-stage-layer screen-summary-layer" id="screenSummaryLayer" style="display:none;">
+      <div class="summary-container">
+        <div class="summary-header">
+          <span class="tag-cyber tag-highlight">实战演练圆满收官</span>
+          <h2 class="summary-title">🏆 突发事件舆情应急处置全景复盘报告</h2>
+          <p class="summary-sub">已生成标准化培训案例沉淀 · 支持一键保存与历史教学回放</p>
+        </div>
+
+        <div class="summary-grid">
+          <div class="summary-card">
+            <h3>📈 全程公信力波动曲线</h3>
+            <div class="summary-chart-box" id="summaryChartBox">
+              <div class="chart-timeline-step">
+                <span>阶段1</span><b>92分</b>
+              </div>
+              <div class="chart-timeline-step">
+                <span>阶段2</span><b>83分</b>
+              </div>
+              <div class="chart-timeline-step">
+                <span>阶段3</span><b>74分</b>
+              </div>
+              <div class="chart-timeline-step">
+                <span>阶段4</span><b>85分</b>
+              </div>
+              <div class="chart-timeline-step best">
+                <span>阶段5</span><b>98分</b>
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <h3>🏅 参演专班协同综合评级</h3>
+            <div class="summary-rank-list">
+              <div class="rank-row"><span>市委网信办监测专班</span><b style="color:#00f0ff;">卓越标杆 (98分)</b></div>
+              <div class="rank-row"><span>区应急管理局指挥调度席</span><b style="color:#059669;">协同高效 (95分)</b></div>
+              <div class="rank-row"><span>区消防救援大队</span><b style="color:#059669;">内攻果断 (96分)</b></div>
+              <div class="rank-row"><span>区联合调查组新闻发言人</span><b style="color:#00f0ff;">权威定调 (98分)</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 三栏核心作战态势区域 (阶段视角 4：实战作战大屏) -->
+    <main class="screen-main-grid" id="screenBattleLayer">
       <!-- ==================== 1. 左侧：红方攻击方实时舆情态势 + 实时榜单 ==================== -->
       <section class="col-left">
         <!-- 模块 1-1：红方攻击态势全景看板 -->
@@ -161,6 +330,36 @@
 
           <div class="trending-list-box" id="trendingList">
             <!-- 动态渲染热搜榜 TOP 5 -->
+          </div>
+        </div>
+
+        <!-- 模块 1-3：全网网民吃瓜与高频互动风暴 (点赞/转发/实时弹幕) -->
+        <div class="cyber-card crowd-monitor-panel">
+          <div class="module-header module-header-red">
+            <div class="module-title-wrap">
+              <span class="title-text">💬 全网网民互动与弹幕风暴 (红方群演)</span>
+            </div>
+            <span class="live-dot-tag" style="background:rgba(255,0,85,0.2); color:#ff0055; border:1px solid #ff0055;">高频沸腾</span>
+          </div>
+
+          <div class="crowd-stats-mini-row">
+            <div class="crowd-stat-box">
+              <span class="cs-label">❤️ 点赞热度</span>
+              <b class="cs-val red-glow" id="crowdLikeCount">8,240</b>
+            </div>
+            <div class="crowd-stat-box">
+              <span class="cs-label">🔄 舆论转发</span>
+              <b class="cs-val" id="crowdShareCount">1,450</b>
+            </div>
+            <div class="crowd-stat-box">
+              <span class="cs-label">💬 尖锐评论</span>
+              <b class="cs-val" id="crowdCommentCount">560</b>
+            </div>
+          </div>
+
+          <div class="crowd-comments-marquee" id="crowdCommentsMarquee">
+            <div class="comment-item"><strong>热心市民：</strong> 起火原因查明了吗？十几个孩子跑出来看着太揪心了！</div>
+            <div class="comment-item"><strong>K市本地观察：</strong> 消防通道有没有被占用？每次老小区都堵车！</div>
           </div>
         </div>
       </section>

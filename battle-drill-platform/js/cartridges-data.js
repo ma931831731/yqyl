@@ -31,6 +31,34 @@ window.DEFAULT_DRILL_CARTRIDGES = [
     "coverUrl": "./media/fire_cover.jpg",
     "bgUrl": "./media/fire_bg.jpg",
     "bgDesc": "K市P区作为省会城市核心城区，辖区面积98平方公里，常住人口超120万。4月8日18时57分，X街道花园居小区高层住宅突发火灾。该小区建成于2008年，共有居民楼15栋，入住率高达90%，常住人口超过5000人，老弱病残孕多，紧邻地铁站与大型商超。现场23层住宅东侧房间起火爆炸，浓烟滚滚，十余名校服学生惊慌逃离。",
+    "preDrillMedia": {
+      "storyIntroVideo": "./media/fire_material_video.mp4",
+      "storyIntroTitle": "突发火灾现场全景还原与首发爆料",
+      "rulesGuideVideo": "./media/fire_material_video.mp4",
+      "rulesGuideTitle": "红蓝对抗协同演练机制与防误导注意事项"
+    },
+    "alarmConfig": {
+      "enabled": true,
+      "lowScoreThreshold": 60,
+      "singlePenaltyThreshold": -10,
+      "soundType": "alarm_critical",
+      "alertPulse": true
+    },
+    "rolePool": {
+      "blueRoles": [
+        { "id": "blue_commander", "name": "市委网信办监测专班", "role": "网信指挥长", "seatType": "single", "capacity": 1, "avatar": "👑", "desc": "全面把控舆情研判与指令下发" },
+        { "id": "blue_emergency", "name": "区应急管理局指挥调度席", "role": "应急调度席", "seatType": "table", "capacity": 6, "avatar": "🛡️", "desc": "前线救援调度、疏散与综合协调" },
+        { "id": "blue_fire", "name": "区消防救援大队", "role": "消防指挥席", "seatType": "table", "capacity": 6, "avatar": "🚒", "desc": "火势内攻扑救、搜救受困人员、火因调查" },
+        { "id": "blue_police", "name": "区公安分局 (网安/治安)", "role": "公安执法席", "seatType": "single", "capacity": 2, "avatar": "👮", "desc": "现场警戒交通管制、网络造谣查处打击" },
+        { "id": "blue_street", "name": "X街道办事处安监组", "role": "属地善后席", "seatType": "table", "capacity": 6, "avatar": "🤝", "desc": "受灾群众安置、业主安抚、维稳走访" },
+        { "id": "blue_spokesman", "name": "联合调查组新闻发言人", "role": "官方发声席", "seatType": "single", "capacity": 1, "avatar": "📢", "desc": "通报起草、权威辟谣与新闻发布会" }
+      ],
+      "redRoles": [
+        { "id": "red_cloud", "name": "抖音网民“云朵儿”", "role": "现场首发拍客", "avatar": "📱", "canUploadVideo": true, "desc": "火灾现场第一视角拍摄短视频发布爆料" },
+        { "id": "red_xiaofei", "name": "造谣网民“小飞飞”", "role": "恶意带节奏自媒体", "avatar": "🚨", "canUploadVideo": false, "desc": "炮制伤亡数字谣言博眼球" },
+        { "id": "red_crowd", "name": "全网网民与吃瓜群众", "role": "大众互动群演", "avatar": "💬", "canUploadVideo": false, "desc": "评论、点赞、转发煽风点火与情绪发酵" }
+      ]
+    },
     "stages": [
       {
         "id": "STAGE-01",

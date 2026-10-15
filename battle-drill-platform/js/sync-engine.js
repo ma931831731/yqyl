@@ -88,6 +88,29 @@ const STAGE_PROFILES = [
 const DEFAULT_STATE = {
   activeScriptId: 'JB-FIRE-20250408',
   drillStatus: 'LOBBY', // 'LOBBY' | 'ROSTER' | 'RUNNING' | 'PAUSED' | 'SUCCESS' | 'FAILED' | 'ENDED'
+  screenPhase: 'PHASE_LOBBY', // 'PHASE_LOBBY' | 'PHASE_STORY_VIDEO' | 'PHASE_ROSTER_WALL' | 'PHASE_RULES_VIDEO' | 'PHASE_BATTLE' | 'PHASE_STAGE_SETTLEMENT' | 'PHASE_FINAL_SUMMARY'
+  screenVideo: {
+    url: './media/fire_material_video.mp4',
+    title: '突发火灾现场全景还原与首发爆料',
+    isPlaying: false
+  },
+  pendingReviews: [], // 待裁判/主持人审核的蓝方处置队列
+  crowdStats: {
+    likeCount: 8200,
+    shareCount: 1450,
+    commentCount: 560
+  },
+  recentCrowdComments: [
+    { id: 'cm_1', author: '热心朝阳群众', text: '起火原因查明了吗？十几个孩子跑出来看着太揪心了！', time: '18:59', likes: 320 },
+    { id: 'cm_2', author: 'K市本地观察', text: '消防通道有没有被占用？每次老小区都堵车！', time: '19:02', likes: 180 },
+    { id: 'cm_3', author: '平安守护者', text: '官方快出通报啊，别让假消息到处乱传！', time: '19:05', likes: 240 }
+  ],
+  alarmState: {
+    triggered: false,
+    soundType: 'alarm_critical',
+    reason: '',
+    time: 0
+  },
   room: {
     id: 'ROOM-8821',
     name: 'K市P区某居民楼突发火灾爆燃与网络造谣处置演练',
@@ -446,6 +469,23 @@ class DrillSyncEngine {
         this.notifyListeners('STORAGE_SYNC', null);
       }
     });
+
+    // 跨设备 SSE 局域网实时双向同步 (手机扫码与大屏实时互通)
+    if (typeof window !== 'undefined' && window.EventSource) {
+      try {
+        const es = new EventSource('/api/sync/events');
+        es.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data && data.state) {
+              this.state = Object.assign({}, this.state, data.state);
+              this.saveState(this.state);
+              this.notifyListeners(data.action, data.payload);
+            }
+          } catch(e) {}
+        };
+      } catch (err) {}
+    }
   }
 
   loadState() {
@@ -456,11 +496,13 @@ class DrillSyncEngine {
         if (!parsed.timelineConfrontations || !parsed.timelineConfrontations.some(c => c.id === 'CF-103')) {
           parsed.timelineConfrontations = JSON.parse(JSON.stringify(DEFAULT_STATE.timelineConfrontations));
         }
-        // 合并补全新字段保证向前兼容
         return Object.assign({}, DEFAULT_STATE, parsed, {
           room: Object.assign({}, DEFAULT_STATE.room, parsed.room || {}),
           battle: Object.assign({}, DEFAULT_STATE.battle, parsed.battle || {}),
-          seats: Object.assign({}, DEFAULT_STATE.seats, parsed.seats || {})
+          seats: Object.assign({}, DEFAULT_STATE.seats, parsed.seats || {}),
+          screenVideo: Object.assign({}, DEFAULT_STATE.screenVideo, parsed.screenVideo || {}),
+          crowdStats: Object.assign({}, DEFAULT_STATE.crowdStats, parsed.crowdStats || {}),
+          alarmState: Object.assign({}, DEFAULT_STATE.alarmState, parsed.alarmState || {})
         });
       }
     } catch (e) {
@@ -509,10 +551,167 @@ class DrillSyncEngine {
         state: this.state
       });
     }
+
+    // 跨设备局域网实时投递
+    if (typeof fetch === 'function') {
+      fetch('/api/sync/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: actionName, payload, state: this.state })
+      }).catch(() => {});
+    }
+
     this.notifyListeners(actionName, payload);
   }
 
-  // === 1. 席位认领与全员就位 ===
+  // === 0. 大屏幕 6 大演练阶段控制 ===
+  setScreenPhase(phase, videoData = null) {
+    this.state.screenPhase = phase;
+    if (videoData) {
+      this.state.screenVideo = Object.assign({}, this.state.screenVideo, videoData);
+    }
+    this.broadcast('SCREEN_PHASE_CHANGED', { phase, video: this.state.screenVideo });
+    return phase;
+  }
+
+  // === 0.1 报警声与声光联动引擎 ===
+  triggerAlarm(soundType = 'alarm_critical', reason = '检测到严重失当处置或公信力跌破红线！') {
+    this.state.alarmState = {
+      triggered: true,
+      soundType,
+      reason,
+      time: Date.now()
+    };
+    this.broadcast('TRIGGER_ALARM', { soundType, reason, score: this.state.battle.credibilityScore });
+  }
+
+  resetAlarm() {
+    this.state.alarmState.triggered = false;
+    this.broadcast('RESET_ALARM', {});
+  }
+
+  // === 0.2 红方吃瓜网民互动系统 (点赞、转发、评论实时弹幕) ===
+  addCrowdInteraction(type, content = '', author = '热心网民') {
+    if (!this.state.crowdStats) this.state.crowdStats = { likeCount: 8200, shareCount: 1450, commentCount: 560 };
+    if (!this.state.recentCrowdComments) this.state.recentCrowdComments = [];
+
+    const nowStr = new Date().toTimeString().slice(0, 5);
+    if (type === 'LIKE') {
+      this.state.crowdStats.likeCount += Math.floor(Math.random() * 20) + 1;
+    } else if (type === 'SHARE') {
+      this.state.crowdStats.shareCount += Math.floor(Math.random() * 5) + 1;
+    } else if (type === 'COMMENT') {
+      this.state.crowdStats.commentCount += 1;
+      const newComment = {
+        id: 'cm_' + Date.now(),
+        author: author || '现场网民',
+        text: content,
+        time: nowStr,
+        likes: Math.floor(Math.random() * 50) + 5
+      };
+      this.state.recentCrowdComments.unshift(newComment);
+      if (this.state.recentCrowdComments.length > 30) {
+        this.state.recentCrowdComments.pop();
+      }
+    }
+
+    this.broadcast('CROWD_INTERACTION', { type, content, author, stats: this.state.crowdStats });
+  }
+
+  // === 0.3 蓝方处置提交与 AI 判分 + 主持人/裁判仲裁 ===
+  submitBlueMeasure(measureData) {
+    if (!this.state.pendingReviews) this.state.pendingReviews = [];
+
+    // AI 规则对比与建议打分逻辑
+    let aiScore = 10;
+    let aiReason = '措施具备时效性与应对针对性';
+
+    if (measureData.isMisleading || measureData.type === 'negative') {
+      aiScore = measureData.delta || -15;
+      aiReason = `【AI判定失当】${measureData.desc || '存在推诿或失当响应，易激化网民对立情绪'}`;
+    } else if (measureData.isCustom) {
+      // 自由手填语义判别
+      const text = (measureData.statement || '') + (measureData.title || '');
+      if (/伤亡|受困|抢救|消防|内攻|排查/i.test(text) && /通报|发布|公布|官方/i.test(text)) {
+        aiScore = 12;
+        aiReason = '【AI优评】有效回应核心关切（伤亡与救援进展），通报规范';
+      } else if (/非本管辖|等待后续|不归我管|请找其他/i.test(text)) {
+        aiScore = -15;
+        aiReason = '【AI警告】检测到推诿用语，涉嫌违规拖延处置';
+      } else if (text.length < 15) {
+        aiScore = 3;
+        aiReason = '【AI判定】处置措施陈述过简，缺少关键行动要素';
+      } else {
+        aiScore = 8;
+        aiReason = '【AI建议分】措施基本符合处置规范，建议视现场协同度微调';
+      }
+    } else {
+      aiScore = measureData.delta !== undefined ? measureData.delta : 10;
+      aiReason = measureData.branchName ? `符合剧本推荐走向: ${measureData.branchName}` : '常规标准处置动作';
+    }
+
+    const reviewId = 'REV-' + Date.now();
+    const reviewItem = {
+      reviewId,
+      time: new Date().toTimeString().slice(0, 5),
+      roleId: measureData.roleId || 'blue_emergency',
+      role: measureData.role || '处置部门',
+      title: measureData.title || '处置响应',
+      statement: measureData.statement || '',
+      isCustom: !!measureData.isCustom,
+      aiScore,
+      aiReason,
+      finalScore: aiScore,
+      measureData
+    };
+
+    this.state.pendingReviews.push(reviewItem);
+    this.broadcast('BLUE_MEASURE_SUBMITTED', { reviewItem });
+    return reviewItem;
+  }
+
+  judgeBlueMeasure(reviewId, finalScore, comment = '') {
+    if (!this.state.pendingReviews) return null;
+    const idx = this.state.pendingReviews.findIndex(r => r.reviewId === reviewId);
+    if (idx === -1) return null;
+
+    const reviewItem = this.state.pendingReviews.splice(idx, 1)[0];
+    const scoreDelta = Number(finalScore !== undefined ? finalScore : reviewItem.aiScore);
+
+    // 将审核通过的措施转换为真实攻防记录
+    const measureData = Object.assign({}, reviewItem.measureData, {
+      id: 'BM-JUDGED-' + Date.now(),
+      roleId: reviewItem.roleId,
+      role: reviewItem.role,
+      title: reviewItem.title,
+      statement: reviewItem.statement + (comment ? ` (裁判点评: ${comment})` : ''),
+      delta: scoreDelta
+    });
+
+    // 真正执行生效
+    const result = this.executeBlueMeasure(measureData);
+
+    // 检查严重低分预警 (如果得分 <= -10 分，或公信力跌破 60，自动播放报警音与红光脉冲)
+    if (scoreDelta <= -10 || this.state.battle.credibilityScore < 60) {
+      this.triggerAlarm('alarm_critical', `【重大失当预警】${reviewItem.role} 处置扣除 ${Math.abs(scoreDelta)} 分，公信力告急！`);
+    }
+
+    this.broadcast('BLUE_MEASURE_JUDGED', { reviewId, scoreDelta, comment, result });
+    return result;
+  }
+
+  // === 1. 席位认领与全员就位 (支持单人排座与大圆桌小组) ===
+
+  claimRoleEx(seatId, { userName = '学员在线', isTable = false, tableNo = '', camp = 'blue' } = {}) {
+    if (!this.state.seats[seatId]) return false;
+    const seat = this.state.seats[seatId];
+    seat.assigned = true;
+    seat.user = isTable ? `第${tableNo || '1'}桌 (${userName})` : userName;
+    seat.isTable = isTable;
+    seat.tableNo = tableNo;
+    this.broadcast('ROLE_CLAIMED', { seatId, seat });
+    return true;
+  }
 
   claimRole(seatId, userName = '学员参演', userAvatar = '') {
     if (!this.state.seats[seatId]) return false;
